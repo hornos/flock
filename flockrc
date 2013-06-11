@@ -1,0 +1,9 @@
+### flock
+flock_root=$(cd $(dirname "${BASH_SOURCE}");pwd -P)
+PATH=${PATH}:${flock_root}/bin
+
+### ansible
+ansiblerc="${HOME}/ansible/hacking/env-setup"
+if test -r ${ansiblerc} ; then
+  source ${ansiblerc} &> /dev/null
+fi

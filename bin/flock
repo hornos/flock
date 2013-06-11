@@ -1,0 +1,182 @@
+#!/bin/bash
+gdn=$(pwd $(dirname $0))
+gbn=$(basename $0)
+
+tmp=".${gbn}.$$"
+
+function flock/exit() {
+  if test -r "${tmp}" ; then
+    rm -f "${tmp}"
+  fi
+  exit 1
+}
+trap flock/exit INT TERM EXIT
+
+
+### defaults
+inventory=${ANSIBLE_HOSTS:-./hosts}
+
+### args
+cmd=${1:-help}
+shift
+hosts=${1:-root}
+shift
+module=${1:-ping}
+shift
+opts=$*
+
+### host operators
+user=${hosts/@*}
+if [ ! -z "$user" ] ; then
+  hosts=${hosts/${user}}
+fi
+
+### default user is sysop
+if [ -z "$user" ] ; then
+  user=sysop
+fi
+
+_opts=""
+# -k
+if [ "${hosts:0:1}" = "@" ] ; then
+  _opts="${_opts} -k"
+  hosts="${hosts:1}"
+  # --sudo
+  if [ "${hosts:0:1}" = "@" ] ; then
+    _opts="${_opts} --sudo"
+    hosts="${hosts:1}"
+  fi
+fi
+
+### common options
+key=./keys/${user}
+_key=""
+if test -r ${key} ; then
+  _key="--private-key=${key}"
+fi
+options="-u ${user} ${_key} -i ${inventory} ${_opts} ${opts}"
+
+### modules
+_module=$module
+if [ -r "${module}.yml" ] ; then
+  module="${module}.yml"
+fi
+
+function help/flock() {
+  cat <<EOF
+
+  Command  Inventory         Playbook    Options
+  ------------------------------------------------
+  init
+  keys
+  play     [user][@@]<hosts> <playbook>  [options]
+  show     [user][@@]<hosts> <playbook>  [options]
+  module   [user][@@]<hosts> <module>    [options]
+  setup    [user][@@]<hosts>             [options]
+  command  [user][@@]<hosts> "<command>" [options]
+
+EOF
+  exit 1
+}
+
+### main
+case ${cmd} in
+  init)
+    # create SSH keys
+    echo ""
+    echo "Generating System Operator key (sysop)"
+    ssh-keygen -b2048 -f keys/sysop
+    echo ""
+    echo "Generating passwordless internode root key (nopass)"
+    ssh-keygen -b2048 -N "" -f keys/nopass
+    echo ""
+    exit 0
+    ;;
+  keys)
+    # check SSH keys
+    for i in sysop nopass ; do
+      echo "${i} : $(ssh-keygen -lf keys/${i})"
+    done
+    exit 0
+    ;;
+  play)
+    command="ansible-playbook"
+    command_options="${module} -l ${hosts}"
+    ;;
+  show)
+    command="ansible-playbook"
+    command_options="${module} -l ${hosts}"
+    echo ""
+    echo "The following tasks will be played:"
+    echo ""
+    cat ${module} | egrep "name:" | sed s/.*name://
+    echo ""
+    read -p "Press any key to continue or Ctrl+C to exit!" pass
+    ;;
+  module)
+    command="ansible"
+    command_options="${hosts} -m ${module}"
+    ;;
+  setup)
+    command="ansible"
+    command_options="${hosts} -m setup"
+    ;;
+  command)
+    command="ansible"
+    command_options="${hosts} -m command -a \"${module}\""
+    ;;
+  restart|stop|start)
+    command="ansible"
+    command_options="${hosts} -m command -a \"service ${_module} ${gbn}\""
+    ;;
+  shell)
+    echo "${module}" > ${tmp}
+    chmod a+x ${tmp}
+    command="ansible"
+    command_options="${hosts} -m shell -a \"${tmp}\""
+    ;;
+  reboot)
+    command="ansible"
+    command_options="${hosts} -m command -a /sbin/reboot"
+    ;;
+  shutdown)
+    command="ansible"
+    command_options="${hosts} -m command -a \"/sbin/shutdown -h now\""
+    ;;
+  update)
+    command="ansible"
+    command_options="${hosts} -m command -a \"yum -y update\""
+    ;;
+  ping)
+    command="ansible"
+    command=options="${hosts} -m ping"
+    ;;
+  ssh)
+    host=$(cat ${inventory} | \
+    grep ${hosts} | \
+    grep ansible_ssh_host | \
+    sed s/.*=// | uniq)
+
+    key=keys/${user}
+    _key=""
+    if test -r ${_key} ; then
+      _key="-i ${key}"
+    fi
+    # check Ting fingerprint
+    ting=$HOME/ting/hosts/${hosts}.json
+    if test -r ${ting} ; then
+       cat ${ting} | grep fp
+    fi
+    ssh -X ${opts} ${_key}  ${user}@${host}
+    exit $?
+    ;;
+  help|*)
+    help/flock
+    ;;
+esac
+
+### done
+echo ""
+echo "Running: $command $command_options $options"
+echo ""
+$command $command_options $options
