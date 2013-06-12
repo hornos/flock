@@ -144,4 +144,7 @@ Due to selinux you have to reboot now:
 
 Now, reach the ground state:
 
-    flock play @@core groundstate
+    flock play @@core firewall
+    flock play @@core ground
+
+Mind that the system network is not protected, due to performance reasons core servers can reach each other wihtout any serious authentication.

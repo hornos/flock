@@ -179,4 +179,4 @@ esac
 echo ""
 echo "Running: $command $command_options $options"
 echo ""
-$command $command_options $options
+eval "$command $command_options $options"
