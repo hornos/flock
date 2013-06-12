@@ -1,0 +1,208 @@
+#
+# Shorewall firewall
+#
+# TODO: dhcp from networks.yml
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+
+  tasks:
+  - name: Install shorewall
+    yum: name=shorewall
+         state=installed
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+  - name: Install shorewall
+    apt: name=shorewall
+         state=installed
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+### ZONES
+  - name: Create /etc/shorewall/zones.d
+    file: path=/etc/shorewall/zones.d
+          owner=root
+          group=root
+          state=directory
+    tags:
+      - zones
+
+  - name: Install /etc/shorewall/zones.d/core
+    template: src=templates/etc/shorewall/zones.d/core.j2
+              dest=/etc/shorewall/zones.d/core
+              owner=root
+              group=root
+              mode=0640
+    tags:
+      - zones
+    notify:
+      - Restart shorewall
+
+  - name: Install zones
+    template: src=templates/etc/shorewall/zones.j2
+              dest=/etc/shorewall/zones
+              owner=root
+              group=root
+              mode=0640
+              backup=yes
+    tags:
+      - zones
+    notify:
+      - Restart shorewall
+
+### POLICY
+  - name: Create /etc/shorewall/policy.d
+    file: path=/etc/shorewall/policy.d
+          owner=root
+          group=root
+          state=directory
+    tags:
+      - policy
+
+  - name: Install /etc/shorewall/policy.d/core
+    template: src=templates/etc/shorewall/policy.d/core.j2
+              dest=/etc/shorewall/policy.d/core
+              owner=root
+              group=root
+              mode=0640
+    tags:
+      - policy
+    notify:
+      - Restart shorewall
+
+  - name: Install policy
+    template: src=templates/etc/shorewall/policy.j2
+              dest=/etc/shorewall/policy
+              owner=root
+              group=root
+              mode=0640
+              backup=yes
+    tags:
+      - policy
+    notify:
+      - Restart shorewall
+
+### RULES
+  - name: Create /etc/shorewall/rules.d
+    file: path=/etc/shorewall/rules.d
+          owner=root
+          group=root
+          state=directory
+    tags:
+      - rules
+
+  - name: Install /etc/shorewall/rules.d/root
+    template: src=templates/etc/shorewall/rules.d/root.j2
+              dest=/etc/shorewall/rules.d/root
+              owner=root
+              group=root
+              mode=0640
+    tags:
+      - rules
+    notify:
+      - Restart shorewall
+
+
+  - name: Install /etc/shorewall/rules.d/sysop
+    template: src=templates/etc/shorewall/rules.d/sysop.j2
+              dest=/etc/shorewall/rules.d/sysop
+              owner=root
+              group=root
+              mode=0640
+    tags:
+      - rules
+    notify:
+      - Restart shorewall
+
+### CONFIGURATION
+  - name: Install other configurations
+    template: src=templates/etc/shorewall/{{item}}.j2
+              dest=/etc/shorewall/{{item}}
+              owner=root
+              group=root
+              mode=0640
+              backup=yes
+    with_items:
+      - rules
+      - blrules
+      - interfaces
+      - routestopped
+    tags:
+      - config
+      - rules
+      - interfaces
+    notify:
+      - Restart shorewall
+
+  - name: Enable shorewall.conf
+    template: src=templates/etc/shorewall/shorewall.conf.j2
+              dest=/etc/shorewall.conf
+              owner=root
+              group=root
+              mode=0640
+              backup=yes
+    tags:
+      - config
+    notify:
+      - Restart shorewall
+
+  - name: Enable startup
+    lineinfile: dest=/etc/shorewall/shorewall.conf
+                regexp='^STARTUP_ENABLED'
+                line='STARTUP_ENABLED=Yes'
+    tags:
+      - config
+
+  - name: Enable startup
+    lineinfile: dest=/etc/sysconfig/shorewall
+                regexp='^startup'
+                line='startup=1'
+    when: ansible_os_family == "RedHat"
+    tags:
+      - config
+
+  - name: Enable safe stop
+    lineinfile: dest=/etc/sysconfig/shorewall
+                regexp='^SAFESTOP'
+                line='SAFESTOP=1'
+    when: ansible_os_family == "RedHat"
+    tags:
+      - config
+
+  - name: Enable Shorwall startup
+    lineinfile: dest=/etc/default/shorewall
+                regexp='^startup='
+                line='startup=1'
+    tags:
+      - config
+    when: ansible_os_family == "Debian"
+    notify:
+      - Restart shorewall
+
+  - name: Stop iptables
+    service: name=iptables
+             state=stopped
+             enabled=no
+    when: ansible_os_family == "RedHat"
+
+  - name: Stop ufw
+    service: name=ufw
+             state=stopped
+             enabled=no
+    ignore_errors: yes
+    when: ansible_os_family == "Debian"
+
+  - name: Start shorewall
+    service: name=shorewall
+             state=started
+             enabled=yes
+
+  handlers:
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted

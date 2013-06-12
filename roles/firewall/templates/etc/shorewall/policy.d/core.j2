@@ -1,0 +1,16 @@
+#SOURCE    DEST        POLICY      LOG LEVEL    LIMIT:BURST
+# system to system
+sys        sys         ACCEPT
+# me to system
+$FW        sys         ACCEPT
+# me to me
+$FW        $FW         ACCEPT
+# me to internet
+$FW        ext         ACCEPT
+# vpn to all
+# https://forums.openvpn.net/topic9504.html
+vpn        all         ACCEPT
+# me to vpn
+$FW        vpn         ACCEPT
+# ditch otherwise
+all        all         DROP      info
