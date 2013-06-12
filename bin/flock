@@ -149,7 +149,7 @@ case ${cmd} in
     ;;
   ping)
     command="ansible"
-    command=options="${hosts} -m ping"
+    command_options="${hosts} -m ping"
     ;;
   ssh)
     host=$(cat ${inventory} | \

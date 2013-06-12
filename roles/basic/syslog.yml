@@ -1,0 +1,90 @@
+---
+- hosts: all
+
+  tasks:
+### MRPROPER
+  - name: Stop rsyslog
+    service: name=rsyslog
+             state=stopped
+             enabled=no
+    tags:
+      - prepare
+    ignore_errors: yes
+
+  - name: Uninstall rsyslog for sure
+    yum: name=rsyslog
+         state=absent
+    when: ansible_os_family == "RedHat"
+    tags:
+      - prepare
+
+  - name: Uninstall rsyslog for sure
+    apt: name=rsyslog
+         state=absent
+    when: ansible_os_family == "Debian"
+    tags:
+      - prepare
+
+### REDHAT
+  - name: Install umask repo
+    template: src=templates/etc/yum.repos.d/umask.repo.j2
+              dest=/etc/yum.repos.d/umask.repo
+              owner=root
+              group=root
+    when: ansible_os_family == "RedHat"
+    tags:
+      - repo
+      - packages
+
+  - name: Install syslog-ng packages
+    yum: name={{item}}
+         state=latest
+         enablerepo=umask
+    with_items:
+      - syslog-ng
+      - syslog-ng-libdbi
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+### DEBIAN
+  - name: Install packages
+    apt: name=$item
+         state=installed
+    with_items:
+      - syslog-ng
+      - syslog-ng-mod-json
+      - syslog-ng-mod-mongodb
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+### CONFIGURATION
+  - name: Create /etc/syslog-ng/conf.d
+    file: path=/etc/syslog-ng/conf.d
+          owner=root
+          group=root
+          state=directory
+    tags:
+      - config
+      - directories
+
+  - name: Install syslog-ng.conf
+    template: src=templates/etc/syslog-ng/syslog-ng.{{ansible_distribution}}.conf.j2
+              dest=/etc/syslog-ng/syslog-ng.conf
+              owner=root
+              group=root
+              backup=yes
+    tags:
+      - config
+
+### SERVICE
+  - name: Start syslog-ng
+    service: name=syslog-ng
+             state=started
+             enabled=yes
+
+  handlers:
+    - name: Restart syslog-ng
+      service: name=syslog-ng
+               state=restarted

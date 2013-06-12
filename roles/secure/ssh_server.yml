@@ -1,0 +1,76 @@
+# Secure SSH server
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+
+  tasks:
+    - name: Secure SSH server
+      template: src=templates/etc/ssh/sshd_config.j2
+                dest=/etc/ssh/sshd_config
+                owner=root
+                group=root
+                mode=0600
+                backup=yes
+      notify:
+        - Restart sshd
+      tags:
+        - config
+
+    - name: FIX sftp subsystem in sshd_config for Debian
+      lineinfile: dest=/etc/ssh/sshd_config
+                  regexp='^Subsystem sftp'
+                  line='Subsystem sftp /usr/lib/openssh/sftp-server'
+      when: ansible_os_family == "Debian"
+      notify:
+        - Restart sshd
+      tags:
+        - config
+
+### KEYS
+    - name: Create .ssh directories
+      file: path=/{{item}}/.ssh
+            owner={{item}}
+            group={{item}}
+            mode=700
+            state=directory
+      with_items:
+        - root
+        - sysop
+      tags:
+        - key
+
+    - name: Install root nopass key
+      copy: src=keys/nopass
+            dest=/root/.ssh/id_rsa
+            owner=root
+            group=root
+            mode=600
+      tags:
+        - key
+
+    - name: Install sysop nopass key
+      copy: src=keys/nopass
+            dest=/home/sysop/.ssh/id_rsa
+            owner=sysop
+            group=sysop
+            mode=600
+      tags:
+        - key
+
+    - name: Install nopass public key
+      authorized_key: user={{item}}
+                      key='$FILE(keys/nopass.pub)'
+      with_items:
+        - root
+        - sysop
+      tags:
+        - key
+
+
+  handlers:
+    - name: Restart sshd
+      service: name={{ service.sshd }}
+               state=restarted

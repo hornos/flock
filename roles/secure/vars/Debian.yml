@@ -1,0 +1,3 @@
+service:
+  sshd: ssh
+  rngd: rng-tools

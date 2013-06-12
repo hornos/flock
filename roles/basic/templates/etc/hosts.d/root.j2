@@ -1,0 +1,3 @@
+{% for host in hostvars %}
+{{ hostvars[host]['ansible_eth0']['ipv4']['address'] }} {{host}}
+{% endfor %}

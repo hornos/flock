@@ -1,0 +1,22 @@
+#
+# syslog-ng remote log client
+#
+---
+- hosts: all
+
+  tasks:
+  - name: Enable loghost client
+    template: src=templates/etc/syslog-ng/conf.d/client.{{ansible_distribution}}.j2
+              dest=/etc/syslog-ng/conf.d/20-client.conf
+              owner=root
+              group=root
+              mode=0644
+    notify:
+      - Restart syslog-ng
+    tags:
+      - config
+
+  handlers:
+    - name: Restart syslog-ng
+      service: name=syslog-ng
+               state=restarted

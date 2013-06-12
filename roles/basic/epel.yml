@@ -1,0 +1,19 @@
+# Enable EPEL repo
+---
+- hosts: all
+  tasks:
+    - group_by: key=${ansible_os_family}
+### REDHAT
+- hosts: RedHat
+  vars_files:
+    - vars/epel.yml
+  tasks:
+    - name: Download EPEL repo
+      get_url: url=${url}/${rpm} dest=/root
+      tags:
+        - packages
+
+    - name: Install EPEL repo
+      command: yum -y localinstall /root/${rpm}
+      tags:
+        - packages

@@ -1,0 +1,24 @@
+#
+# syslog-ng based log server
+#
+---
+- hosts: all
+
+  tasks:
+
+  - name: Enable syslog-ng loghost
+    template: src=templates/etc/syslog-ng/conf.d/loghost.j2
+              dest=/etc/syslog-ng/conf.d/10-loghost.conf
+              owner=root
+              group=root
+              mode=0644
+    notify:
+      - Restart syslog-ng
+    tags:
+      - config
+
+### SERVICE
+  handlers:
+    - name: Restart syslog-ng
+      service: name=syslog-ng
+               state=restarted

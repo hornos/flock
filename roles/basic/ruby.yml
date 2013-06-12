@@ -1,0 +1,72 @@
+---
+- hosts: all
+
+  vars_files:
+    - vars/ruby.yml
+
+  tasks:
+### PACKAGES
+  - name: Install ruby packages
+    yum: name=$item
+    with_items:
+      - make
+      - gcc
+      - gcc-c++
+      - zlib-devel
+      - libxml2-devel
+      - libxslt-devel
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+### DEBIAN
+  - name: Install ruby packages
+    apt: name=$item
+    with_items:
+      - make
+      - gcc
+      - g++
+      - zlib1g-dev
+      - libxml2-dev
+      - libxslt1-dev
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+### RVM
+  - name: Copy RVM Installer
+    template: src=templates/root/install_rvm.j2
+              dest=/root/install_rvm
+              owner=root
+              group=root
+              mode=0700
+    tags:
+      - packages
+
+  - name: Install RVM
+    shell: /root/install_rvm
+    tags:
+      - packages
+      - rvm
+
+  - name: Install RVM prompt
+    template: src=templates/etc/profile.d/rvm-ps1.sh.j2
+              dest=/etc/profile.d/90-rvm-ps1.sh
+              owner=root
+              group=root
+              mode=0644
+    tags:
+      - config
+      - rvm
+
+  - name: Fix global ruby path
+    file: src=/usr/local/rvm/bin/$item
+          dest=/usr/bin/$item
+          state=link
+    with_items:
+      - ruby
+      - gem
+      # - bundle
+    tags:
+      - fix
+      - rvm

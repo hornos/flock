@@ -1,16 +1,8 @@
 #
 # Top level bootstrap file
 #
-# Generate administrator keys before bootstrapping:
-#
-#     ssh-keygen -b 2048 -C Sysop -f keys/sysop
-#
-#
 ---
 - hosts: all
-
-  vars_files:
-    - bootstrap_vars.yml
 
   tasks:
 
@@ -20,13 +12,17 @@
       when: ansible_os_family == "RedHat"
       tags:
         - packages
+        - json
 
-    - name: Install sudo
-      yum: name=sudo
+    - name: Install packages
+      yum: name={{item}}
            state=installed
+      with_items:
+        - sudo
       when: ansible_os_family == "RedHat"
       tags:
         - packages
+        - sudo
 
 
 ### DEBIAN
@@ -36,9 +32,11 @@
       tags:
         - packages
 
-    - name: Install sudo
-      apt: name=sudo
+    - name: Install packages
+      apt: name={{item}}
            state=installed
+      with_items:
+        - sudo
       when: ansible_os_family == "Debian"
       tags:
         - packages
@@ -55,8 +53,8 @@
       tags:
         - wheel
 
-    - name: Create administrator user {{ sysop_user }}
-      user: name={{ sysop_user }}
+    - name: Create System Operator
+      user: name=sysop
             comment='System Operator'
             groups=wheel
             password=*
@@ -65,7 +63,7 @@
         - wheel
 
 ### SUDO
-    - name: Sudo for wheel
+    - name: Sudo for the wheel group
       lineinfile: dest=/etc/sudoers.d/wheel line="%wheel ALL=(ALL) NOPASSWD:ALL"
                   create=yes
                   state=present
@@ -84,29 +82,10 @@
         - sudo
         - wheel
 
-#    # TODO: template in template
-#    - name: Install {{sysop_user}} SSH public key
-#      authorized_key: user={{sysop_user}}
-#                      key="{{ lookup('file', 'keys/{{sysop_user}}.pub') }}"
-#                      manage_dir=yes
-
-    - name: Create sysop SSH directory
-      file: path=/home/{{ sysop_user }}/.ssh
-            state=directory
-            owner={{ sysop_user }}
-            group={{ sysop_user }}
-            mode=0700
+    - name: 
+      authorized_key: user=sysop
+                      key="{{ lookup('file', 'keys/sysop.pub') }}"
+                      manage_dir=yes
       tags:
         - ssh
-        - legacy
-
-    - name: Install sysop SSH public key
-      copy: src={{ sysop_key }}.pub
-            dest=/home/{{ sysop_user }}/.ssh/authorized_keys
-            owner={{ sysop_user }}
-            group={{ sysop_user }}
-            mode=0600
-      tags:
-        - ssh
-        - legacy
-
+        - keys

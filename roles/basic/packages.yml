@@ -1,0 +1,91 @@
+#
+# how to check security updates:
+# http://www.cyberciti.biz/faq/redhat-fedora-centos-linux-yum-installs-security-updates/
+#
+---
+- hosts: all
+
+  tasks:
+
+  - name: Install basic packages
+    yum: name=$item
+         state=installed
+    with_items:
+      - cronie
+      - mc
+      - htop
+      - iptraf-ng
+      - sysstat
+      - nmap
+      - mtr
+      - man
+      - git
+      - gcc
+      - gcc-c++
+      - python-pip
+      - python-devel
+      - python-crypto
+      - python-setuptools
+      - python-sqlite2
+      - pyOpenSSL
+      - make
+      - nodejs
+      - multitail
+      - rsstail
+      - yum-security
+      - xorg-x11-xauth
+      - jailkit
+      - libtool
+      - curl
+      - sqlite-devel
+      - sqlite
+      - xz
+      - pxz
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+# TODO: nodejs and repos
+  - name: Install basic packages
+    apt: name=$item
+         state=installed
+    with_items:
+      - mc
+      - htop
+      - iptraf
+      - sysstat
+      - nmap
+      - mtr-tiny
+      - manpages
+      - git
+      - gcc
+      - g++
+      - python-pip
+      - python-crypto
+      - python-distutils-extra
+      - python-openssl
+      - python-dev
+      - make
+      - multitail
+      - rsstail
+      - xauth
+      - libtool
+      - python-software-properties
+      - software-properties-common
+      - curl
+      - miniupnpc
+      - sdparm
+      - liblzma-dev
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+  - name: Install basic packages
+    apt: name=$item
+         state=installed
+    with_items:
+      - sysv-rc-conf
+    when: ansible_distribution == "Ubuntu"
+    tags:
+      - packages
+      - ubuntu

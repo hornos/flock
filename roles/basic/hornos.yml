@@ -1,0 +1,13 @@
+---
+- hosts: all
+  tasks:
+    - group_by: key=${ansible_os_family}
+### REDHAT
+- hosts: RedHat
+  vars_files:
+    - vars/hornos.yml
+  tasks:
+    - name: Download hornos repo
+      get_url: url=${url}/${repo} dest=/etc/yum.repos.d/${repo}
+      tags:
+        - packages

@@ -64,8 +64,10 @@ domain=grid
 # an explicit netmask instead.
 
 ### ROOT SERVER
-dhcp-range=10.1.1.1,10.1.1.250,255.255.255.0,6h
-dhcp-range=192.168.1.220,192.168.1.230,255.255.255.0,6h
+dhcp-range=DHCP_RANGE
+
+# dhcp-range=10.1.1.1,10.1.1.250,255.255.255.0,6h
+# dhcp-range=192.168.1.220,192.168.1.230,255.255.255.0,6h
 
 # Supply parameters for specified hosts using DHCP. There are lots
 # of valid alternatives, so we will give examples of each. Note that

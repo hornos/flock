@@ -2,6 +2,7 @@
 gbn=$(basename $0)
 gdn=$(cd $(dirname $0); pwd)
 jockey_root="${gdn}/../space"
+jockey_root=$(cd ${jockey_root}; pwd)
 
 ### defaults
 default=centos64
@@ -56,7 +57,6 @@ Space Jockey Kickstart Manager
 
   kick <system> <mac> [ip] [name] [pass]
   ipxe <system> <mac>
-  pass         - generate a password
   dump         - listen to bootp requests
   http         - start ngnix http server on host IP
   masq         - start dnsmasq server on host IP
@@ -108,7 +108,13 @@ case ${cmd} in
   pass|netpass)
     jockey/${cmd}
   ;;
-
+  password)
+    mac=$(jockey/mac ${arg} | tr [A-Z] [a-z])
+    pass="${jockey_root}/${mac}.pass"
+    if test -r "${pass}" ; then
+      echo "${arg} [${mac}]: $(cat ${pass})"
+    fi
+  ;;
   ### real kickstart
   kick)
     ### args
@@ -119,7 +125,7 @@ case ${cmd} in
     shift
     addr=${1:-10.1.1.1}
     shift
-    name=${1:-root-01}
+    name=${1:-core-01}
     shift
 
     ### password
@@ -137,24 +143,31 @@ case ${cmd} in
     template="${jockey_root}/kickstart.${system}"
     os_kickstart="${http_root}/${ks}.ks"
 
+    ### esxi
+    if [ "${system}" = "esxi" ] ; then
+      cat "${template}" | \
+      awk -v p=${pass} '{gsub("ROOT_PASSWORD",p); print}' \
+      > "${os_kickstart}"
+    else
     cat "${template}" | \
-    awk -v p=${root_pass} \
-        -v q=${pass} \
-        -v l=${http_listen} \
-        -v i=${interface} \
-        -v a=${addr} \
-        -v n=${name} \
-        -v t=${ntp_server} \
-        -v g=${gateway} \
-    '{gsub("ROOT_PASSWORD_PLAIN",q);
-      gsub("ROOT_PASSWORD",p);
-      gsub("HTTP_LISTEN",l);
-      gsub("SYSTEM_NAME",n);
-      gsub("SYSTEM_ADDR",a);
-      gsub("NTP_SERVER",t);
-      gsub("GATEWAY",g);
-      gsub("INTERFACE",i); print}' \
-    > "${os_kickstart}"
+      awk -v p=${root_pass} \
+          -v q=${pass} \
+          -v l=${http_listen} \
+          -v i=${interface} \
+          -v a=${addr} \
+          -v n=${name} \
+          -v t=${ntp_server} \
+          -v g=${gateway} \
+      '{gsub("ROOT_PASSWORD_PLAIN",q);
+        gsub("ROOT_PASSWORD",p);
+        gsub("HTTP_LISTEN",l);
+        gsub("SYSTEM_NAME",n);
+        gsub("SYSTEM_ADDR",a);
+        gsub("NTP_SERVER",t);
+        gsub("GATEWAY",g);
+        gsub("INTERFACE",i); print}' \
+      > "${os_kickstart}"
+    fi
 
     ### pxelinux
     http_kickstart="${http_listen}/${ks}.ks"
@@ -165,6 +178,16 @@ case ${cmd} in
     awk -v k=${http_kickstart} -v d=${system} -v i=${interface} \
     '{gsub("KICKSTART",k); gsub("_DEFAULT",d); gsub("INTERFACE",i); print}' \
     > "${ipxe_kickstart}"
+
+    ### esxi boot
+    if [ "${system}" = "esxi" ] ; then
+      template="${jockey_root}/boot/esxi/repo/BOOT.CFG"
+      esxi_kickstart="${jockey_root}/boot/esxi/boot.cfg"
+      cat "${template}" | \
+      sed "s/\//repo\//g" | \
+      awk -v l="http://${http_kickstart}" '{gsub("^kernelopt.*","kernelopt=ks=" l);print}' \
+      > "${esxi_kickstart}"
+    fi
   ;;
 
   ### just do the ipxe part
@@ -187,117 +210,77 @@ case ${cmd} in
     > "${ipxe_kickstart}"
   ;;
 
-  ### esxi
-
-    ### kickstart
-    cat ${jockey_root}/kickstart.esxi | \
-    awk -v p=${pass} '{gsub("ROOT_PASSWORD",p); print}' \
-    > ${http_root}/${ks}.ks
-
-#    ### pxelinux
-#    http_kickstart="${http_listen}/${ks}.ks"
-#    ipxe_kickstart="${ipxe_root}/01-${ks}"
-#    template="${jockey_root}/boot/kickstart"
-#    cat "${template}" | \
-#    awk -v d=${system} '{gsub("_DEFAULT",d); print}' \
-#    > "${ipxe_kickstart}"
-
-    cat ${jockey_root}/boot/esxi/repo/BOOT.CFG | \
-    sed "s/\//repo\//g" | \
-    awk -v l="http://${http_kickstart}" '{gsub("^kernelopt.*","kernelopt=ks=" l);print}' \
-    > ${jockey_root}/boot/esxi/boot.cfg
-  ;;
-
   dump)
     tcpdump -i ${arg} port bootps
   ;;
 
   http)
-    addresses=""
-    for i in $listen_addresses; do
-      if test "${i}:8080" != "${http_listen}" ; then
-        addresses="${addresses}listen $i:8080;\n"
-      fi
-    done
-
+    trap jockey/http/exit INT TERM EXIT
     cat ${jockey_root}/http | \
     awk -v p=${http_root} \
-        -v l=${http_listen} \
-        -v a="${addresses}" '{
-      gsub("#LISTEN",a);
+        -v l=${http_listen} '{
       gsub("HTTP_ROOT",p);
       gsub("HTTP_LISTEN",l); print}' \
     > ${http_conf}
-    # cat ${http_conf}
-    echo "Starting HTTP Server..."
+    echo "HTTP server started on ${http_listen}"
     echo "Press Ctrl+C to exit"
-    ${nginx_bin} -c ${http_conf}
+    ${http_bin} -c ${http_conf}
   ;;
 
   wrt)
     # WRT Hacking
-    jockey_ip=192.168.0.5
-
-    ### args
-    default=${cmd}
+     boot_server=192.168.0.5
 
     cat ${jockey_root}/wrt | \
     awk -v p=${masq_root} \
-        -v l=${jockey_ip} '{
+        -v l=${boot_server} '{
       gsub("DNSMASQ_LISTEN",l);
       gsub("DNSMASQ_ROOT",p); print}' \
     > ${masq_conf}
 
-    # cat ${masq_conf}
-    echo "Starting DNSmasq server..."
+    echo "DNSmasq server started on ${boot_server}"
     echo "Press Ctrl+C to exit"
-    sudo ${dnsmasq_bin} -d -C ${masq_conf}
+    sudo ${masq_bin} -d -C ${masq_conf}
   ;;
 
-  boot)
-    interfaces=""
-    for i in $listen_interfaces; do
-      interfaces="${interfaces}interface=$i\n"
-    done
+  masq)
+    trap jockey/masq/exit INT TERM EXIT
+    # interfaces="interface=${boot_interface}"
+    addresses="listen-address=${boot_server}"
 
-    addresses=""
-    for i in $listen_addresses; do
-      addresses="${addresses}listen-address=$i\n"
-    done
-
+    ### gateway and router
     _router="dhcp-option=3"
     _dns=""
-    if ! test -z "${router}" ; then
-      _router="dhcp-option=option:router,${router}"
-      _dns="dhcp-option=6,${router}"
+    if ! test -z "${gateway}" ; then
+      _router="dhcp-option=option:router,${gateway}"
+      _dns="dhcp-option=6,${gateway}"
     fi
 
     cat ${jockey_root}/masq | \
-    awk -v i=${interfaces} \
-        -v a=${addresses} \
+    awk -v a=${addresses} \
         -v p=${masq_root} \
         -v r=${_router} \
         -v d=${_dns} \
-        -v l=${jockey_ip} '{
-      gsub("#LISTEN-INTERFACES",i);
+        -v w=${dhcp_range} \
+        -v l=${boot_server} '{
       gsub("#LISTEN-ADDRESSES",a);
       gsub("#ROUTER",r);
       gsub("#DNS",d);
+      gsub("DHCP_RANGE",w);
       gsub("DNSMASQ_LISTEN",l);
       gsub("DNSMASQ_ROOT",p); print}' \
     > ${masq_conf}
 
-    # cat ${masq_conf}
-    echo "Starting DNSmasq server..."
+    echo "DNSmasq server started on ${boot_server}"
     echo "Press Ctrl+C to exit"
-    sudo ${dnsmasq_bin} -d -C ${masq_conf}
+    sudo ${masq_bin} -d -C ${masq_conf}
   ;;
 
   ipmi)
     sub=${arg}
     shift
     arg=$1
-    ipmi=${jockey_root}/.ipmi
+    ipmi=${jockey_root}/ipmi.conf
     if [ -r ${ipmi} ] ; then
       source ${ipmi}
     fi

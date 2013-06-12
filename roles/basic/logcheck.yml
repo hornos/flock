@@ -1,0 +1,44 @@
+---
+- hosts: all
+  vars_files:
+    - vars/logcheck.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+
+  tasks:
+
+### REDHAT
+  - name: Install logcheck packages
+    yum: name=$item
+         state=installed
+    with_items:
+      - logcheck
+      - cronie
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+  - name: Install logcheck packages
+    apt: name=logcheck
+         state=installed
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+
+### CONFIGURATION
+  - name: Set sysop email /etc/logcheck/logcheck.conf
+    lineinfile: dest=/etc/logcheck/logcheck.conf
+                regexp='^SENDMAILTO'
+                line='SENDMAILTO={{logcheck.mailto}}'
+                backup=yes
+    notify:
+      - Restart crond
+    tags:
+      - config
+
+
+### SERVICE
+  handlers:
+    - name: Restart crond
+      service: name={{service.crond}}
+               state=restarted

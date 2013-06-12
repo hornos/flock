@@ -1,0 +1,16 @@
+#
+# Install repos and virtual environments
+#
+---
+
+- include: epel.yml
+- include: rpmforge.yml
+- include: hornos.yml
+- include: elrepo.yml
+
+# TODO
+# - include: nodejs.yml
+# - include: ruby.yml
+
+# TODO
+# Debian related

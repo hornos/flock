@@ -1,0 +1,35 @@
+#
+# TODO: tor
+#
+---
+- hosts: all
+
+  tasks:
+### PACKAGES
+  - name: Install packages
+    yum: name=$item
+         state=installed
+    with_items:
+      - python-keyczar
+      - openssl
+      - fuse-cryptofs
+      - crypto-utils
+      - gpgme
+      - pygpgme
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+  - name: Install packages
+    apt: name=$item
+         state=installed
+    with_items:
+      - python-keyczar
+      - openssl
+      - encfs
+      - gnupg
+      - ecryptfs-utils
+      - python-pyme
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages

@@ -1,0 +1,3 @@
+# TODO: better roles in ansible
+---
+- include: roles/basic/basic.yml

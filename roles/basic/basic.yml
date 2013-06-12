@@ -1,0 +1,16 @@
+---
+# - include: repos.yml
+# - include: packages.yml
+# - include: python.yml
+# - include: ruby.yml
+# - include: crypto.yml
+# - include: top.yml
+# services
+#- include: dnsmasq.yml
+#- include: ntp_server.yml
+# TODO: new role post firewall
+- include: syslog.yml
+- include: syslog_loghost.yml
+- include: syslog_client.yml
+# TODO: GPG encryption
+#- include: logcheck.yml

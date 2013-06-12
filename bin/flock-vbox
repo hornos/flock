@@ -62,15 +62,25 @@ function vm/create() {
 
 
 ### main
-cmd=${1:-create}
+cmd=${1:-help}
 shift
 
 ### args
 case ${cmd} in
-  create|harmonia)
+  inventory)
+    echo "[core]"
+    arg=${1:-core-0?}
+    for i in $(VBoxManage list vms | \
+               egrep "${arg}" | \
+               cut -d" " -f1 | \
+               sed s/\"//g); do
+      echo $i
+    done
+  ;;
+  create)
     name=${1:-test}
-    type=${2:-Ubuntu_64}
-    cpus=${3:-2}
+    type=${2:-RedHat_64}
+    cpus=${3:-1}
     memory=${4:-1024}
     hdsize=${5:-2000000}
     hostnet=${6:-vboxnet0}
@@ -111,6 +121,7 @@ case ${cmd} in
   boot)
     name=${1:-test}
     boot=${2:-net}
+    echo "Set boot device: $boot on ${name}"
     ${vbox} modifyvm "${name}" --boot1 "${boot}"
   ;;
 esac

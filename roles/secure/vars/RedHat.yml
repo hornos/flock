@@ -1,0 +1,3 @@
+service:
+  sshd: sshd
+  rngd: rngd

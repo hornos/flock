@@ -1,0 +1,29 @@
+#
+# Like it or not selinux has to go
+#
+# Switch to permissive mode
+# TODO: enforced
+---
+- hosts: all
+  tasks:
+    - group_by: key=${ansible_os_family}
+
+- hosts: RedHat
+  tasks:
+    - name: Install selinux packages
+      yum: name=$item state=installed
+      with_items:
+        - libsemanage
+        - setools-libs-python
+        - policycoreutils-python
+        - libselinux-python
+      tags:
+        - packages
+
+    - name: Set selinux permissive policy
+      lineinfile: dest=/etc/selinux/config
+                regexp='^SELINUX='
+                line='SELINUX=permissive'
+                backup=yes
+      tags:
+        - policy
