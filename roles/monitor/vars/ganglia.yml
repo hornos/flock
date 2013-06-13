@@ -1,0 +1,6 @@
+---
+ganglia:
+  cluster: core
+  user: monitor
+  password: monitor
+  mcast: 239.2.11.71

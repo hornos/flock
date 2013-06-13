@@ -1,0 +1,8 @@
+url: http://www.globus.org/ftppub/gt5/5.2/5.2.4/installers/repo
+rpm: Globus-5.2.stable-config.centos-6-1.noarch.rpm
+
+# to be installed
+globus_cas:
+  - 695e84e6
+globus:
+  default: 695e84e6

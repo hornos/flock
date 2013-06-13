@@ -1,0 +1,13 @@
+Alias /ganglia /usr/share/ganglia
+
+<Location /ganglia>
+  Order deny,allow
+  Deny from all
+  Allow from {{ networks.system }}/{{ masks.system }}
+  Allow from {{ networks.vpn }}/{{ masks.vpn }}
+  {% for host in sysops %}
+  Allow from {{host}}/32
+  {% endfor %}
+  Allow from 127.0.0.1
+  Allow from ::1
+</Location>

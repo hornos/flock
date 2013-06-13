@@ -73,27 +73,6 @@
       tags:
         - hosts
 
-#    - name: Enable root server hostnames
-#      template: src=templates/etc/hosts.d/root.j2
-#                dest=/etc/hosts.d/root
-#                owner=bin
-#                group=wheel
-#                mode=0644
-#      when_string: "'$usehosts' == 'no'"
-#      notify:
-#        - Restart dnsmasq
-#      tags:
-#        - hosts
-#
-#    - name: FIX Disable root server hostnames
-#      file: path=/etc/hosts.d/root
-#            state=absent
-#      when_string: "'$usehosts' == 'yes'"
-#      notify:
-#        - Restart dnsmasq
-#      tags:
-#        - hosts
-
     - name: Install /etc/hosts
       template: src=templates/etc/hosts.j2
                 dest=/etc/hosts

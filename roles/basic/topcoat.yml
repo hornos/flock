@@ -1,0 +1,57 @@
+#
+# UI http://topcoat.io/
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - vars/topcoat.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+
+  tasks:
+  - name: Download topcoat
+    get_url: url="{{url}}"
+             dest="/root/{{zip}}"
+
+  - name: Unpack topcoat
+    command: unzip -o "/root/{{zip}}" -d /opt
+
+  - name: Enable topcoat
+    template: src=templates/etc/httpd/conf.d/topcoat.conf.j2
+              dest=/etc/{{service.httpd}}/conf.d/topcoat.conf
+              owner=root
+              group=root
+              mode=0644
+    notify:
+      - Restart httpd
+    tags:
+      - config
+
+### INDEX
+  - name: Install /var/www/html/index.html
+    template: src=templates/var/www/html/index_topcoat.html.j2
+              dest=/var/www/html/index.html
+              owner=root
+              group=root
+              mode=0644
+    when: ansible_os_family == "RedHat"
+    tags:
+      - index
+      - config
+
+  - name: Install /var/www/index.html
+    template: src=templates/var/www/html/index_topcoat.html.j2
+              dest=/var/www/index.html
+              owner=root
+              group=root
+              mode=0644
+    when: ansible_os_family == "Debian"
+    tags:
+      - index
+      - config
+
+  handlers:
+    - name: Restart httpd
+      service: name={{service.httpd}}
+               state=restarted

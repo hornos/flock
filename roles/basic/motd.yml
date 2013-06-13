@@ -1,0 +1,24 @@
+#
+# Logo
+#
+---
+- hosts: all
+
+  tasks:
+    - name: Install motd logo
+      template: src=templates/etc/motd.logo.j2
+                dest=/etc/motd.logo
+                owner=root
+                group=root
+                mode=0644
+      tags:
+        - config
+
+    - name: Install motd
+      template: src=templates/etc/profile.d/motd.sh.j2
+                dest=/etc/profile.d/99-motd.sh
+                owner=root
+                group=root
+                mode=0644
+      tags:
+        - config

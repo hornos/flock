@@ -3,6 +3,18 @@
 # 
 ---
 - include: ipset.yml
+- include: multicast.yml
 - include: shorewall.yml
 - include: fail2ban.yml
 - include: geoip.yml
+
+- hosts: all
+  tasks:
+    - name: Firewall role
+      lineinfile: dest=/etc/ANSIBLE_ROLE
+                  regexp="^firewall"
+                  line=firewall
+                  state=present
+                  create=yes
+      tags:
+        - role

@@ -89,3 +89,13 @@
       tags:
         - ssh
         - keys
+
+
+    - name: Bootstrap done
+      lineinfile: dest=/etc/ANSIBLE_STATE
+                  regexp="^bootstrap"
+                  line=bootstrap
+                  state=present
+                  create=yes
+      tags:
+        - state

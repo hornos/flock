@@ -7,3 +7,14 @@
 - include: sudo.yml
 - include: ssh_server.yml
 - include: selinux.yml
+
+- hosts: all
+  tasks:
+    - name: Secure role
+      lineinfile: dest=/etc/ANSIBLE_ROLE
+                  regexp="^secure"
+                  line=secure
+                  state=present
+                  create=yes
+      tags:
+        - role

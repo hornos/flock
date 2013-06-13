@@ -1,0 +1,167 @@
+# reinit:
+# --extra-vars "reinit=yes"
+---
+- hosts: all
+
+  vars_files:
+    - vars/inittab.yml
+
+  vars:
+    is_reinit: "'$reinit' == 'yes'"
+
+  tasks:
+### REDHAT
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - htop
+      - sysstat
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+### DEBIAN
+  - name: Install packages
+    apt: name={{item}}
+         state=installed
+    with_items:
+      - htop
+      - sysstat
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+  - name: Ubuntu Warning
+    debug: msg="Ubuntu's init is a fuckin mess!"
+    when: ansible_os_family == "Debian"
+
+### CONFIGURATION
+  - name: Set ttys
+    lineinfile: dest=/etc/sysconfig/init
+                regexp='^ACTIVE_CONSOLES'
+                line="ACTIVE_CONSOLES={{ttys.consoles}}"
+    when: ansible_os_family == "RedHat"
+    tags:
+      - tty
+
+  - name: Set X tty
+    lineinfile: dest=/etc/init/start-ttys.conf
+                regexp='^env X_TTY'
+                line="env X_TTY={{ttys.x}}"
+    when: ansible_os_family == "RedHat"
+    tags:
+      - tty
+
+### MESSAGES
+  - name: Install Init start-messages
+    template: src=templates/etc/init/start-messages.conf.j2
+              dest=/etc/init/start-messages.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "RedHat"
+    tags:
+      - messages
+
+  - name: Install Init messages
+    template: src=templates/etc/init/messages.conf.j2
+              dest=/etc/init/messages.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "RedHat"
+    tags:
+      - messages
+
+### GLANCES
+  - name: Install Init start-glances
+    template: src=templates/etc/init/start-glances.conf.j2
+              dest=/etc/init/start-glances.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "RedHat"
+    tags:
+      - glances
+
+  - name: Install Init glances
+    template: src=templates/etc/init/glances.conf.j2
+              dest=/etc/init/glances.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "RedHat"
+    tags:
+      - glances
+
+### IOSTAT
+  - name: Install Init start-iostat
+    template: src=templates/etc/init/start-iostat.conf.j2
+              dest=/etc/init/start-iostat.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "RedHat"
+    tags:
+      - iostat
+
+  - name: Install Init iostat
+    template: src=templates/etc/init/iostat.conf.j2
+              dest=/etc/init/iostat.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "RedHat"
+    tags:
+      - iostat
+
+### MPSTAT
+  - name: Install Init start-mpstat
+    template: src=templates/etc/init/start-mpstat.conf.j2
+              dest=/etc/init/start-mpstat.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "RedHat"
+    tags:
+      - mpstat
+
+  - name: Install Init mpstat
+    template: src=templates/etc/init/mpstat.conf.j2
+              dest=/etc/init/mpstat.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "RedHat"
+    tags:
+      - mpstat
+
+### GSTAT
+  - name: Install Init start-gstat
+    template: src=templates/etc/init/start-gstat.conf.j2
+              dest=/etc/init/start-gstat.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "RedHat"
+    tags:
+      - gstat
+
+  - name: Install Init gstat
+    template: src=templates/etc/init/gstat.conf.j2
+              dest=/etc/init/gstat.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "RedHat"
+    tags:
+      - gstat
+
+  - name: Restart init
+    shell: /sbin/telinit q
+    when: ansible_os_family == "RedHat"
+
+  - name: Reinit
+    command: /root/bin/reinit
+    only_if: '$is_reinit'

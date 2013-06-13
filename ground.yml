@@ -1,3 +1,17 @@
 # TODO: better roles in ansible
 ---
+- include: roles/basic/prebasic.yml
+- include: roles/firewall/firewall.yml
 - include: roles/basic/basic.yml
+- include: roles/monitor/monitor.yml
+
+- hosts: all
+  tasks:
+    - name: Ground state done
+      lineinfile: dest=/etc/ANSIBLE_STATE
+                  regexp="^ground"
+                  line=ground
+                  state=present
+                  create=yes
+      tags:
+        - state

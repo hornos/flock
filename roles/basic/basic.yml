@@ -1,16 +1,37 @@
 ---
+### packages
+# done in prebasic
 # - include: repos.yml
 # - include: packages.yml
-# - include: python.yml
-# - include: ruby.yml
-# - include: crypto.yml
-# - include: top.yml
-# services
-#- include: dnsmasq.yml
-#- include: ntp_server.yml
-# TODO: new role post firewall
+- include: python.yml
+- include: ruby.yml
+- include: crypto.yml
+- include: top.yml
+### services
+- include: dnsmasq.yml
+- include: ntp_server.yml
 - include: syslog.yml
 - include: syslog_loghost.yml
 - include: syslog_client.yml
-# TODO: GPG encryption
-#- include: logcheck.yml
+### TODO: GPG encryption
+###- include: logcheck.yml
+- include: httpd.yml
+- include: sysinfo.yml
+- include: topcoat.yml
+- include: h5ai.yml
+- include: tools.yml
+### config
+- include: modules.yml
+- include: inittab.yml
+- include: motd.yml
+
+- hosts: all
+  tasks:
+    - name: Basic role
+      lineinfile: dest=/etc/ANSIBLE_ROLE
+                  regexp="^basic"
+                  line=basic
+                  state=present
+                  create=yes
+      tags:
+        - role

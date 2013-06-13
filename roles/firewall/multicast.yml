@@ -1,0 +1,15 @@
+#
+# http://stackoverflow.com/questions/14527311/routing-configuration-to-forward-multicast-traffic-to-a-single-nic-on-redhat-6
+#
+---
+- hosts: all
+
+  tasks:
+    - name: Enable multicast route
+      lineinfile: dest=/etc/sysconfig/network-scripts/route-eth0
+                  regexp='^224.0.0.0'
+                  line='224.0.0.0/4 dev eth0'
+                  create=yes
+      when: ansible_os_family == "RedHat"
+      tags:
+        - config

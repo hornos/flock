@@ -1,0 +1,14 @@
+#
+# top is replaced by glances
+#
+ttys:
+  messages: '/dev/tty1'
+  glances: '/dev/tty2'
+  iostat: '/dev/tty3'
+  mpstat: '/dev/tty4'
+  gstat: '/dev/tty5'
+  consoles: '/dev/tty[6-7]'
+  x: '/dev/tty7'
+
+watch:
+  delay: 3

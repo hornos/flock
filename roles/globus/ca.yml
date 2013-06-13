@@ -1,0 +1,74 @@
+
+---
+- hosts: all
+  vars_files:
+    - vars/globus.yml
+
+  tasks:
+    # Mind the non-relative path
+    - name: Download CAs
+      copy: src=../../ca/globus_simple_ca_{{item}}.tar.gz
+            dest=/root/globus_simple_ca_{{item}}.tar.gz
+            owner=root
+            group=root
+            mode=0600
+      with_items: globus_cas
+      tags:
+        - packages
+        - ca
+
+    - name: Install CAs
+      shell: tar xvz --strip-components 1 -C /etc/grid-security/certificates -f /root/globus_simple_ca_{{item}}.tar.gz
+      with_items: globus_cas
+      tags:
+        - packages
+        - ca
+
+    - name: Set default CA [{{globus.default}}]
+      file: src=/etc/grid-security/certificates/{{item}}.{{globus.default}}
+            dest=/etc/grid-security/{{item}}
+            state=link
+      with_items:
+        - globus-host-ssl.conf
+        - globus-user-ssl.conf
+        - grid-security.conf
+      tags:
+        - ca
+        - config
+
+    - name: Install /etc/grid-security/hostcert.pem
+      copy: src=../../ca/{{globus.default}}/grid-security/{{inventory_hostname}}_cert.pem
+            dest=/etc/grid-security/hostcert.pem
+            owner=root
+            group=root
+            mode=0644
+      tags:
+        - cert
+        - config
+
+    - name: Install /etc/grid-security/hostkey.pem
+      copy: src=../../ca/{{globus.default}}/grid-security/{{inventory_hostname}}_key.pem
+            dest=/etc/grid-security/hostkey.pem
+            owner=root
+            group=root
+            mode=0600
+      tags:
+        - key
+        - config
+
+    - name: Link default CA
+      file: src=/etc/grid-security/certificates/{{globus.default}}.0
+            dest=/etc/grid-security/cacert.pem
+            state=link
+      tags:
+        - config
+        - link
+
+    - name: Install Grid tools
+      template: src=templates/root/bin/{{item}}.j2
+                dest=/root/bin/{{item}}
+                owner=root
+                group=root
+                mode=0755
+      with_items:
+        - check_grid

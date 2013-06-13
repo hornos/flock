@@ -1,0 +1,116 @@
+#
+# Basic httpd settings
+#
+# http://goaccess.prosoftcorp.com/
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+
+  tasks:
+### REDHAT
+  - name: Install http packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - httpd
+      - apachetop
+      - php
+      - php-xml
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+  - name: Install /var/www/html/index.html
+    template: src=templates/var/www/html/index.html.j2
+              dest=/var/www/html/index.html
+              owner=root
+              group=root
+              mode=0644
+    when: ansible_os_family == "RedHat"
+    tags:
+      - index
+      - config
+
+### DEBIAN
+  - name: Install http packages
+    apt: name={{item}}
+         state=installed
+    with_items:
+      - apache2
+      - apachetop
+      - php5
+      - php-xml-parser
+      - goaccess
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+  - name: Install /var/www/index.html
+    template: src=templates/var/www/html/index.html.j2
+              dest=/var/www/index.html
+              owner=root
+              group=root
+              mode=0644
+    when: ansible_os_family == "Debian"
+    tags:
+      - index
+      - config
+
+
+### CONFIGURATION
+  - name: Enable server status
+    template: src=templates/etc/httpd/conf.d/status.conf.j2
+              dest=/etc/{{service.httpd}}/conf.d/status.conf
+              owner=root
+              group=root
+              mode=0644
+    notify:
+      - Restart httpd
+    tags:
+      - config
+
+  - name: Set server name
+    template: src=templates/etc/httpd/conf.d/servername.conf.j2
+              dest=/etc/{{service.httpd}}/conf.d/servername.conf
+              owner=root
+              group=root
+              mode=0644
+    notify:
+      - Restart httpd
+    tags:
+      - config
+
+  - name: Set error documents
+    template: src=templates/etc/httpd/conf.d/error.conf.j2
+              dest=/etc/{{service.httpd}}/conf.d/error.conf
+              owner=root
+              group=root
+              mode=0644
+    notify:
+      - Restart httpd
+    tags:
+      - config
+      - error
+
+  - name: Allow HTTP connect
+    seboolean: name=httpd_can_network_connect
+               state=true
+               persistent=yes
+    when: ansible_os_family == "RedHat"
+    notify:
+      - Restart httpd
+    tags:
+      - selinux
+
+  - name: Start httpd
+    service: name={{service.httpd}}
+             state=started
+
+  handlers:
+    - name: Restart httpd
+      service: name={{service.httpd}}
+               state=restarted

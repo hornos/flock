@@ -1,0 +1,18 @@
+#
+# http://www.globus.org/toolkit/
+#
+---
+- include: packages.yml
+- include: ca.yml
+- include: httpd.yml
+
+- hosts: all
+  tasks:
+    - name: Globus role
+      lineinfile: dest=/etc/ANSIBLE_ROLE
+                  regexp="^globus"
+                  line=globus
+                  state=present
+                  create=yes
+      tags:
+        - role

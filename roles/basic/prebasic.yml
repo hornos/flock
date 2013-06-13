@@ -1,0 +1,5 @@
+---
+### packages
+- include: repos.yml
+- include: packages.yml
+

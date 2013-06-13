@@ -7,7 +7,7 @@
 
   tasks:
 
-  - name: Install basic packages
+  - name: Install packages
     yum: name=$item
          state=installed
     with_items:
@@ -46,7 +46,7 @@
       - packages
 
 # TODO: nodejs and repos
-  - name: Install basic packages
+  - name: Install packages
     apt: name=$item
          state=installed
     with_items:

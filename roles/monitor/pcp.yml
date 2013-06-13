@@ -1,0 +1,61 @@
+#
+# http://oss.sgi.com/projects/pcp/
+#
+---
+- hosts: all
+
+  tasks:
+### REDHAT
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - pcp
+      - pcp-gui
+      - python-pcp
+      - perl-PCP-PMDA
+      - perl-PCP-MMV
+      - perl-PCP-LogSummary
+      - perl-PCP-LogImport
+      - pcp-import-sar2pcp
+      - pcp-import-mrtg2pcp
+      - pcp-import-iostat2pcp
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+### DEBIAN
+  - name: Install packages
+    apt: name={{item}}
+         state=installed
+    with_items:
+      - pcp
+      - pcp-gui
+      - pcp-import-sar2pcp
+      - pcp-import-mrtg2pcp
+      - pcp-import-iostat2pcp
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+### FIREWALL
+  - name: Install /etc/shorewall/rules.d/pmcd
+    template: src=templates/etc/shorewall/rules.d/pmcd.j2
+              dest=/etc/shorewall/rules.d/pmcd
+              owner=root
+              group=root
+              mode=0640
+    tags:
+      - firewall
+    notify:
+      - Restart shorewall
+
+  - name: Start pmcd
+    service: name=pmcd
+             state=started
+             enabled=yes
+
+  handlers:
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted

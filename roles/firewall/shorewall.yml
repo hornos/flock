@@ -96,9 +96,9 @@
     tags:
       - rules
 
-  - name: Install /etc/shorewall/rules.d/root
-    template: src=templates/etc/shorewall/rules.d/root.j2
-              dest=/etc/shorewall/rules.d/root
+  - name: Install /etc/shorewall/rules.d/core
+    template: src=templates/etc/shorewall/rules.d/core.j2
+              dest=/etc/shorewall/rules.d/core
               owner=root
               group=root
               mode=0640

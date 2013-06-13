@@ -1,0 +1,63 @@
+#
+# http://www.globus.org/toolkit/
+#
+---
+- hosts: all
+  vars_files:
+    - vars/globus.yml
+
+  tasks:
+    - name: Download repository
+      get_url: url=${url}/${rpm} dest=/root
+      when: ansible_os_family == "RedHat"
+      tags:
+        - repo
+
+    - name: Install repository
+      command: yum -y localinstall /root/${rpm}
+      when: ansible_os_family == "RedHat"
+      tags:
+        - repo
+
+    - name: Install packages
+      yum: name={{item}}
+           state=installed
+      with_items:
+        - globus-gridftp
+        - globus-gram5
+        - globus-gsi
+        - globus-data-management-server
+        - globus-data-management-client
+        - globus-resource-management-server
+        - globus-resource-management-client
+      when: ansible_os_family == "RedHat"
+      tags:
+        - packages
+
+    - name: Install packages
+      apt: name={{item}}
+           state=installed
+      with_items:
+        - globus-gridftp-server-progs
+        - globus-gram-job-manager
+        - globus-gsi-cert-utils-progs
+        - globus-proxy-utils
+      when: ansible_os_family == "Debian"
+      tags:
+        - packages
+
+    - name: Create /etc/grid-security/certificates
+      file: path=/etc/grid-security/certificates
+            state=directory
+            owner=root
+            group=root
+      tags:
+        - directories
+
+    - name: FIX stop globus-gridftp-server
+      service: name=globus-gridftp-server
+               state=stopped
+               enabled=no
+      when: ansible_os_family == "Debian"
+      tags:
+        - fix

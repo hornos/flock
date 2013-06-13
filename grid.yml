@@ -1,0 +1,14 @@
+# TODO: better roles in ansible
+---
+- include: roles/globus/globus.yml
+
+- hosts: all
+  tasks:
+    - name: Grid state done
+      lineinfile: dest=/etc/ANSIBLE_STATE
+                  regexp="^grid"
+                  line=grid
+                  state=present
+                  create=yes
+      tags:
+        - state

@@ -1,0 +1,14 @@
+---
+- include: ganglia.yml
+- include: pcp.yml
+
+- hosts: all
+  tasks:
+    - name: Monitor role
+      lineinfile: dest=/etc/ANSIBLE_ROLE
+                  regexp="^monitor"
+                  line=monitor
+                  state=present
+                  create=yes
+      tags:
+        - role

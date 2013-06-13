@@ -1,7 +1,6 @@
 #!/bin/bash
 gdn=$(pwd $(dirname $0))
 gbn=$(basename $0)
-
 tmp=".${gbn}.$$"
 
 function flock/exit() {

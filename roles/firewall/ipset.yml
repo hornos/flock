@@ -68,7 +68,7 @@
         - functions
         - blacklist.sh
         - whitelist.sh
-        - root.sh
+        - core.sh
         - sysop.sh
         - private.sh
       tags:

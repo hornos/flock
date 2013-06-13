@@ -1,0 +1,183 @@
+#
+# Ganglia cluster monitor
+#
+# TODO: monitor cleanup mysql 
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+    - vars/ganglia.yml
+
+  tasks:
+### REDHAT
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - ganglia
+      - ganglia-gmetad
+      - ganglia-gmond
+      - ganglia-gmond-python
+      - ganglia-web
+      - libnodeupdown-backend-ganglia
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+
+### DEBIAN
+  - name: Install repository
+    apt_repository: repo='deb http://ppa.launchpad.net/rufustfirefly/ganglia/ubuntu precise main'
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+      - repo
+
+  - name: Install packages
+    apt: name={{item}}
+         state=installed
+    with_items:
+      - ganglia-monitor
+      - ganglia-monitor-python
+      - ganglia-modules-linux
+      - ganglia-webfrontend
+      - gmetad
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+### MODULES
+  - name: Download modules
+    git: repo="git://github.com/ganglia/gmond_python_modules.git"
+         dest=/opt/gmond_python_modules
+    tags:
+      - modules
+
+
+### CONFIGURATION
+
+# TODO: ipmi monitoring
+
+# TODO: multicast test and firewall
+#  - name: Add multicast route
+#    command: /sbin/route add -host ${mcast_addr} dev ${mcast_dev}
+
+  - name: Ganglia monitor
+    template: src=templates/etc/ganglia/gmond.conf.j2
+              dest=/etc/ganglia/gmond.conf
+              owner=root
+              group=root
+              mode=0644
+              backup=yes
+    notify:
+      - Restart gmond
+    tags:
+      - config
+
+  - name: Ganglia metadata
+    template: src=templates/etc/ganglia/gmetad.conf.j2
+              dest=/etc/ganglia/gmetad.conf
+              owner=root
+              group=root
+              mode=0644
+              backup=yes
+    notify:
+      - Restart gmetad
+    tags:
+      - config
+
+  - name: Disable tcpconn.pyconf
+    template: src=templates/etc/ganglia/conf.d/tcpconn.pyconf.j2
+              dest=/etc/ganglia/conf.d/tcpconn.pyconf
+              owner=root
+              group=root
+              mode=0644
+    notify:
+      - Restart gmond
+    tags:
+      - config
+
+  - name: Enable Ganglia web interface
+    template: src=templates/etc/httpd/conf.d/ganglia.conf.j2
+              dest=/etc/{{service.httpd}}/conf.d/ganglia.conf
+              owner=root
+              group=root
+              mode=0644
+    notify:
+      - Restart httpd
+    tags:
+      - config
+
+  - name: Enable topcoat style
+    template: src=templates/usr/share/ganglia/templates/default/header.tpl.j2
+              dest=/usr/share/ganglia/templates/default/header.tpl
+              owner=root
+              group=root
+              backup=yes
+    tags:
+      - frontend
+      - topcoat
+
+  - name: Enable gmond service
+    lineinfile: dest=/etc/services
+                regexp="^gmond 8649/{{item}}"
+                line="gmond 8649/{{item}}"
+    with_items:
+     - tcp
+     - udp
+    tags:
+      - config
+      - services
+
+  - name: Enable gmetad-xml service
+    lineinfile: dest=/etc/services
+                regexp="^gmetad-xml 8651/{{item}}"
+                line="gmetad-xml 8651/{{item}}"
+    with_items:
+     - tcp
+     - udp
+    tags:
+      - config
+      - services
+
+  - name: Enable gmetad-int service
+    lineinfile: dest=/etc/services
+                regexp="^gmetad-int 8652/{{item}}"
+                line="gmetad-int 8652/{{item}}"
+    with_items:
+     - tcp
+     - udp
+    tags:
+      - config
+      - services
+
+  - name: Start gmond
+    service: name={{service.gmond}}
+             state=started
+             enabled=yes
+
+  - name: Start gmetad
+    service: name=gmetad
+             state=started
+             enabled=yes
+
+  - name: Start httpd
+    service: name={{service.httpd}}
+             state=started
+             enabled=yes
+
+
+  handlers:
+    - name: Restart gmond
+      service: name={{service.gmond}}
+               state=restarted
+
+    - name: Restart gmetad
+      service: name=gmetad
+               state=restarted
+
+    - name: Restart httpd
+      service: name={{service.httpd}}
+               state=restarted
