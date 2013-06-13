@@ -1,0 +1,14 @@
+# TODO: better roles in ansible
+---
+- include: roles/cluster/cluster.yml
+
+- hosts: all
+  tasks:
+    - name: Cluster state done
+      lineinfile: dest=/etc/ANSIBLE_STATE
+                  regexp="^cluster"
+                  line=cluster
+                  state=present
+                  create=yes
+      tags:
+        - state

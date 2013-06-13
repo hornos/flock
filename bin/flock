@@ -126,7 +126,7 @@ case ${cmd} in
     ;;
   restart|stop|start)
     command="ansible"
-    command_options="${hosts} -m command -a \"service ${_module} ${gbn}\""
+    command_options="${hosts} -m command -a \"service ${_module} ${cmd}\""
     ;;
   shell)
     echo "${module}" > ${tmp}

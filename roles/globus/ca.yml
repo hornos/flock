@@ -5,9 +5,8 @@
     - vars/globus.yml
 
   tasks:
-    # Mind the non-relative path
     - name: Download CAs
-      copy: src=../../ca/globus_simple_ca_{{item}}.tar.gz
+      copy: src=ca/globus_simple_ca_{{item}}.tar.gz
             dest=/root/globus_simple_ca_{{item}}.tar.gz
             owner=root
             group=root

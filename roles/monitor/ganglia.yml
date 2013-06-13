@@ -1,7 +1,8 @@
 #
 # Ganglia cluster monitor
 #
-# TODO: monitor cleanup mysql 
+# TODO: UPDATE
+#
 ---
 - hosts: all
 

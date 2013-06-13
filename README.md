@@ -212,14 +212,29 @@ Enter Grid state:
     flock play @@core grid
 
 ### Clustering
+Create common authentication key (`keys/authkey`):
+
+    dd if=/dev/urandom of=keys/authkey bs=128 count=1
+
+Enter Cluster state:
+
+    flock play @@core cluster
+
+The following tools are installed under `/root/bin`:
+
+    ring
+    totem
+    quorum
+
+### Database
+
+### Storage
+
+### Scheduler
 
 ### VPN
 
 ### Message Queue
-
-### Filesystem
-
-### Scheduler
 
 ### Hadoop
 

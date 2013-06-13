@@ -1,0 +1,17 @@
+#
+# http://www.globus.org/toolkit/
+#
+---
+- include: corosync.yml
+- include: corosync_tools.yml
+
+- hosts: all
+  tasks:
+    - name: Cluster role
+      lineinfile: dest=/etc/ANSIBLE_ROLE
+                  regexp="^cluster"
+                  line=cluster
+                  state=present
+                  create=yes
+      tags:
+        - role
