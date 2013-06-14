@@ -1,7 +1,9 @@
-Flock - The Rapid Infrastructure Prototype Engine
+Flock / Rapid Infrastructure Prototype Engine
 =================================================
 
 *The fact is, Adelmo's death has caused much spiritual unease among my flock.*
+
+![Flock](http://24.media.tumblr.com/tumblr_lzinfntu2G1qj8pa7o1_500.gif)
 
 ## Install
 Go home:
