@@ -1,0 +1,92 @@
+#
+# http://www.howtogeek.com/howto/30184/10-ways-to-generate-a-random-password-from-the-command-line/
+#
+---
+- hosts: all
+
+  vars_files:
+    # pusher app id
+    - keys/ting.yml
+
+  tasks:
+    - name: Download repository
+      git: repo='git://github.com/hornos/ting.git'
+           dest=/opt/ting
+      tags:
+        - packages
+
+    - name: Install packages
+      shell: 'cd /opt/ting;./install'
+      tags:
+        - packages
+
+    - name: FIX lzma link
+      file: src=/usr/lib64/liblzma.so.0
+            dest=/usr/lib64/liblzma.so
+            state=link
+      when: ansible_os_family == "RedHat"
+      tags:
+        - fix
+        - links
+
+    - name: FIX lzma link
+      file: src=/usr/lib/x86_64-linux-gnu/liblzma.so.5
+            dest=/usr/lib/x86_64-linux-gnu/liblzma.so
+            state=link
+      when: ansible_os_family == "Debian"
+      tags:
+        - fix
+        - links
+
+    - name: Install key
+      copy: src=keys/ting.key
+            dest=/opt/ting/ting.key
+            owner=sysop
+            group=sysop
+            mode=0600
+      tags:
+        - key
+
+    - name: Install config
+      template: src=templates/opt/ting/ting.yml.j2
+                dest=/opt/ting/ting.yml
+      tags:
+        - config
+
+    - name: Set permissions
+      file: path=/opt/ting
+            owner=sysop
+            group=sysop
+            recurse=yes
+            state=directory
+      tags:
+        - permissions
+
+    - name: Install service
+      template: src=templates/etc/init.d/ting.j2
+                dest=/etc/init.d/ting
+                owner=root
+                group=root
+                mode=0755
+      tags:
+        - services
+
+    - name: Start Ting
+      service: name=ting
+               state=started
+               enabled=yes
+
+### TODO: better ubuntu and debian support
+    - name: Enable Ting
+      command: sysv-rc-conf ting on
+      when: ansible_os_family == "Debian"
+
+    - name: Crapbuntu
+      file: src=/etc/init.d/ting
+            dest=/etc/rc6.d/K20ting
+            state=link
+      when: ansible_os_family == "Debian"
+
+    - name: Crapbuntu
+      shell: 'cd /etc/rc2.d;if test -f S20ting; then mv S20ting S80ting;fi'
+      when: ansible_os_family == "Debian"

@@ -1,0 +1,188 @@
+#!/bin/bash
+#
+# http://openvpn.net/index.php/open-source/documentation/howto.html#quick
+#
+
+gdn=$(pwd $(dirname $0))
+gbn=$(basename $0)
+tmp=".${gbn}.$$"
+ca_dir="./ca"
+ca_ver=2.0
+
+function ca/exit() {
+  if test -r "${tmp}" ; then
+    rm -f "${tmp}"
+  fi
+  exit 1
+}
+trap ca/exit INT TERM EXIT
+
+### defaults
+inventory=${ANSIBLE_HOSTS:-./hosts}
+config=${FLOCK_CONFIG:-./flock.conf}
+openvpn='/usr/local/Cellar/openvpn/2.2.2/sbin/openvpn'
+
+if [ -r "${config}" ] ; then
+  source "${config}"
+fi
+
+function help/ca() {
+  cat <<EOF
+
+  create <CN> [days] [email]
+  host <CA> <FQDN>
+
+EOF
+  exit 1
+}
+
+function ca/init() {
+  # ca/mkdir "${ca_dir}/grid-security"
+  rsync -av "${ca_dir}/easy-rsa/easy-rsa/${ca_ver}" "${ca_dir}/${1}"
+}
+
+### args
+cmd=${1:-create}
+shift
+
+case "${cmd}" in
+
+  ### Create CA
+  create)
+    ca_cn=${1:-vpnca}
+    shift
+    days=${1:-365}
+    shift
+    email=${1}
+
+    ca/init "${ca_cn}"
+ 
+    pushd "ca/${ca_cn}/${ca_ver}"
+    source vars
+    ./clean-all
+    ./build-ca
+    popd
+    echo ""
+  ;;
+
+  server)
+    ca_cn=${1:-vpnca}
+    shift
+    fqdn=${1:-server}
+    shift
+    opts=${*}
+
+    pushd "ca/${ca_cn}/${ca_ver}"
+    source vars
+    ./build-key-server ${fqdn}
+    popd
+  ;;
+
+  client)
+    ca_cn=${1:-vpnca}
+    shift
+    fqdn=${1:-server}
+    shift
+    opts=${*}
+
+    pushd "ca/${ca_cn}/${ca_ver}"
+    source vars
+    ./build-key ${fqdn}
+    popd
+  ;;
+
+  dh)
+    ca_cn=${1:-vpnca}
+    shift
+    fqdn=${1:-server}
+    shift
+    opts=${*}
+
+    pushd "ca/${ca_cn}/${ca_ver}"
+    source vars
+    ./build-dh
+    popd
+  ;;
+
+  ta)
+    ca_cn=${1:-vpnca}
+    shift
+    fqdn=${1:-server}
+    shift
+    opts=${*}
+
+    pushd "ca/${ca_cn}/${ca_ver}/keys"
+    ${openvpn} --genkey --secret ta.key
+    popd
+  ;;
+
+  param)
+    ca_cn=${1:-vpnca}
+    shift
+    fqdn=${1:-server}
+    shift
+    opts=${*}
+
+    pushd "ca/${ca_cn}/${ca_ver}"
+    source vars
+    ./build-dh
+    popd
+
+    pushd "ca/${ca_cn}/${ca_ver}/keys"
+    ${openvpn} --genkey --secret ta.key
+    popd
+  ;;
+
+  blick)
+    ca_cn=${1:-vpnca}
+    shift
+    fqdn=${1:-server}
+    shift
+    opts=${*}
+
+    dest="${HOME}/.openvpn/${fqdn}"
+    if ! test -d "${dest}"; then
+      mkdir ${dest}
+    fi
+
+    pushd "ca/${ca_cn}/${ca_ver}/keys"
+    cp -v ${fqdn}.crt "${dest}/client.crt"
+    cp -v ${fqdn}.key "${dest}/client.key"
+    cp -v ta.key "${dest}"
+    cp -v ca.crt "${dest}"
+    popd
+  ;;
+
+  ting)
+    pat=${1}
+    shift
+    fqdn=${1:-core}
+    target="${HOME}/.openvpn/${fqdn}.ovpn"
+    cat > "${target}" <<EOF
+client
+proto tcp
+EOF
+    cat $HOME/ting/hosts/${pat}.json | \
+    grep ip | \
+    sed 's/[^0-9.]//g' | \
+    awk '{print "remote",$1,"1194"}' \
+    >> "${target}"
+    cat >> "${target}" <<EOF
+dev tun
+ca ${fqdn}/ca.crt
+cert ${fqdn}/client.crt
+key ${fqdn}/client.key
+tls-auth ${fqdn}/ta.key 1
+keepalive 10 120
+cipher DES-EDE3-CBC
+comp-lzo
+persist-key
+persist-tun
+verb 3
+EOF
+  ;;
+
+  help|*)
+    help/ca
+  ;;
+esac

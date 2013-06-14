@@ -233,6 +233,91 @@ The following tools are installed under `/root/bin`:
 ### Scheduler
 
 ### VPN
+Download Easy RSA CA:
+
+    git clone git://github.com/OpenVPN/easy-rsa.git ca/easy-rsa
+
+Create a VPN CA (`vpnca`):
+
+    flock-vpn create
+
+Create server certificates:
+
+    for i in 1 2 3 ; do flock-vpn server vpnca core-0$i; done
+
+Create sysop client certificate:
+
+    flock-vpn client vpnca sysop
+
+Create DH and TA parameters:
+
+    flock-vpn param vpnca
+
+You need the following files:
+
+Filename | Needed By | Purpose | Secret
+--- | --- | --- | ---
+ca.crt | server & clients | Root CA cert | NO
+ca.key | sysop | Root CA key | YES
+ta.key | server & clients | HMAC | YES
+dh{n}.pem | server | DH parameters | NO
+server.crt | server | Server Cert | NO
+server.key | server | Server Key | YES
+client.crt | client | Client Cert | NO
+client.key | client | Client Key | YES
+
+Install OpenVPN servers:
+
+    flock play @@core roles/vpn/openvpn
+
+Install Tunnelblick on your mac and link:
+
+    pushd $HOME
+    ln -s 'Library/Application Support/Tunnelblick/Configurations' .openvpn
+    popd
+
+Install the sysop certificate for Tunnelblick:
+
+    flock-vpn blick vpnca sysop
+
+#### Ting
+You can determine server IPs by Ting. Register a free [pusher.com](https://github.com/NIIF/nce) account. Generate a key:
+
+    openssl rand -base64 32 > keys/ting.key
+
+Create `keys/ting.yml` with the following content:
+
+    ting:
+      key: ...
+      secret: ...
+      app_id: ...
+
+Enable the role:
+
+    flock play @@core roles/vpn/ting
+
+Install Ting on your mac:
+
+    pushd $HOME
+    git clone git://github.com/hornos/ting.git
+
+Edit the `ting.yml` and fill in your app details.
+
+The ting service will pong back the machines external IP ans SSH host fingerprints. On your local machine start the monitor:
+
+    pushd $HOME/ting
+    ./ting -k ../flock/keys/ting.key -m client
+
+Ping them
+
+    ./ting -k ../flock/keys/ting.key ping
+
+Hosts are collected in `ting/hosts` as json files. Create an Tunnelblick client configuration based on Ting pongs:
+
+    pushd $HOME/flock
+    flock-vpn ting core? core
+
+Now connect with Tunnelblick.
 
 ### Message Queue
 

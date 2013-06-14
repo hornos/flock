@@ -12,7 +12,7 @@ networks:
   bmc: 10.0.0.0
   system: 10.1.0.0
   compute: 10.1.1.0
-  vpn: 10.9.0.0
+  vpn: 10.8.0.0
 
 masks:
   system: 16
