@@ -1,0 +1,36 @@
+
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+    - vars/ganglia.yml
+
+  tasks:
+
+  - name: Stop gmond
+    service: name={{service.gmond}}
+             state=stopped
+             enabled=no
+    ignore_errors: yes
+
+  - name: Stop gmetad
+    service: name=gmetad
+             state=stopped
+             enabled=no
+    ignore_errors: yes
+
+  - name: Remove packages
+    yum: name={{item}}
+         state=absent
+    with_items:
+      - ganglia
+      - ganglia-gmetad
+      - ganglia-gmond
+      - ganglia-gmond-python
+      - ganglia-web
+      - libnodeupdown-backend-ganglia
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages

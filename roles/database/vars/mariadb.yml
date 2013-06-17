@@ -1,0 +1,8 @@
+mariadb:
+  user: 'root'
+  password: 'root'
+  socket: '/var/lib/mysql/mysql.sock'
+  pid: '/var/run/mysql/mysql.pid'
+  state: '/var/lib/mysql/grastate.dat'
+  secret: 'PSb2eN9hYDkd'
+  timeout: 60

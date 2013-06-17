@@ -1,0 +1,188 @@
+#
+# http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH4-Installation-Guide/CDH4-Installation-Guide.html
+#
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+    - vars/${inventory_hostname}.yml
+    - vars/cdh4.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_backup: "'$inventory_hostname' == '$backup'"
+
+  tasks:
+### REDHAT
+  - name: Download CDH4 key
+    get_url: url={{url}}/{{key}} dest=/root/{{key}}
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - key
+
+  - name: Import CDH4 key
+    command: rpm --import /root/{{key}}
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - key
+
+  - name: Download CDH4
+    get_url: url={{url}}/{{rpm}} dest=/root/{{rpm}}
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - key
+
+  - name: Install CDH4
+    command: yum -y localinstall /root/{{rpm}}
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - repo
+
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - zookeeper-server
+      - java-1.7.0-openjdk
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - zookeeper
+
+### ZOOKEEPER
+  - name: Install myid
+    copy: content={{myid}}
+          dest={{zookeeper.data}}/myid
+    tags:
+      - myid
+      - config
+      - zookeeper
+
+  - name: Fix data permissions
+    file: path={{zookeeper.data}}
+          owner=zookeeper
+          group=zookeeper
+          state=directory
+          recurse=yes
+    tags:
+      - fix
+      - directories
+      - zookeeper
+
+  - name: Fix log permissions
+    file: path={{zookeeper.log}}
+          owner=zookeeper
+          group=zookeeper
+          state=directory
+          recurse=yes
+    tags:
+      - fix
+      - directories
+      - zookeeper
+
+  - name: Install zoo.cfg
+    template: src=templates/etc/zookeeper/conf/zoo.cfg.j2
+              dest=/etc/zookeeper/conf/zoo.cfg
+              owner=root
+              group=root
+              backup=yes
+    tags:
+      - config
+      - zookeeper
+    notify:
+      - Restart zookeeper
+
+  - name: Start zookeeper
+    service: name=zookeeper-server
+             state=started
+             enabled=yes
+
+### YARN
+  - name: Install hadoop packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - hadoop-yarn-resourcemanager
+      - hadoop-hdfs-namenode
+      - hadoop-hdfs-secondarynamenode
+      - hadoop-yarn-nodemanager
+      - hadoop-hdfs-datanode
+      - hadoop-mapreduce
+      - hadoop-mapreduce-historyserver
+      - hadoop-yarn-proxyserver
+      - hadoop-client
+    when: ansible_os_family == "RedHat"
+    tags:
+      - hadoop
+      - packages
+
+### DATA PARTITION
+  - name: Create Hadoop dat partition
+    lvol: vg={{hadoop.vg_root}}
+          lv={{hadoop.lv_data}}
+          size={{hadoop.lv_size}}
+    tags:
+      - partition
+      - data
+      - lvm
+
+  - name: Create filesystem
+    filesystem: fstype=xfs
+                dev=/dev/{{hadoop.vg_root}}/{{hadoop.lv_data}}
+    tags:
+      - partition
+      - fs
+
+  - name: Creat mount dir
+    file: path={{hadoop.lv_mnt}}
+          state=directory
+    tags:
+      - partition
+      - data
+
+  - name: Mount hadoop data
+    mount: name={{hadoop.lv_mnt}}
+           src=/dev/{{hadoop.vg_root}}/{{hadoop.lv_data}}
+           fstype=xfs
+           opts={{hadoop.opts}}
+           state=mounted
+    tags:
+      - partition
+      - data
+
+
+### CONFIGURATION
+  - name: Install new cluster
+    command: cp -r /etc/hadoop/conf.dist /etc/hadoop/conf.{{hadoop.cluster}}
+    tags:
+      - config
+      - hadoop
+
+  - name: Link config
+    file: src=/etc/hadoop/conf.{{hadoop.cluster}}
+          dest=/etc/hadoop/conf
+          state=link
+    tags:
+      - config
+      - hadoop
+      - links
+
+  # shared state aka Slurm
+  - name: Create state directory
+    file: path={{hadoop.state}}
+          state=directory
+    tags:
+      - state
+      - hadoop
+    only_if: '$is_master'
+
+
+  handlers:
+    - name: Restart zookeeper
+      service: name=zookeeper-server
+               state=restarted

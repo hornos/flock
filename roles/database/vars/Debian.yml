@@ -1,0 +1,3 @@
+service:
+  httpd: apache2
+  mysql: mysqld

@@ -1,0 +1,94 @@
+#
+# Format gluster disk:
+# --extra-vars "format=yes"
+# Mount gluster disk:
+# --extra-vars "mount=yes"
+#
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    - vars/gluster.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+
+  tasks:
+
+  - name: Install repository
+    get_url: url={{url}}/{{repo}} dest=/etc/yum.repos.d/{{repo}}
+    tags:
+      - packages
+      - repo
+
+  - name: Install packages
+    yum: name={{item}}
+         state=latest
+    with_items:
+      - xfsprogs
+      - glusterfs-server
+      - glusterfs-fuse
+    tags:
+      - packages
+
+  # http://www.gluster.org/community/documentation/index.php/HowTos:Brick_naming_conventions
+  - name: Create partition
+    lvol: vg={{gluster.vg_root}}
+          lv={{gluster.lv_data}}
+          size={{gluster.lv_size}}
+    tags:
+      - partition
+      - lvm
+
+  - name: Create filesystem
+    filesystem: fstype=xfs
+                dev=/dev/{{gluster.vg_root}}/{{gluster.lv_data}}
+    tags:
+      - partition
+      - fs
+
+  - name: Creat mount dir
+    file: path={{gluster.lv_mnt}}
+          state=directory
+    tags:
+      - partition
+
+  - name: Create common dir
+    file: path={{gluster.common}}
+          state=directory
+    tags:
+      - partition
+
+  - name: Mount glusterfs
+    mount: name={{gluster.lv_mnt}}
+           src=/dev/{{gluster.vg_root}}/{{gluster.lv_data}}
+           fstype=xfs
+           opts={{gluster.opts}}
+           state=mounted
+    tags:
+      - partition
+
+  - name: Start Glusterfs
+    service: name=glusterd
+             state=started
+             enabled=yes
+
+# setfattr -x trusted.glusterfs.volume-id /data/glusterfs/common/brick1
+
+  - name: Install Gluster bootstrap
+    template: src=templates/root/gluster_bootstrap.j2
+              dest=/root/gluster_bootstrap
+              owner=root
+              group=root
+              mode=0700
+    ignore_errors: yes
+    only_if: '$is_master'
+    tags:
+      - bootstrap
+
+# root-01> gluster peer probe root-03
+# root-01> gluster volume add-brick common 10.1.1.3:/data/glusterfs/common/brick1
+# root-01> gluster volume stop common
+# root-01> gluster volume delete common
+
+# lvremove /dev/vg_root/glusterfs_common_brick1

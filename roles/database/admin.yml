@@ -1,0 +1,90 @@
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - vars/mariadb.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+
+  tasks:
+    - name: Install packages
+      yum: name={{item}}
+           state=installed
+      with_items:
+        - mytop
+        - mtop
+        - innotop
+        - php-mcrypt
+        - php-mbstring
+        - phpmyadmin
+      when: ansible_os_family == "RedHat"
+      notify:
+        - Restart httpd
+      tags:
+        - packages
+
+    - name: Install packages
+      apt: name={{item}}
+           state=installed
+      with_items:
+        - mytop
+        - php5-mcrypt
+        - phpmyadmin
+      when: ansible_os_family == "Debian"
+      notify:
+        - Restart httpd
+      tags:
+        - packages
+
+
+# https://github.com/repoforge/rpms/issues/254
+    - name: Fix php-mcrypt
+      lineinfile: dest=/etc/php.d/mcrypt.ini
+                  regexp='^extension'
+                  line='extension=mcrypt.so'
+      when: ansible_os_family == "RedHat"
+      notify:
+        - Restart httpd
+      tags:
+        - fix
+
+    - name: Enable phpmyadmin
+      template: src=templates/etc/httpd/conf.d/phpmyadmin.conf.j2
+              dest=/etc/{{service.httpd}}/conf.d/phpmyadmin.conf
+              owner=root
+              group=root
+              mode=0644
+      notify:
+        - Restart httpd
+
+    - name: Install phpmyadmin config
+      template: src=templates/usr/share/phpmyadmin/config.inc.php.j2
+              dest=/usr/share/phpmyadmin/config.inc.php
+              owner=root
+              group=root
+              mode=0644
+
+    - name: Create /root/bin directory
+      file: path=/root/bin
+            owner=root
+            group=root
+            state=directory
+
+    - name: Install tools
+      template: src=templates/root/bin/{{item}}.j2
+                dest=/root/bin/{{item}}
+                owner=root
+                group=root
+                mode=0755
+      with_items:
+        - wsrep_status
+        - mytop
+        - mtop
+        - innotop
+      tags:
+        - tools
+
+  handlers:
+    - name: Restart httpd
+      service: name={{service.httpd}}
+               state=restarted

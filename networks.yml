@@ -34,3 +34,4 @@ sysops:
 
 # root master
 master: core-01
+backup: core-02

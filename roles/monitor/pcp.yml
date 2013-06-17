@@ -39,7 +39,7 @@
       - packages
 
 ### FIREWALL
-  - name: Install /etc/shorewall/rules.d/pmcd
+  - name: Install firewwall rules
     template: src=templates/etc/shorewall/rules.d/pmcd.j2
               dest=/etc/shorewall/rules.d/pmcd
               owner=root

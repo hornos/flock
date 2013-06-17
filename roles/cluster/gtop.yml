@@ -1,0 +1,49 @@
+#
+# https://github.com/pcuzner/gluster-monitor
+#
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    - vars/gluster.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+
+  tasks:
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - net-snmp
+      - net-snmp-utils
+      - net-snmp-python
+    tags:
+      - packages
+
+  - name: Download Gluster gtop
+    git: repo=git://github.com/pcuzner/gluster-monitor.git
+         dest=/opt/gluster-monitor
+    tags:
+      - packages
+
+  - name: Install SNMP config
+    template: src=templates/etc/snmp/snmpd.conf.j2
+              dest=/etc/snmp/snmpd.conf
+              owner=root
+              group=root
+              backup=yes
+    notify:
+      - Restart snmpd
+    tags:
+      - config
+
+  - name: Link gtop
+    file: src=/opt/gluster-monitor/gtop.py
+          dest=/root/bin/gtop
+          state=link
+
+  handlers:
+    - name: Restart snmpd
+      service: name=snmpd
+               state=restarted

@@ -1,0 +1,5 @@
+#!/bin/bash
+sudo /usr/bin/amixer -q -c 0 sset 'Master',0 unmute && /usr/bin/amixer -q -c 0 sset 'Master',0 100 
+sudo /usr/bin/amixer -q -c 0 sset 'ALC892 Default PCM',0 unmute
+sudo /usr/bin/amixer -q -c 0 sset 'ALC892',0 unmute && /usr/bin/amixer -q -c 0 sset 'ALC892',1 unmute
+sudo alsactl store 0

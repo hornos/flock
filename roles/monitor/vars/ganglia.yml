@@ -1,6 +1,10 @@
 ---
+url: http://dev.centos.org/centos/6/opennebula
+repo: opennebula-testing.repo
+
 ganglia:
   cluster: core
   user: monitor
   password: monitor
   mcast: 239.2.11.71
+  version: 3.4.0

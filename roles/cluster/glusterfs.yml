@@ -1,0 +1,66 @@
+
+---
+- hosts: all
+
+  vars_files:
+    - vars/gluster.yml
+
+  tasks:
+
+  - name: Set deadline I/O scheduler
+    shell: /bin/echo "deadline" > /sys/block/{{gluster.disk}}/queue/scheduler
+    tags:
+      - tune
+
+  - name: Set I/O request size
+    shell: /bin/echo "256" > /sys/block/{{gluster.disk}}/queue/nr_requests
+    tags:
+      - tune
+
+  - name: Set read-ahead size
+    shell: /sbin/blockdev --setra 4096 /dev/{{gluster.disk}}
+    tags:
+      - tune
+
+
+  - name: Unlimited stack size
+    lineinfile: dest=/sbin/mount.glusterfs
+                regexp='^ulimit -s unlimited'
+                line='ulimit -s unlimited'
+                insertbefore='^_init'
+    tags:
+      - limits
+
+  - name: Unlimited lock size
+    lineinfile: dest=/sbin/mount.glusterfs
+                regexp='^ulimit -l unlimited'
+                line='ulimit -l unlimited'
+                insertbefore='^_init'
+    tags:
+      - limits
+
+  - name: Unlimited CPU time
+    lineinfile: dest=/sbin/mount.glusterfs
+                regexp='^ulimit -t unlimited'
+                line='ulimit -t unlimited'
+                insertbefore='^_init'
+    tags:
+      - limits
+
+  - name: Unlimited open files
+    lineinfile: dest=/sbin/mount.glusterfs
+                regexp='^ulimit -n unlimited'
+                line='ulimit -n unlimited'
+                insertbefore='^_init'
+                state=absent
+    tags:
+      - limits
+
+  - name: Mount common
+    mount: name={{gluster.common}}
+           src=127.0.0.1:/{{gluster.volume}}
+           fstype=glusterfs
+           opts={{gluster.opts}},log-level=WARNING,log-file=/var/log/gluster.log
+           state=mounted
+    tags:
+      - mount

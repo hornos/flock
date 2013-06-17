@@ -1,0 +1,75 @@
+#!/bin/bash
+
+{% set first=1 %}
+ROOT="{%- for host in hostvars %}
+{%- if not first %}
+{{- ' ' }}
+{%- endif %}
+{%- if first %}
+{%- set first=0 %}
+{%- endif %}
+{{- host }}
+{%- endfor %}"
+
+{% set first=1 %}
+ROOT_IP="{%- for host in hostvars %}
+{%- if not first %}
+{{- ' ' }}
+{%- endif %}
+{%- if first %}
+{%- set first=0 %}
+{%- endif %}
+{{- hostvars[host]['ansible_eth0']['ipv4']['address'] }}
+{%- endfor %}"
+
+ROOT_AUTH="{%- for host in hostvars %}
+{%- if not first %}
+,
+{%- endif %}
+{%- if first %}
+{%- set first=0 %}
+{%- endif %}
+{{- hostvars[host]['ansible_eth0']['ipv4']['address'] }}
+{%- endfor %}"
+
+{% set first=1 %}
+ROOT_DISK="{%- for host in hostvars %}
+{%- if not first %}
+{{- ' ' }}
+{%- endif %}
+{%- if first %}
+{%- set first=0 %}
+{%- endif %}
+{{- hostvars[host]['ansible_eth0']['ipv4']['address'] }}:{{- gluster.lv_mnt }}
+{%- endfor %}"
+
+VOLUME={{ gluster.volume }}
+REPLICA={{ gluster.replica }}
+
+echo ""
+echo "Peers: $ROOT_IP"
+echo ""
+for i in $ROOT_IP ; do
+  if [ "$(hostname -i)" != "$i" ] ; then
+    read -p "Peer probe $i?"
+    gluster peer probe $i
+  fi
+done
+
+echo ""
+gluster peer status
+
+echo ""
+read -p "Create volume $VOLUME on $ROOT_DISK?"
+gluster volume create $VOLUME replica $REPLICA transport {{gluster.transport}} $ROOT_DISK
+
+echo ""
+read -p "Start volume $VOLUME?"
+gluster volume start $VOLUME
+
+echo ""
+read -p "Volume info $VOLUME?"
+gluster volume info
+
+# read -p "Set authentication on $VOLUME?"
+# gluster volume set $VOLUME auth.allow $ROOT_AUTH

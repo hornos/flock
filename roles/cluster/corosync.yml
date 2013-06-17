@@ -2,11 +2,17 @@
 # http://www.hastexo.com/resources/docs/mysqlgalera-pacemaker-high-availability-clusters/configuring-corosync
 #
 # TODO: pe processing error
+#
+# rollback:
+# --extra-vars "rollback=yes"
 ---
 - hosts: all
 
   vars_files:
     - networks.yml
+
+  vars:
+    is_rollback: "'$rollback' == 'yes'"
 
   tasks:
 ### REDHAT

@@ -160,6 +160,8 @@ For the awesome PCP download `ftp://oss.sgi.com/projects/pcp/download/mac/` and 
     pmstat -h 10.1.1.1 -h 10.1.1.2 -h 10.1.1.3
     /Applications/pmchart.app/Contents/MacOS/pmchart -h 10.1.1.1 -c Overview 
 
+TODO: NTP RRD gmetad update problem
+
 ### Globus CA
 Install the certificate utilities and Globus on your mac:
 
@@ -229,10 +231,56 @@ The following tools are installed under `/root/bin`:
     quorum
 
 ### Database
+#### MariaDB with Galera
+Install database:
+
+    flock play @@core roles/database/mariadb
+
+Login to the master node and secure the installation:
+
+    mysql_secure_installation
+
+Install admin interface:
+
+    flock play @@core roles/database/admin
 
 ### Storage
+#### Gluster
+Change to the latest mainline kernel:
+
+    flock play @@core roles/system/kernel
+    flock reboot @@core
+
+Install Gluster and setup a 3-node FS cluster:
+
+    flock play @@core roles/cluster/gluster
+
+Login to the master node and bootstrap the cluster:
+
+    /root/gluster_bootstrap
+
+Finally, mount the common directory:
+
+    flock play @@core roles/cluster/glusterfs
+    flock play @@core roles/cluster/gtop
+
+Monitor the cluster:
+
+    /root/bin/gtop
 
 ### Scheduler
+#### Slurm
+Generate the Munge auth key:
+
+    dd if=/dev/random bs=1 count=1024 > keys/munge.key
+
+Install Slurm:
+
+    flock play @@core roles/scheduler/slurm
+
+Login to the master node and test the queue:
+
+    srun -N 3 hostname
 
 ### VPN
 Download Easy RSA CA:
@@ -324,5 +372,8 @@ Now connect with Tunnelblick.
 ### Message Queue
 
 ### Hadoop
+#### CDH4
 
 
+## Home Server
+ 

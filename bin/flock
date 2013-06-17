@@ -102,6 +102,10 @@ case ${cmd} in
     command="ansible-playbook"
     command_options="${module} -l ${hosts}"
     ;;
+  rollback)
+    command="ansible-playbook"
+    command_options="${module} -l ${hosts} --extra-vars \"rollback=yes\""
+    ;;
   show)
     command="ansible-playbook"
     command_options="${module} -l ${hosts}"

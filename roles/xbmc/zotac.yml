@@ -1,0 +1,60 @@
+# TODO: rework
+# http://wiki.xbmc.org/index.php?title=HOW-TO:Setup_audio_over_HDMI_on_nVidia_GeForce/nForce_controller
+#
+---
+- hosts: all
+
+  tasks:
+    - name: Remove packages
+      apt: name={{item}}
+           state=absent
+      with_items:
+        - pulseaudio
+      when: ansible_os_family == "Debian"
+      tags:
+        - packages
+
+    - name: Install /etc/asound.conf
+      template: src=templates/etc/asound.conf.j2
+                dest=/etc/asound.conf
+                backup=yes
+      tags:
+        - config
+        - asound
+
+    - name: Setup Intel module
+      lineinfile: dest=/etc/modprobe.d/alsa-base.conf
+                  backup=yes
+                  regexp='^options snd-hda-intel model=6stack-dig'
+                  line='options snd-hda-intel model=6stack-dig'
+      tags:
+        - config
+        - modules
+
+    - name: Setup Intel alsa card
+      template: src=templates/usr/share/alsa/cards/HDA-Intel.conf.j2
+                dest=/usr/share/alsa/cards/HDA-Intel.conf
+                backup=yes
+      tags:
+        - config
+        - alsa
+        - intel
+
+    - name: Install asoundrc
+      template: src=templates/home/sysop/asoundrc.j2
+                dest=/home/sysop/.asoundrc
+                backup=yes
+                owner=sysop
+      tags:
+        - config
+        - asound
+
+    - name: Install scripts
+      template: src=templates/home/sysop/{{item}}.j2
+                dest=/home/sysop/{{item}}
+                owner=sysop
+                mode=0755
+      with_items:
+        - unmute
+      tags:
+        - scripts

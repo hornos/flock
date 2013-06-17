@@ -13,16 +13,21 @@
 
   tasks:
 ### REDHAT
+  - name: Install repository
+    get_url: url={{url}}/{{repo}} dest=/etc/yum.repos.d/{{repo}}
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - repo
+
   - name: Install packages
     yum: name={{item}}
          state=installed
     with_items:
-      - ganglia
-      - ganglia-gmetad
       - ganglia-gmond
-      - ganglia-gmond-python
+      - ganglia-gmond-modules-python
+      - ganglia-gmetad
       - ganglia-web
-      - libnodeupdown-backend-ganglia
     when: ansible_os_family == "RedHat"
     tags:
       - packages
@@ -49,24 +54,19 @@
     tags:
       - packages
 
-### MODULES
-  - name: Download modules
-    git: repo="git://github.com/ganglia/gmond_python_modules.git"
-         dest=/opt/gmond_python_modules
-    tags:
-      - modules
-
+#### MODULES
+#  - name: Download modules
+#    git: repo="git://github.com/ganglia/gmond_python_modules.git"
+#         dest=/opt/gmond_python_modules
+#    tags:
+#      - modules
+#
+#
 
 ### CONFIGURATION
 
-# TODO: ipmi monitoring
-
-# TODO: multicast test and firewall
-#  - name: Add multicast route
-#    command: /sbin/route add -host ${mcast_addr} dev ${mcast_dev}
-
   - name: Ganglia monitor
-    template: src=templates/etc/ganglia/gmond.conf.j2
+    template: src=templates/etc/ganglia/{{ganglia.version}}/gmond.conf.j2
               dest=/etc/ganglia/gmond.conf
               owner=root
               group=root
@@ -78,7 +78,7 @@
       - config
 
   - name: Ganglia metadata
-    template: src=templates/etc/ganglia/gmetad.conf.j2
+    template: src=templates/etc/ganglia/{{ganglia.version}}/gmetad.conf.j2
               dest=/etc/ganglia/gmetad.conf
               owner=root
               group=root
@@ -89,17 +89,26 @@
     tags:
       - config
 
-  - name: Disable tcpconn.pyconf
-    template: src=templates/etc/ganglia/conf.d/tcpconn.pyconf.j2
-              dest=/etc/ganglia/conf.d/tcpconn.pyconf
-              owner=root
-              group=root
-              mode=0644
-    notify:
-      - Restart gmond
+  - name: Set rrds mode
+    file: path=/var/lib/ganglia/rrds/
+          state=directory
+          recurse=yes
+          owner=nobody
+          group=nobody
     tags:
-      - config
-
+      - perm
+#
+#  - name: Disable tcpconn.pyconf
+#    template: src=templates/etc/ganglia/conf.d/tcpconn.pyconf.j2
+#              dest=/etc/ganglia/conf.d/tcpconn.pyconf
+#              owner=root
+#              group=root
+#              mode=0644
+#    notify:
+#      - Restart gmond
+#    tags:
+#      - config
+#
   - name: Enable Ganglia web interface
     template: src=templates/etc/httpd/conf.d/ganglia.conf.j2
               dest=/etc/{{service.httpd}}/conf.d/ganglia.conf
@@ -112,10 +121,9 @@
       - config
 
   - name: Enable topcoat style
-    template: src=templates/usr/share/ganglia/templates/default/header.tpl.j2
-              dest=/usr/share/ganglia/templates/default/header.tpl
-              owner=root
-              group=root
+    lineinfile: dest=/var/www/html/ganglia/styles.css
+                regexp='^@import'
+                line='@import url("/topcoat/css/topcoat-desktop-light.min.css");'
               backup=yes
     tags:
       - frontend
@@ -154,6 +162,18 @@
       - config
       - services
 
+### FIREWALL
+  - name: Install firewall rules
+    template: src=templates/etc/shorewall/rules.d/ganglia.j2
+              dest=/etc/shorewall/rules.d/ganglia
+              owner=root
+              group=root
+              mode=0640
+    tags:
+      - firewall
+    notify:
+      - Restart shorewall
+
   - name: Start gmond
     service: name={{service.gmond}}
              state=started
@@ -178,6 +198,11 @@
     - name: Restart gmetad
       service: name=gmetad
                state=restarted
+
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted
+
 
     - name: Restart httpd
       service: name={{service.httpd}}

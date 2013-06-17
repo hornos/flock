@@ -1,0 +1,10 @@
+slurm:
+  cluster: core
+  user: 'slurm'
+  password: 'slurm'
+  db: 'slurm_acct_db'
+  repo: 'home_hornos_centos'
+  state: '/common/slurm/state'
+  checkpoint: '/common/slurm/checkpoint'
+  compute: 'core-[01-3]'
+  timeout: 60

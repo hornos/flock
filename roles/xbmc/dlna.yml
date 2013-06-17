@@ -1,0 +1,48 @@
+#
+# http://www.conrad.id.au/2012/06/quick-tip-dlna-server-on-linux-ubuntu.html
+#
+---
+- hosts: all
+
+  tasks:
+    - name: Install packages
+      apt: name={{item}}
+           state=installed
+      with_items:
+        - minidlna
+      when: ansible_os_family == "Debian"
+      tags:
+        - packages
+
+    - name: Create /dlna
+      file: path=/dlna
+            state=directory
+      tags:
+        - directories
+
+    - name: Install config
+      template: src=templates/etc/minidlna.conf.j2
+                dest=/etc/minidlna.conf
+                backup=yes
+      tags:
+        - config
+      notify:
+        - Restart minidlna
+
+    - name: Install firewall
+      template: src=templates/etc/shorewall/rules.d/minidlna.j2
+                dest=/etc/shorewall/rules.d/minidlna
+      tags:
+        - config
+        - firewall
+      notify:
+        - Restart firewall
+
+  handlers:
+    - name: Restart firewall
+      service: name=shorewall
+               state=restarted
+
+    - name: Restart minidlna
+      service: name=minidlna
+               state=restarted

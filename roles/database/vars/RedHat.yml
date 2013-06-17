@@ -1,0 +1,3 @@
+service:
+  httpd: httpd
+  mysql: mysql
