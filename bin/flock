@@ -89,6 +89,12 @@ case ${cmd} in
     echo "Generating passwordless internode root key (nopass)"
     ssh-keygen -b2048 -N "" -f keys/nopass
     echo ""
+    if [ ! -d ./keys ]; then
+      mkdir ./keys
+    fi
+    if [ ! -d ./space/boot/pxelinux.cfg ]; then
+      mkdir -p ./space/boot/pxelinux.cfg
+    fi
     exit 0
     ;;
   keys)

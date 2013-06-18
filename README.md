@@ -41,9 +41,6 @@ Generate SSH keys:
 
 Keys and certificates are in the `keys` directory.
 
-keys dir pxelinux.cfg
-
-
 VirtualBox extension pack
 
 ## Network Install
