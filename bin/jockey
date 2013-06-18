@@ -23,7 +23,7 @@ fi
 masq_conf=${jockey_root}/masq.conf
 masq_root=${jockey_root}/boot
 ipxe_root=${masq_root}/pxelinux.cfg
-masq_bin=$(which dnsmasq)
+masq_bin=${usrlocal}/sbin/dnsmasq
 
 ### http server (nginx)
 http_conf=${jockey_root}/http.conf
