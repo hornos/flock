@@ -1,3 +1,4 @@
 service:
   httpd: httpd
   mysql: mysql
+  gmond: gmond

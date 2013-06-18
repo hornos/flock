@@ -141,7 +141,7 @@
 
   - name: Enable shorewall.conf
     template: src=templates/etc/shorewall/shorewall.conf.j2
-              dest=/etc/shorewall.conf
+              dest=/etc/shorewall/shorewall.conf
               owner=root
               group=root
               mode=0640

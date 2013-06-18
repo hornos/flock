@@ -12,4 +12,4 @@ gluster:
   common: '/common'
   fio_size: '100M'
   disk: 'sda'
-  opts: 'defaults'
+  opts: 'defaults,_netdev'

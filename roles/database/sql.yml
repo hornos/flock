@@ -1,0 +1,17 @@
+#
+# Basic configuration for root servers
+# 
+---
+- include: mariadb.yml
+- include: admin.yml
+
+- hosts: all
+  tasks:
+    - name: SQL role
+      lineinfile: dest=/etc/ANSIBLE_ROLE
+                  regexp="^sql"
+                  line=sql
+                  state=present
+                  create=yes
+      tags:
+        - role

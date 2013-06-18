@@ -12,11 +12,11 @@ Go home:
 
 For the Flock boot you need `ngnix` and `dnsmasq`:
 
-    brew install ngnix dnsmasq
+    brew install nginx dnsmasq
 
 For the Flock provision you need Ansible:
 
-    git clone git clone git://github.com/ansible/ansible.git
+    git clone git://github.com/ansible/ansible.git
 
 For the Flock you need Flock:
 
@@ -33,7 +33,7 @@ Or run
 
 Mind that `flock` always works relative to the current directory:
 
-    push flock
+    pushd flock
 
 Generate SSH keys:
 
@@ -41,7 +41,15 @@ Generate SSH keys:
 
 Keys and certificates are in the `keys` directory.
 
+keys dir pxelinux.cfg
+
+
+VirtualBox extension pack
+
 ## Network Install
+Get net install images:
+
+
 Space Jockey (`jockey`) is a simple Cobbler replacement. You need a simple inventory file like this (`space/hosts`):
 
     boot_server=10.1.1.254
@@ -54,7 +62,7 @@ The boot server listens on `boot_server` IP and Debian-based systems use the `in
 The following network topology is used:
 
     Network   VBox Net IPv4 Addr  Mask DHCP
-    system    vboxnetN 10.1.1.254 16   off
+    system    vboxnet0 10.1.1.254 16   off
     external  NAT/Bridged
 
 If you use VirtualBox for modelling you can create the servers by:
@@ -160,8 +168,6 @@ For the awesome PCP download `ftp://oss.sgi.com/projects/pcp/download/mac/` and 
     pmstat -h 10.1.1.1 -h 10.1.1.2 -h 10.1.1.3
     /Applications/pmchart.app/Contents/MacOS/pmchart -h 10.1.1.1 -c Overview 
 
-TODO: NTP RRD gmetad update problem
-
 ### Globus CA
 Install the certificate utilities and Globus on your mac:
 
@@ -234,15 +240,11 @@ The following tools are installed under `/root/bin`:
 #### MariaDB with Galera
 Install database:
 
-    flock play @@core roles/database/mariadb
+    flock play @@core database
 
 Login to the master node and secure the installation:
 
     mysql_secure_installation
-
-Install admin interface:
-
-    flock play @@core roles/database/admin
 
 ### Storage
 #### Gluster

@@ -23,7 +23,7 @@ fi
 masq_conf=${jockey_root}/masq.conf
 masq_root=${jockey_root}/boot
 ipxe_root=${masq_root}/pxelinux.cfg
-masq_bin=${usrlocal}/sbin/dnsmasq
+masq_bin=$(which dnsmasq)
 
 ### http server (nginx)
 http_conf=${jockey_root}/http.conf
@@ -31,7 +31,7 @@ http_server=${boot_server}
 http_port=8080
 http_listen=${http_server}:${http_port}
 http_root=${masq_root}
-http_bin=${usrlocal}/sbin/nginx
+http_bin=$(which nginx)
 
 ### traps
 function jockey/masq/exit() {
