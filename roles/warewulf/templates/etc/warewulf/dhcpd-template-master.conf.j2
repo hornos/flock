@@ -1,0 +1,25 @@
+# http://consultancy.edvoncken.net/index.php/HOWTO_Configure_DHCP_failover
+
+#
+# TODO: http://kb.juniper.net/InfoCenter/index?page=content&id=KB16352&actp=RSS
+#
+
+##########################
+# DHCP Failover, Primary #
+##########################
+
+subnet {{networks.system}} netmask {{dhcp_masks.system}} {
+  pool {
+    range {{warewulf.range}};
+  }
+  not authoritative;
+  option subnet-mask {{dhcp_masks.system}};
+  allow booting;
+  allow bootp;
+  ddns-update-style interim;
+  option routers default_router;
+  filename "/warewulf/gpxelinux.0";
+  not authoritative;
+}
+
+# Node entries will follow below

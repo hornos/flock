@@ -3,6 +3,7 @@
 - include: roles/basic/prebasic.yml
 - include: roles/firewall/firewall.yml
 - include: roles/basic/basic.yml
+- include: roles/system/ipv6off.yml
 - include: roles/monitor/monitor.yml
 
 - hosts: all

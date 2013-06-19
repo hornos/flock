@@ -1,4 +1,7 @@
 # TODO: better roles in ansible
+#
+# ANSIBLE_HOSTS=core flock play @@core database --extra-vars='master=core'
+#
 ---
 - include: roles/database/sql.yml
 

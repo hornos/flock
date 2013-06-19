@@ -1,0 +1,10 @@
+url: http://warewulf.lbl.gov/downloads/repo
+repo: warewulf-rhel6.repo
+
+warewulf:
+  db: 'warewulf'
+  user: 'warewulf'
+  password: 'warewulf'
+  common: '/common/warewulf'
+  range: '10.1.1.11 10.1.1.21'
+  interface: 'eth0'

@@ -21,7 +21,8 @@
   tasks:
 ### REDHAT
     - name: Install dnsmasq packages
-      yum: name=$item state=installed
+      yum: name={{item}}
+           state=installed
       with_items:
         - dnsmasq
         - dnsmasq-utils
@@ -33,7 +34,8 @@
 
 ### DEBIAN
     - name: Install dnsmasq packages
-      apt: name=$item state=installed
+      apt: name={{item}}
+           state=installed
       with_items:
         - dnsmasq
         - bind9utils
@@ -104,6 +106,13 @@
                   backup=yes
       tags:
         - resolv
+
+    - name: Set hostname
+      lineinfile: dest=/etc/sysconfig/network
+                  regexp='^HOSTNAME'
+                  line="HOSTNAME={{inventory_hostname}}"
+      tags:
+        - hostname
 
     - name: Localhost DNS for DHCP ({{interfaces.dhcp}})
       template: src=templates/etc/dhcp/dhclient-{{interfaces.dhcp}}.conf.j2

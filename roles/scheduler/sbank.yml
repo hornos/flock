@@ -1,0 +1,21 @@
+#
+# https://github.com/jcftang/slurm-bank
+#
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    - vars/slurm.yml
+    - vars/mariadb.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_backup: "'$inventory_hostname' == '$backup'"
+
+  tasks:
+  - name: Clone repository
+    git: repo='https://github.com/jcftang/slurm-bank'
+         dest='/opt/slurm-bank'
+    tags:
+      - repo
+      - packages

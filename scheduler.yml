@@ -1,0 +1,15 @@
+# TODO: better roles in ansible
+---
+- include: roles/scheduler/slurm.yml
+- include: roles/scheduler/sbank.yml
+
+- hosts: all
+  tasks:
+    - name: Scheduler state done
+      lineinfile: dest=/etc/ANSIBLE_STATE
+                  regexp="^scheduler"
+                  line=scheduler
+                  state=present
+                  create=yes
+      tags:
+        - state

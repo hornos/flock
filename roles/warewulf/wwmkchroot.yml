@@ -1,0 +1,59 @@
+
+---
+- hosts: all
+  vars_files:
+    - vars/warewulf.yml
+
+  vars:
+    target: 'sl-6'
+
+  tasks:
+    - name: Install {{target}}
+      shell: "yes | wwmkchroot {{target}} {{warewulf.common}}/chroots/{{target}}"
+      tags:
+        - packages
+        - target
+
+    - name: Create .ssh directories
+      file: path={{warewulf.common}}/chroots/{{target}}/{{item}}/.ssh
+            owner={{item}}
+            group={{item}}
+            mode=700
+            state=directory
+      with_items:
+        - root
+      tags:
+        - key
+
+    - name: Install root nopass key
+      copy: src=keys/nopass
+            dest={{warewulf.common}}/chroots/{{target}}/{{item}}/.ssh/id_rsa
+            owner={{item}}
+            group={{item}}
+            mode=600
+      with_items:
+        - root
+      tags:
+        - key
+
+    - name: Install root nopass public key
+      copy: src=keys/nopass.pub
+            dest={{warewulf.common}}/chroots/{{target}}/{{item}}/.ssh/id_rsa.pub
+            owner={{item}}
+            group={{item}}
+            mode=600
+      with_items:
+        - root
+      tags:
+        - key
+
+    - name: Install root authorized_keys
+      copy: src=keys/nopass.pub
+            dest={{warewulf.common}}/chroots/{{target}}/{{item}}/.ssh/authorized_keys
+            owner={{item}}
+            group={{item}}
+            mode=600
+      with_items:
+        - root
+      tags:
+        - key

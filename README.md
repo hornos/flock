@@ -5,14 +5,22 @@ Flock / Rapid Infrastructure Prototype Engine
 
 ![Flock](http://24.media.tumblr.com/tumblr_lzinfntu2G1qj8pa7o1_500.gif)
 
-## Install
+## Install for OS X
 Go home:
 
     cd
 
 For the Flock boot you need `ngnix` and `dnsmasq`:
 
-    brew install nginx dnsmasq
+    brew install nginx dnsmasq python libyaml
+
+Edit your `.profile` or `.bash_profile` and set PATH:
+
+    PATH=/usr/local/bin:$PATH
+
+Install python packages:
+
+    pip pyyaml jinja2 paramiko
 
 For the Flock provision you need Ansible:
 
@@ -20,7 +28,9 @@ For the Flock provision you need Ansible:
 
 For the Flock you need Flock:
 
-    git://github.com/hornos/flock.git
+    git clone git://github.com/hornos/flock.git
+
+Install VirtualBox extension pack.
 
 ### Setup
 Edit your `.profile` or `.bash_profile`:
@@ -41,11 +51,14 @@ Generate SSH keys:
 
 Keys and certificates are in the `keys` directory.
 
-VirtualBox extension pack
-
 ## Network Install
-Get net install images:
+Get install images eg. for Debian:
 
+    pushd space/boot
+    rsync -avP ftp.us.debian.org::debian/dists/wheezy/main/installer-amd64/current/images/netboot/ ./wheezy
+    popd
+
+Debian-based systems should be installed with NAT.
 
 Space Jockey (`jockey`) is a simple Cobbler replacement. You need a simple inventory file like this (`space/hosts`):
 
@@ -275,7 +288,7 @@ Generate the Munge auth key:
 
 Install Slurm:
 
-    flock play @@core roles/scheduler/slurm
+    flock play @@core scheduler
 
 Login to the master node and test the queue:
 
@@ -367,6 +380,28 @@ Hosts are collected in `ting/hosts` as json files. Create an Tunnelblick client 
     flock-vpn ting core? core
 
 Now connect with Tunnelblick.
+
+### Warewulf
+
+    flock play @@core warewulf
+
+Install compute image:
+
+    flock play @@core roles/warewulf/wwmkchroot
+
+Create compute image:
+
+    flock play @@core roles/warewulf/wwmnfs
+    flock play @@core roles/warewulf/wwkernel
+
+Create compute VMs:
+
+     flock-vbox create n01
+
+TODO: Login to the master node:
+
+    wwsh node new n0000 --netdev=eth0 --hwaddr=<MACADDR> -I 10.1.1.11 -G 10.1.1.254 --netmask=255.255.255.0
+    wwsh provision set n0000 --bootstrap=2.6.32-358.el6.x86_64 --vnfs=sl-6
 
 ### Message Queue
 

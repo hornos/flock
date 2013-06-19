@@ -1,0 +1,17 @@
+#
+# Install Mainline Kernel
+#
+---
+- hosts: all
+
+  tasks:
+
+### REDHAT
+  - name: IPv6 off
+    lineinfile: dest=/etc/sysctl.conf
+                regexp='^net.ipv6.conf.all.disable_ipv6'
+                line='net.ipv6.conf.all.disable_ipv6 = 1'
+                backup=yes
+    tags:
+      - ip
+      - config

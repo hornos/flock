@@ -1,0 +1,246 @@
+# Warewulf Cluster
+# http://www.admin-magazine.com/HPC/Articles/Warewulf-Cluster-Manager-Master-and-Compute-Nodes
+# http://www.admin-magazine.com/HPC/Articles/Warewulf-Cluster-Manager-Completing-the-Environment
+#
+# TODO: consider /usr/bin/cluster-env for regular users
+#
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    - vars/mariadb.yml
+    - vars/warewulf.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_backup: "'$inventory_hostname' == '$backup'"
+
+  tasks:
+  - name: Download repository
+    get_url: url={{url}}/{{repo}} dest=/etc/yum.repos.d/{{repo}}
+    tags:
+      - packages
+
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - xinetd
+      - httpd
+      - dhcp
+      - tcpdump
+      - tftp-server
+      - mod_perl
+      - perl-Term-ReadLine-Gnu
+      - warewulf-common
+      - warewulf-cluster
+      - warewulf-provision
+      - warewulf-provision-server
+      - warewulf-vnfs
+      - warewulf-nhc
+    tags:
+      - packages
+
+  - name: Setup warewulf mysql db
+    mysql_db: db={{warewulf.db}}
+              login_user={{mariadb.user}}
+              login_password={{mariadb.password}}
+              login_unix_socket={{mariadb.socket}}
+    only_if: '$is_master'
+    tags:
+      - database
+
+  - name: Setup warewulf mysql user
+    mysql_user: name={{warewulf.user}} password={{warewulf.password}} priv={{warewulf.db}}.*:ALL
+                login_user={{mariadb.user}}
+                login_password={{mariadb.password}}
+                login_unix_socket={{mariadb.socket}}
+    only_if: '$is_master'
+    tags:
+      - database
+
+  - name: Install /etc/warewulf/database.conf
+    template: src=templates/etc/warewulf/database.conf.j2
+              dest=/etc/warewulf/database.conf
+              owner=root
+              group=root
+              mode=0644
+    tags:
+      - config
+
+  - name: Create common directory
+    file: path={{warewulf.common}}
+          owner=root
+          group=root
+          state=directory
+    tags:
+      - directories
+    only_if: '$is_master'
+
+  - name: Create common tftpboot directory
+    file: path={{warewulf.common}}/tftpboot
+          owner=root
+          group=root
+          state=directory
+    tags:
+      - directories
+      - ftp
+    only_if: '$is_master'
+
+  - name: Create common chroots directory
+    file: path={{warewulf.common}}/chroots
+          owner=root
+          group=root
+          state=directory
+    tags:
+      - directories
+      - ftp
+    only_if: '$is_master'
+
+  - name: Create common kernels directory
+    file: path={{warewulf.common}}/kernels
+          owner=root
+          group=root
+          state=directory
+    tags:
+      - directories
+      - ftp
+    only_if: '$is_master'
+
+  - name: Create common tftpboot/warewulf directory
+    file: path={{warewulf.common}}/tftpboot/warewulf
+          owner=root
+          group=root
+          state=directory
+    tags:
+      - directories
+      - ftp
+    only_if: '$is_master'
+
+  - name: Copy tfptboot files
+    shell: /bin/cp /usr/share/warewulf/* {{warewulf.common}}/tftpboot/warewulf
+    tags:
+      - config
+      - ftp
+    only_if: '$is_master'
+
+  - name: Install /etc/xinetd.d/tftp
+    template: src=templates/etc/xinetd.d/tftp.j2
+              dest=/etc/xinetd.d/tftp
+              owner=root
+              group=root
+              mode=0644
+    tags:
+      - config
+      - ftp
+    notify:
+      - Restart xinetd
+
+  - name: Install /etc/warewulf/provision.conf
+    template: src=templates/etc/warewulf/provision.conf.j2
+              dest=/etc/warewulf/provision.conf
+              owner=root
+              group=root
+              mode=0644
+    tags:
+      - config
+      - provision
+
+  - name: Install master /etc/warewulf/dhcpd-template.conf
+    template: src=templates/etc/warewulf/dhcpd-template-master.conf.j2
+              dest=/etc/warewulf/dhcpd-template.conf
+              owner=root
+              group=root
+              mode=0644
+    tags:
+      - config
+      - dhcp
+    notify:
+      - Update dhcp
+    only_if: '$is_master'
+
+  - name: Install backup /etc/warewulf/dhcpd-template.conf
+    template: src=templates/etc/warewulf/dhcpd-template-backup.conf.j2
+              dest=/etc/warewulf/dhcpd-template.conf
+              owner=root
+              group=root
+              mode=0644
+    tags:
+      - config
+      - dhcp
+    notify:
+      - Update dhcp
+    only_if: '$is_backup'
+
+  - name: Set DHCP listen interface
+    lineinfile: dest=/etc/sysconfig/dhcpd
+                regexp='^DHCPDARGS'
+                line="DHCPDARGS={{warewulf.interface}}"
+    tags:
+      - config
+      - dhcp
+    notify:
+      - Update dhcp
+
+  - name: Exclude /boot
+    lineinfile: dest=/etc/warewulf/vnfs.conf
+                regexp='^excludes \+= \/boot'
+                line='excludes += /boot'
+                backup=yes
+    tags:
+      - exclude
+
+  - name: Install node.conf
+    template: src=templates/etc/warewulf/defaults/node.conf.j2
+              dest=/etc/warewulf/defaults/node.conf
+              backup=yes
+    tags:
+      - config
+      - defaults
+
+  - name: Install ipset tables
+    template: src=templates/etc/ipset.d/{{item}}.j2
+              dest=/etc/ipset.d/{{item}}
+              owner=root
+              group=root
+              mode=0755
+    with_items:
+      - warewulf.sh
+    tags:
+      - firewall
+      - ipset
+    notify:
+      - Restart ipset
+
+  - name: Install firewall rules
+    template: src=templates/etc/shorewall/rules.d/warewulf.j2
+              dest=/etc/shorewall/rules.d/warewulf
+              owner=root
+              group=root
+              mode=0640
+    tags:
+      - firewall
+    notify:
+      - Restart shorewall
+
+
+  ### SERVICES
+  - name: Start xinetd
+    service: name=xinetd
+             state=started
+
+  handlers:
+    - name: Restart xinetd
+      service: name=xinetd
+               state=restarted
+
+    - name: Restart ipset
+      service: name=ipset
+               state=reloaded
+
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted
+
+    - name: Update dhcp
+      shell: /usr/bin/wwsh dhcp update

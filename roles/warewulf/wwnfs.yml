@@ -1,0 +1,15 @@
+
+---
+- hosts: all
+  vars_files:
+    - vars/warewulf.yml
+
+  vars:
+    target: 'sl-6'
+
+  tasks:
+    - name: Create image {{target}}
+      shell: "yes | wwnfs --chroot {{warewulf.common}}/chroots/{{target}}"
+      tags:
+        - image
+        - target

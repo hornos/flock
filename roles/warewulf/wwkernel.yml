@@ -1,0 +1,24 @@
+#
+# TODO lone kernel and nopack dirs
+#
+---
+- hosts: all
+  vars_files:
+    - vars/warewulf.yml
+
+  vars:
+    target: 'sl-6'
+    kernel: '2.6.32-358.el6.x86_64'
+
+  tasks:
+    - name: Install kernel {{target}}
+      shell: "yes | /root/bin/wwyum {{target}}"
+      tags:
+        - kernel
+        - target
+
+    - name: Bootstrap kernel {{kernel}}
+      shell: "yes | wwbootstrap --chroot={{warewulf.common}}/chroots/{{target}} {{kernel}}"
+      tags:
+        - kernel
+        - bootstrap

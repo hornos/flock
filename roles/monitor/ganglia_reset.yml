@@ -1,0 +1,24 @@
+#
+# Ganglia cluster monitor
+#
+# TODO: UPDATE
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+    - vars/ganglia.yml
+
+  tasks:
+  - name: Stop gmetad
+    service: name=gmetad
+             state=stopped
+
+  - name: Clean rrds
+    shell: 'rm -fr /var/lib/ganglia/rrds/*'
+
+  - name: Start gmetad
+    service: name=gmetad
+             state=started
