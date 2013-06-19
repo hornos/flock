@@ -1,0 +1,14 @@
+---
+- hosts: all
+
+  tasks:
+    - name: Install packages
+      yum: name={{item}}
+           state=installed
+      with_items:
+        - PyYAML
+        - python-paramiko
+        - python-jinja2
+        - ansible
+      tags:
+        - packages

@@ -9,7 +9,7 @@
 
   tasks:
     - name: Create image {{target}}
-      shell: "yes | wwnfs --chroot {{warewulf.common}}/chroots/{{target}}"
+      shell: "yes | wwvnfs --chroot {{warewulf.common}}/chroots/{{target}}"
       tags:
         - image
         - target

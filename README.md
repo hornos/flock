@@ -396,12 +396,66 @@ Create compute image:
 
 Create compute VMs:
 
-     flock-vbox create n01
+     for i in 1 2 3; do flock-vbox create cn-0$i;done
 
 TODO: Login to the master node:
 
-    wwsh node new n0000 --netdev=eth0 --hwaddr=<MACADDR> -I 10.1.1.11 -G 10.1.1.254 --netmask=255.255.255.0
-    wwsh provision set n0000 --bootstrap=2.6.32-358.el6.x86_64 --vnfs=sl-6
+    wwsh node new cn-01 --netdev=eth0 --hwaddr=00:11:22:33:44:55 -I 10.1.1.11 -G 10.1.1.254 --netmask=255.255.255.0
+    wwsh provision set cn-01 --bootstrap=2.6.32-358.el6.x86_64 --vnfs=sl-6
+
+#### Optimized VNFS image
+Install a chroot:
+
+    wwmkchroot sl-6 /common/warewulf/chroots/sl-6
+    wwvnfs --chroot=/common/warewulf/chroots/sl-6
+
+Clone the VNFS directory and UPX compress (might not help):
+
+     pushd /common/warewulf/chroots
+     rsync -ar sl-6/* sl-6-upx
+     pushd sl-6-upx
+     for i in $(find . -name *.so) ; do upx -qqq --best $i;done
+     for i in $(find . -executable) ; do upx -qqq --best $i;done
+     popd
+     wwvnfs --chroot=/common/warewulf/chroots/sl-6-upx/
+
+#### Kernels
+
+    /root/bin/wwkernel sl-6 install kernel
+    wwbootstrap --chroot=/common/warewulf/kernels/sl-6 2.6.32-358.el6.x86_64
+
+Provision:
+
+    wwnodescan --netdev=eth0 --ipaddr=10.1.1.11 --netmask=255.255.255.0 --vnfs=sl-6 --bootstrap=2.6.32-358.el6.x86_64 cn-0[1-3] -g compute
+
+Start the VMs.
+
+Clear them:
+
+    wwsh node delete cn-0[1-3]
+
+#### Datastore
+
+    flock play @@core roles/warewulf/datastore
+
+Enable remote logging:
+
+    wwsh file import /common/warewulf/datastore/sl-6/etc/rsyslog.conf --name=sl-6-rsyslog --path=/etc/rsyslog.conf --mode=0644 --uid=0 --gid=0
+    wwsh provision set cn-0[1-3] --fileadd sl-6-rsyslog
+
+reboot the nodes.
+
+TODO: wwgetfiles wwgetscript
+TODO: pssh
+
+#### Ansible
+TODO: paramiko problem
+
+    flock play @@core roles/warewulf/ansible
+
+    pushd /common/warewulf
+    wwsh node list | grep cn | awk -F. '{print $1}' > hosts
+
 
 ### Message Queue
 

@@ -1,7 +1,7 @@
 #
 # Ganglia cluster monitor
 #
-# TODO: UPDATE
+# TODO: RRD NTP problem
 #
 ---
 - hosts: all
@@ -15,10 +15,12 @@
   - name: Stop gmetad
     service: name=gmetad
              state=stopped
+             enabled=no
 
   - name: Clean rrds
     shell: 'rm -fr /var/lib/ganglia/rrds/*'
 
-  - name: Start gmetad
-    service: name=gmetad
-             state=started
+#  - name: Start gmetad
+#    service: name=gmetad
+#             state=started
+#

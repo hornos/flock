@@ -4,6 +4,12 @@
 #
 # TODO: consider /usr/bin/cluster-env for regular users
 #
+# TODO: http protect xinted restart
+# standalone kernel network ips
+# ldap inetgration
+# slurm integration
+# ganglia integration
+# storage integration
 ---
 - hosts: all
   vars_files:
@@ -25,6 +31,7 @@
     yum: name={{item}}
          state=installed
     with_items:
+      - upx
       - xinetd
       - httpd
       - dhcp
@@ -87,21 +94,15 @@
       - ftp
     only_if: '$is_master'
 
-  - name: Create common chroots directory
-    file: path={{warewulf.common}}/chroots
+  - name: Create directories
+    file: path={{warewulf.common}}/{{item}}
           owner=root
           group=root
           state=directory
-    tags:
-      - directories
-      - ftp
-    only_if: '$is_master'
-
-  - name: Create common kernels directory
-    file: path={{warewulf.common}}/kernels
-          owner=root
-          group=root
-          state=directory
+    with_items:
+      - chroots
+      - kernels
+      - datastore
     tags:
       - directories
       - ftp
@@ -186,6 +187,14 @@
     lineinfile: dest=/etc/warewulf/vnfs.conf
                 regexp='^excludes \+= \/boot'
                 line='excludes += /boot'
+                backup=yes
+    tags:
+      - exclude
+
+  - name: Exclude /lib/modules
+    lineinfile: dest=/etc/warewulf/vnfs.conf
+                regexp='^excludes \+= \/lib\/modules'
+                line='excludes += /lib/modules'
                 backup=yes
     tags:
       - exclude

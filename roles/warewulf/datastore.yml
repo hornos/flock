@@ -1,0 +1,42 @@
+# Warewulf Cluster
+# http://www.admin-magazine.com/HPC/Articles/Warewulf-Cluster-Manager-Master-and-Compute-Nodes
+# http://www.admin-magazine.com/HPC/Articles/Warewulf-Cluster-Manager-Completing-the-Environment
+#
+# TODO: consider /usr/bin/cluster-env for regular users
+#
+# TODO: http protect xinted restart
+# standalone kernel network ips
+# ldap inetgration
+# slurm integration
+# ganglia integration
+# storage integration
+#
+# flock play @@core roles/warewulf/datastore.yml --extra-vars='master=core'
+#
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    - vars/mariadb.yml
+    - vars/warewulf.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_backup: "'$inventory_hostname' == '$backup'"
+
+  tasks:
+
+  # TODO: skip
+  - name: Create sl-6 directories
+    file: 'path={{warewulf.common}}/datastore/sl-6/etc owner=root group=root state=directory'
+    tags:
+      - directories
+    only_if: '$is_master'
+
+   # mind that datastore is not absolute
+  - name: Install rsyslog compute config
+    template: src=templates/datastore/sl-6/etc/rsyslog.conf.j2
+              dest={{warewulf.common}}/datastore/sl-6/etc/rsyslog.conf
+    tags:
+      - syslog
+    only_if: '$is_master'

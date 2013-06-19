@@ -7,12 +7,13 @@
   tasks:
 
 ### REDHAT
-    - name: Install python-simplejson
-      raw: yum -y install python-simplejson
-      when: ansible_os_family == "RedHat"
-      tags:
-        - packages
-        - json
+# obsolete
+#    - name: Install python-simplejson
+#      raw: yum -y install python-simplejson
+#      when: ansible_os_family == "RedHat"
+#      tags:
+#        - packages
+#        - json
 
     - name: Install packages
       yum: name={{item}}
