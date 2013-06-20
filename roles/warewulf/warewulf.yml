@@ -32,6 +32,9 @@
          state=installed
     with_items:
       - upx
+      - pssh
+      - genders
+      - genders-python
       - xinetd
       - httpd
       - dhcp
@@ -220,6 +223,10 @@
       - ipset
     notify:
       - Restart ipset
+
+#
+# ANSIBLE_HOSTS=core flock play @@core warewulf --extra-vars='master=core' --tag firewall
+#
 
   - name: Install firewall rules
     template: src=templates/etc/shorewall/rules.d/warewulf.j2

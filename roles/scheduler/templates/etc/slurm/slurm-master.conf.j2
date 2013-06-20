@@ -1,0 +1,108 @@
+ClusterName={{slurm.cluster}}
+ControlMachine={{master}}
+
+#
+SlurmUser=slurm
+#SlurmdUser=root
+SlurmctldPort=6817
+SlurmdPort=6818
+AuthType=auth/munge
+#JobCredentialPrivateKey=
+#JobCredentialPublicCertificate=
+
+StateSaveLocation={{slurm.state}}
+SlurmdSpoolDir=/var/spool/slurmd
+JobCheckpointDir={{slurm.checkpoint}}
+
+SwitchType=switch/none
+MpiDefault=none
+SlurmctldPidFile=/var/run/slurm/slurmctld.pid
+SlurmdPidFile=/var/run/slurm/slurmd.pid
+ProctrackType=proctrack/pgid
+#PluginDir=
+CacheGroups=0
+#FirstJobId=
+ReturnToService=2
+#MaxJobCount=
+#PlugStackConfig=
+#PropagatePrioProcess=
+#PropagateResourceLimits=
+#PropagateResourceLimitsExcept=
+#Prolog=
+#Epilog=
+#SrunProlog=
+#SrunEpilog=
+#TaskProlog=
+#TaskEpilog=
+#TaskPlugin=
+#TrackWCKey=no
+#TreeWidth=50
+#TmpFs=
+#UsePAM=
+#
+# TIMERS
+SlurmctldTimeout={{slurm.timeout}}
+SlurmdTimeout={{slurm.timeout}}
+InactiveLimit=0
+MinJobAge=300
+KillWait=30
+Waittime=0
+#
+# SCHEDULING
+SchedulerType=sched/backfill
+#SchedulerAuth=
+#SchedulerPort=
+#SchedulerRootFilter=
+SelectType=select/cons_res
+SelectTypeParameters=CR_Core_Memory
+SchedulerParameters=defer
+FastSchedule=1
+PriorityType=priority/multifactor
+
+# PriorityDecayHalfLife=7-0
+# sbank
+PriorityUsageResetPeriod=YEARLY
+PriorityWeightFairshare=100000
+PriorityWeightAge=1000
+PriorityWeightPartition=10000
+PriorityWeightJobSize=1000
+PriorityMaxAge=1-0
+
+# http://www.schedmd.com/slurmdocs/preempt.html
+PreemptType=preempt/partition_prio
+PreemptMode=SUSPEND,GANG
+
+# CheckpointType=checkpoint/blcr
+
+EnforcePartLimits=YES
+GroupUpdateForce=1
+
+# TODO HealthCheckProgram warewulf
+
+#
+# LOGGING
+SlurmctldDebug=3
+SlurmctldLogFile=/var/log/slurm/slurmctld.log
+SlurmdDebug=3
+SlurmdLogFile=/var/log/slurm/slurmd.log
+JobCompType=jobcomp/none
+#JobCompLoc=
+DefaultStorageType=slurmdbd
+
+# ACCOUNTING
+#JobAcctGatherType=jobacct_gather/linux
+#JobAcctGatherFrequency=30
+
+AccountingStorageEnforce=associations,limits,qos
+AccountingStorageType=accounting_storage/slurmdbd
+AccountingStorageHost={{master}}
+#AccountingStorageLoc=
+#AccountingStoragePass=
+#AccountingStorageUser=
+#
+# COMPUTE NODES
+NodeName={{master}} State=UNKNOWN
+PartitionName=DEFAULT Nodes={{master}} MaxTime=INFINITE State=UP
+PartitionName=low    Default=NO  Priority=10 PreemptMode=requeue
+PartitionName=normal Default=YES Priority=20 PreemptMode=suspend
+PartitionName=high   Default=NO  Priority=30 PreemptMode=off

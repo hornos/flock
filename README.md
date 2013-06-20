@@ -382,28 +382,14 @@ Hosts are collected in `ting/hosts` as json files. Create an Tunnelblick client 
 Now connect with Tunnelblick.
 
 ### Warewulf
+Warewulf is a badass cluster kit.
 
     flock play @@core warewulf
-
-Install compute image:
-
-    flock play @@core roles/warewulf/wwmkchroot
-
-Create compute image:
-
-    flock play @@core roles/warewulf/wwmnfs
-    flock play @@core roles/warewulf/wwkernel
 
 Create compute VMs:
 
      for i in 1 2 3; do flock-vbox create cn-0$i;done
 
-TODO: Login to the master node:
-
-    wwsh node new cn-01 --netdev=eth0 --hwaddr=00:11:22:33:44:55 -I 10.1.1.11 -G 10.1.1.254 --netmask=255.255.255.0
-    wwsh provision set cn-01 --bootstrap=2.6.32-358.el6.x86_64 --vnfs=sl-6
-
-#### Optimized VNFS image
 Install a chroot:
 
     wwmkchroot sl-6 /common/warewulf/chroots/sl-6
@@ -419,7 +405,7 @@ Clone the VNFS directory and UPX compress (might not help):
      popd
      wwvnfs --chroot=/common/warewulf/chroots/sl-6-upx/
 
-#### Kernels
+Install a kernel:
 
     /root/bin/wwkernel sl-6 install kernel
     wwbootstrap --chroot=/common/warewulf/kernels/sl-6 2.6.32-358.el6.x86_64
@@ -445,8 +431,12 @@ Enable remote logging:
 
 reboot the nodes.
 
-TODO: wwgetfiles wwgetscript
-TODO: pssh
+    /root/package_ganglia sl-6
+    wwvnfs sl-6
+
+    /root/bin/wwservice compute gmond restart
+
+munge slurm pcp group passw packages ldap autofs nfs home
 
 #### Ansible
 TODO: paramiko problem
@@ -455,6 +445,10 @@ TODO: paramiko problem
 
     pushd /common/warewulf
     wwsh node list | grep cn | awk -F. '{print $1}' > hosts
+
+### Scheduler
+
+    flock play @@core scheduler
 
 
 ### Message Queue

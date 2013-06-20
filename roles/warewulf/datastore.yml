@@ -4,11 +4,9 @@
 #
 # TODO: consider /usr/bin/cluster-env for regular users
 #
-# TODO: http protect xinted restart
-# standalone kernel network ips
+# better rsyslog
 # ldap inetgration
 # slurm integration
-# ganglia integration
 # storage integration
 #
 # flock play @@core roles/warewulf/datastore.yml --extra-vars='master=core'
@@ -40,3 +38,14 @@
     tags:
       - syslog
     only_if: '$is_master'
+
+  - name: Install scripts
+    template: src=templates/root/{{item}}.j2
+              dest=/root/{{item}}
+              mode=0755
+              owner=root
+              group=root
+    with_items:
+      - package_ganglia
+    tags:
+      - scripts

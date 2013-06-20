@@ -1,0 +1,38 @@
+#
+# Example slurmdbd.conf file.
+#
+# See the slurmdbd.conf man page for more information.
+#
+# Archive info
+#ArchiveJobs=yes
+#ArchiveDir="/tmp"
+#ArchiveSteps=yes
+#ArchiveScript=
+#JobPurge=12
+#StepPurge=1
+#
+# Authentication info
+AuthType=auth/munge
+#AuthInfo=/var/run/munge/munge.socket.2
+#
+# slurmDBD info
+DbdHost={{master}}
+
+#DbdPort=7031
+SlurmUser=slurm
+#MessageTimeout=300
+DebugLevel=4
+#DefaultQOS=normal,standby
+LogFile=/var/log/slurm/slurmdbd.log
+PidFile=/var/run/slurm/slurmdbd.pid
+PluginDir=/usr/lib64/slurm
+#PrivateData=accounts,users,usage,jobs
+#TrackWCKey=yes
+#
+# Database info
+StorageType=accounting_storage/mysql
+StorageHost=127.0.0.1
+#StoragePort=1234
+StoragePass={{slurm.user}}
+StorageUser={{slurm.password}}
+StorageLoc={{slurm.db}}

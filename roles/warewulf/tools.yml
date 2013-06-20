@@ -17,3 +17,5 @@
                 mode=0755
       with_items:
         - wwyum
+        - wwservice
+

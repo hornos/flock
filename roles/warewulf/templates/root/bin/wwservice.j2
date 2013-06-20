@@ -1,0 +1,11 @@
+#!/bin/bash
+
+_group=${1:-compute}
+shift
+_service=${1:-gmond}
+shift
+_action=${1:-restart}
+shift
+_opts=$*
+
+pssh ${_opts} -H "$(wwsh node list|grep ${_group}| awk '{print $1}')" service ${_service} ${_action}

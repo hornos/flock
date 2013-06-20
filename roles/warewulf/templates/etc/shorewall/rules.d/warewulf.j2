@@ -1,4 +1,9 @@
-ACCEPT       sys:+warewulf           $FW       udp       69
+# Syslog
 ACCEPT       sys:+warewulf           $FW       udp      514
+# Boot
+ACCEPT       sys:+warewulf           $FW       udp       69
 ACCEPT       sys:+warewulf           $FW       tcp       80
+# Ganglia
+ACCEPT       sys:+warewulf           $FW       udp     8649
+ACCEPT       sys:+warewulf           $FW       tcp     8649
 Ping(ACCEPT) sys                     $FW
