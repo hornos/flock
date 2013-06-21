@@ -386,11 +386,65 @@ Warewulf is a badass cluster kit.
 
     flock play @@core warewulf
 
+
+
 Create compute VMs:
 
      for i in 1 2 3; do flock-vbox create cn-0$i;done
 
-Install a chroot:
+Login to the master node and make a child:
+
+    wwmkchroot centos-6 /common/warewulf/chroots/centos-6
+
+Make the chroot hosts inventory (`/common/warewulf/chroots/hosts`):
+
+    [chroots]
+    /common/warewulf/chroots/centos-6
+
+Play the clone book:
+
+    ANSIBLE_HOSTS=hosts ansible-playbook -l chroots playbooks/clone.yml
+
+    /root/bin/wwyum /common/warewulf/chroots/centos-6 install kernel
+
+Child a repo:
+
+    cp /etc/yum.conf /common/warewulf/chroots/centos-6/etc
+    cp /etc/yum.repos.d/*.repo /common/warewulf/chroots/centos-6/etc/yum.repos.d
+
+    yum --config /common/warewulf/chroots/centos-6/etc/yum.conf --installroot /common/warewulf/chroots/centos-6/ makecache
+
+Slurm:
+
+    yum --config /common/warewulf/chroots/centos-6/etc/yum.conf --installroot /common/warewulf/chroots/centos-6/ install munge slurm slurm-munge slurm-pam_slurm slurm-perlapi slurm-plugins slurm-sjobexit slurm-sjstat
+
+Ganglia:
+
+    yum --config /common/warewulf/chroots/centos-6/etc/yum.conf --installroot /common/warewulf/chroots/centos-6/ install ganglia-gmond ganglia-gmond-modules-python
+
+Configure `rsyslog.conf`:
+
+    # rsyslog v5 configuration file
+    $ModLoad imuxsock
+    $ModLoad imklog
+    $ModLoad immark
+    $ActionFileDefaultTemplate RSYSLOG_FileFormat
+    $IncludeConfig /etc/rsyslog.d/*.conf
+    kern.*         /dev/console
+    local7.*       /var/log/boot.log
+    ### begin forwarding rule ###
+    *.* @core:514
+    ### end of the forwarding rule ###
+
+Configure Users:
+
+
+
+    cp /etc/sysconfig/network-scripts/route-eth0 /common/warewulf/chroots/centos-6/etc/sysconfig/network-scripts/
+    cp /etc/ganglia/gmond.conf /common/warewulf/chroots/centos-6/etc/ganglia/
+
+Configure Munge:
+
 
     wwmkchroot sl-6 /common/warewulf/chroots/sl-6
     wwvnfs --chroot=/common/warewulf/chroots/sl-6

@@ -12,3 +12,14 @@
         - ansible
       tags:
         - packages
+
+    - name: Install clone inventory
+      templates: src
+                 dest
+      tags:
+        - clone
+
+    - name: Install clone playbooks
+
+    - name: Install clone scripts
+    

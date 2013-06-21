@@ -5,6 +5,7 @@
 ---
 - include: roles/warewulf/warewulf.yml
 - include: roles/warewulf/tools.yml
+- include: roles/warewulf/ansible.yml
 
 - hosts: all
   tasks:
