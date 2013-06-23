@@ -5,7 +5,7 @@
     - vars/warewulf.yml
 
   vars:
-    target: 'sl-6'
+    target: 'centos-6'
 
   tasks:
     - name: Create image {{target}}

@@ -203,7 +203,6 @@
       service: name=shorewall
                state=restarted
 
-
     - name: Restart httpd
       service: name={{service.httpd}}
                state=restarted

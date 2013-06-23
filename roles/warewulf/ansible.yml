@@ -36,6 +36,7 @@
       with_items:
         - playbooks
         - playbooks/templates
+        - playbooks/keys
       tags:
         - clone
         - directories
@@ -49,6 +50,9 @@
         - repos.yml
         - rsyslog.yml
         - ganglia.yml
+        - users.yml
+        - munge.yml
+        - slurm.yml
       tags:
         - clone
         - playbooks
@@ -64,6 +68,9 @@
         - clonebook
         - cloneyum
         - clonepackages
+        - cloneimage
+        - cloneupx
+        - clonekernel
       tags:
         - clone
         - scripts

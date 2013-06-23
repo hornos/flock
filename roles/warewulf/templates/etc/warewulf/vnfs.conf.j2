@@ -1,0 +1,31 @@
+# General Vnfs configuration file.
+#
+# You can also create a VNFS specific configuration file in the vnfs/
+# configuration directory named "vnfs/[name].conf". There you can put
+# additional information and configuration paramaters.
+
+# If you are doing a stateful install, comment out the /usr/share
+# exclude before building the VNFS. /usr/share is needed by dracut
+# excludes += /home
+excludes += /tmp
+excludes += /dev
+excludes += /usr/share
+excludes += /usr/X11R6
+excludes += /usr/lib/locale
+excludes += /usr/lib64/locale
+excludes += /usr/src
+excludes += /usr/include
+
+# These are optional because they may break things if you have not
+# enabled hybridization
+
+#excludes += /usr/lib64/R
+#excludes += /usr/lib64/python2.4
+#excludes += /usr/lib/perl5
+#excludes += /usr/openv
+#excludes += /usr/lib64/perl5
+#excludes += /usr/lib64/dri
+
+excludes += /boot
+excludes += /lib/modules
+excludes += /var/cache/yum

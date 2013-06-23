@@ -1,0 +1,42 @@
+#
+# Mind the gap!
+#
+---
+- hosts: all
+  connection: chroot
+  tasks:
+    - name: Set munge user
+      lineinfile: dest=/etc/sysconfig/munge
+                  regexp='^USER'
+                  line='USER="munge"'
+      tags:
+        - munge
+
+    - name: Set munge permissions
+      file: path=/var/$item/munge
+            owner=munge
+            group=munge
+            state=directory
+      with_items:
+        - run
+        - lib
+        - log
+      tags:
+        - munge
+
+    - name: Set munge permissions /etc/munge
+      file: path=/etc/munge
+            owner=munge
+            group=munge
+            state=directory
+      tags:
+        - munge
+
+    - name: Setup munge key
+      copy: src=/etc/munge/munge.key
+            dest=/etc/munge/munge.key
+            owner=munge
+            group=munge
+            mode=0600
+      tags:
+        - munge

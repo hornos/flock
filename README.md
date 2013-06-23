@@ -382,6 +382,7 @@ Hosts are collected in `ting/hosts` as json files. Create an Tunnelblick client 
 Now connect with Tunnelblick.
 
 ### Warewulf
+TODO: mysql no wsrep master
 Warewulf is a badass cluster kit.
 
     flock play @@core warewulf
@@ -394,20 +395,24 @@ Login to the master node and make a child:
 
     wwmkchroot centos-6 /common/warewulf/chroots/centos-6
 
-Install basic packages
+Install basic packages (NTP, Munge, Slurm):
 
     pushd /common/warewulf/chroots
     ./clonepackages
 
-Enable remote syslog:
+Enable remote syslog (TODO: no console log):
 
     ./clonebook centos-6 playbooks/rsyslog
+
+TODO: tty monitors + upx
 
 Configure Ganglia:
 
     ./clonebook centos-6 playbooks/ganglia
 
-Generate cluster key:
+Generate cluster keys:
+
+    ssh-keygen -b2048 -N "" -f playbooks/keys/cluster
 
 Configure Users (mind the uid/gid numbers!):
 
@@ -415,55 +420,62 @@ Configure Users (mind the uid/gid numbers!):
 
 Configure Munge:
 
-Configure Slurm:
+    ./clonebook centos-6 playbooks/munge
 
-Exclude directories:
+Configure Slurm (TODO: remote logs via syslog, queues, nodes, state, dynamic host file like):
 
-Make the image
+    ./clonebook centos-6 playbooks/slurm
 
-    wwvnfs --chroot=/common/warewulf/chroots/centos-6
+Configure NTP (TODO: ntpdate + ptp no ntpd):
 
-Clone the VNFS directory and UPX compress (optional):
+    ./clonebook centos-6 playbooks/ntpd
 
-     pushd /common/warewulf/chroots
-     rsync -ar centos-6/* centos-6-upx
-     pushd centos-6-upx
-     for i in $(find . -name *.so) ; do upx -qqq --best $i;done
-     for i in $(find . -executable) ; do upx -qqq --best $i;done
-     popd
-     wwvnfs --chroot=/common/warewulf/chroots/centos-6-upx/
+TODO: templates with networks.yml
+
+Enable services:
+
+    chroot centos-6
+    chkconfig munge on
+    chkconfig ntpd on
+    exit
+
+(re)Make the image:
+
+    ./cloneimage centos-6
+
+or try to compress it as well (TODO minify, busybox tranzitus, sysuuid boot):
+
+    ./cloneupx centos-6
+    ./cloneimage centos-6-upx
 
 Bootstrap the kernel:
 
-    wwbootstrap --chroot=/common/warewulf/kernels/sl-6 2.6.32-358.el6.x86_64
+    for i in $(ls centos-6/boot/vmlinuz*); do basename ${i/*vmlinuz-//};done
+    ./clonekernel centos-6 <KERNEL>
 
-Provision:
+    wwbootstrap --chroot=/common/warewulf/chroots/centos-6 2.6.32-358.el6.x86_64
 
-    wwnodescan --netdev=eth0 --ipaddr=10.1.1.11 --netmask=255.255.255.0 --vnfs=sl-6 --bootstrap=2.6.32-358.el6.x86_64 cn-0[1-3] -g compute
+Provision (TODO: from networks.yml):
+
+    ./clonescan centos-6/<KERNEL> compute/cn-0[1-3]
+
+    wwnodescan --netdev=eth0 --ipaddr=10.1.1.11 --netmask=255.255.255.0 --vnfs=centos-6 --bootstrap=2.6.32-358.el6.x86_64 cn-0[1-3] -g compute
 
 Start the VMs.
+
+Make a Slurm configuration:
+
+    srun -N 2 hostname
 
 Clear them:
 
     wwsh node delete cn-0[1-3]
 
-#### Datastore
-
-    flock play @@core roles/warewulf/datastore
-
-Enable remote logging:
-
-    wwsh file import /common/warewulf/datastore/sl-6/etc/rsyslog.conf --name=sl-6-rsyslog --path=/etc/rsyslog.conf --mode=0644 --uid=0 --gid=0
-    wwsh provision set cn-0[1-3] --fileadd sl-6-rsyslog
-
-reboot the nodes.
-
-    /root/package_ganglia sl-6
-    wwvnfs sl-6
-
     /root/bin/wwservice compute gmond restart
 
 munge slurm pcp group passw packages ldap autofs nfs home
+
+queue confs
 
 #### Ansible
 TODO: paramiko problem

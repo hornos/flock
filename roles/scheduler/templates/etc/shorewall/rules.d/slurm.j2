@@ -1,0 +1,6 @@
+# slutmctld
+ACCEPT     sys:+compute        $FW       tcp      6817
+# NTP
+ACCEPT     sys:+compute        $FW       udp      123
+# ephemeral ports for srun
+ACCEPT     sys:+compute        $FW       tcp      32768:61000

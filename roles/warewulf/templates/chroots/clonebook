@@ -1,5 +1,5 @@
 #!/bin/bash
-_hosts=${1:-centos}
+_hosts=${1:-centos-6}
 shift
 _playbook=${1:-playbooks/repos.yml}
 shift

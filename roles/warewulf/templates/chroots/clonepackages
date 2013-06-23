@@ -13,3 +13,6 @@
 
 ### install ganglia packages
 ./cloneyum centos-6 install ganglia-gmond ganglia-gmond-modules-python
+
+### NTP
+./cloneyum centos-6 install ntp

@@ -280,6 +280,34 @@
       - config
       - services
 
+### IPSet
+  - name: Install ipset tables
+    template: src=templates/etc/ipset.d/{{item}}.j2
+              dest=/etc/ipset.d/{{item}}
+              owner=root
+              group=root
+              mode=0755
+    with_items:
+      - compute.sh
+    tags:
+      - firewall
+      - ipset
+    notify:
+      - Restart ipset
+
+### Firewall
+  - name: Install firewall rules
+    template: src=templates/etc/shorewall/rules.d/slurm.j2
+              dest=/etc/shorewall/rules.d/slurm
+              owner=root
+              group=root
+              mode=0640
+    tags:
+      - firewall
+    notify:
+      - Restart shorewall
+
+
   - name: Start slurm
     service: name=slurm
              state=started
@@ -296,4 +324,12 @@
 
     - name: Restart slurm
       service: name=slurm
+               state=restarted
+
+    - name: Restart ipset
+      service: name=ipset
+               state=reloaded
+
+    - name: Restart shorewall
+      service: name=shorewall
                state=restarted

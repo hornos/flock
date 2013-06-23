@@ -1,0 +1,127 @@
+#
+# Mind the gap!
+#
+---
+- hosts: all
+  connection: chroot
+  tasks:
+### GROUPS
+    - name: Create sysop group
+      group: name=sysop
+             gid=500
+      tags:
+        - groups
+
+    - name: Create munge group
+      group: name=munge
+             gid=502
+      tags:
+        - groups
+
+    - name: Create slurm group
+      group: name=slurm
+             gid=503
+      tags:
+        - groups
+
+### USERS
+    - name: Create sysop user
+      user: name=sysop
+            uid=500
+            group=sysop
+            groups=wheel
+            append=yes
+      tags:
+        - users
+
+# group 501 is rvm
+
+    - name: Create munge user
+      user: name=munge
+            uid=501
+            group=munge
+      tags:
+        - users
+
+    - name: Create slurm user
+      user: name=slurm
+            uid=502
+            group=slurm
+      tags:
+        - users
+
+### SSH keys
+
+### ROOT
+    - name: Create SSH directory
+      file: path=/root/.ssh
+            owner=root
+            group=root
+            mode=0700
+            state=directory
+      tags:
+        - directories
+
+    - name: Install cluster key
+      copy: src=keys/cluster
+            dest=/root/.ssh/id_rsa
+            owner=root
+            group=root
+            mode=0600
+      tags:
+        - keys
+
+    - name: Install cluster public key
+      copy: src=keys/cluster.pub
+            dest=/root/.ssh/id_rsa.pub
+            owner=root
+            group=root
+            mode=0600
+      tags:
+        - keys
+
+    - name: Install authorized key
+      copy: src=keys/cluster.pub
+            dest=/root/.ssh/authorized_keys
+            owner=root
+            group=root
+            mode=0600
+      tags:
+        - keys
+
+### SYSOP
+    - name: Create SSH directory
+      file: path=/home/sysop/.ssh
+            owner=sysop
+            group=sysop
+            mode=0700
+            state=directory
+      tags:
+        - directories
+
+    - name: Install cluster key
+      copy: src=keys/cluster
+            dest=/home/sysop/.ssh/id_rsa
+            owner=sysop
+            group=sysop
+            mode=0600
+      tags:
+        - keys
+
+    - name: Install cluster public key
+      copy: src=keys/cluster.pub
+            dest=/home/sysop/.ssh/id_rsa.pub
+            owner=sysop
+            group=sysop
+            mode=0600
+      tags:
+        - keys
+
+    - name: Install authorized key
+      copy: src=keys/cluster.pub
+            dest=/home/sysop/.ssh/authorized_keys
+            owner=sysop
+            group=sysop
+            mode=0600
+      tags:
+        - keys

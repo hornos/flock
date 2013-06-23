@@ -1,0 +1,4 @@
+#!/bin/bash
+_hosts=${1:-centos-6}
+shift
+wwvnfs --chroot=${PWD}/${_hosts}

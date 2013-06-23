@@ -1,0 +1,36 @@
+#
+# Mind the gap!
+#
+---
+- hosts: all
+  connection: chroot
+  tasks:
+    - name: Create slurm directories
+      file: path=/var/$item/slurm
+            owner=slurm
+            group=slurm
+            state=directory
+      with_items:
+        - log
+        - run
+        - lib
+      tags:
+        - slurm
+
+    - name: Install /etc/slurm/slurm.conf
+      template: src=/etc/slurm/slurm.conf
+                dest=/etc/slurm/slurm.conf
+                owner=slurm
+                group=slurm
+                mode=0644
+      tags:
+        - slurm
+
+    - name: Install /etc/sysconfig/slurm
+      template: src=/etc/sysconfig/slurm
+                dest=/etc/sysconfig/slurm
+                owner=slurm
+                group=slurm
+                mode=0644
+      tags:
+        - slurm
