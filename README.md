@@ -386,8 +386,6 @@ Warewulf is a badass cluster kit.
 
     flock play @@core warewulf
 
-
-
 Create compute VMs:
 
      for i in 1 2 3; do flock-vbox create cn-0$i;done
@@ -396,72 +394,47 @@ Login to the master node and make a child:
 
     wwmkchroot centos-6 /common/warewulf/chroots/centos-6
 
-Make the chroot hosts inventory (`/common/warewulf/chroots/hosts`):
+Install basic packages
 
-    [chroots]
-    /common/warewulf/chroots/centos-6
+    pushd /common/warewulf/chroots
+    ./clonepackages
 
-Play the clone book:
+Enable remote syslog:
 
-    ANSIBLE_HOSTS=hosts ansible-playbook -l chroots playbooks/clone.yml
+    ./clonebook centos-6 playbooks/rsyslog
 
-    /root/bin/wwyum /common/warewulf/chroots/centos-6 install kernel
+Configure Ganglia:
 
-Child a repo:
+    ./clonebook centos-6 playbooks/ganglia
 
-    cp /etc/yum.conf /common/warewulf/chroots/centos-6/etc
-    cp /etc/yum.repos.d/*.repo /common/warewulf/chroots/centos-6/etc/yum.repos.d
+Generate cluster key:
 
-    yum --config /common/warewulf/chroots/centos-6/etc/yum.conf --installroot /common/warewulf/chroots/centos-6/ makecache
+Configure Users (mind the uid/gid numbers!):
 
-Slurm:
-
-    yum --config /common/warewulf/chroots/centos-6/etc/yum.conf --installroot /common/warewulf/chroots/centos-6/ install munge slurm slurm-munge slurm-pam_slurm slurm-perlapi slurm-plugins slurm-sjobexit slurm-sjstat
-
-Ganglia:
-
-    yum --config /common/warewulf/chroots/centos-6/etc/yum.conf --installroot /common/warewulf/chroots/centos-6/ install ganglia-gmond ganglia-gmond-modules-python
-
-Configure `rsyslog.conf`:
-
-    # rsyslog v5 configuration file
-    $ModLoad imuxsock
-    $ModLoad imklog
-    $ModLoad immark
-    $ActionFileDefaultTemplate RSYSLOG_FileFormat
-    $IncludeConfig /etc/rsyslog.d/*.conf
-    kern.*         /dev/console
-    local7.*       /var/log/boot.log
-    ### begin forwarding rule ###
-    *.* @core:514
-    ### end of the forwarding rule ###
-
-Configure Users:
-
-
-
-    cp /etc/sysconfig/network-scripts/route-eth0 /common/warewulf/chroots/centos-6/etc/sysconfig/network-scripts/
-    cp /etc/ganglia/gmond.conf /common/warewulf/chroots/centos-6/etc/ganglia/
+    ./clonebook centos-6 playbooks/users
 
 Configure Munge:
 
+Configure Slurm:
 
-    wwmkchroot sl-6 /common/warewulf/chroots/sl-6
-    wwvnfs --chroot=/common/warewulf/chroots/sl-6
+Exclude directories:
 
-Clone the VNFS directory and UPX compress (might not help):
+Make the image
+
+    wwvnfs --chroot=/common/warewulf/chroots/centos-6
+
+Clone the VNFS directory and UPX compress (optional):
 
      pushd /common/warewulf/chroots
-     rsync -ar sl-6/* sl-6-upx
-     pushd sl-6-upx
+     rsync -ar centos-6/* centos-6-upx
+     pushd centos-6-upx
      for i in $(find . -name *.so) ; do upx -qqq --best $i;done
      for i in $(find . -executable) ; do upx -qqq --best $i;done
      popd
-     wwvnfs --chroot=/common/warewulf/chroots/sl-6-upx/
+     wwvnfs --chroot=/common/warewulf/chroots/centos-6-upx/
 
-Install a kernel:
+Bootstrap the kernel:
 
-    /root/bin/wwkernel sl-6 install kernel
     wwbootstrap --chroot=/common/warewulf/kernels/sl-6 2.6.32-358.el6.x86_64
 
 Provision:

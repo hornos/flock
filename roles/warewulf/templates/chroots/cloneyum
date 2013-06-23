@@ -1,0 +1,5 @@
+#!/bin/bash
+_hosts=${1:-centos-6}
+shift
+_args=${*:-makecache}
+yum --config ${PWD}/${_hosts}/etc/yum.conf --installroot ${PWD}/${_hosts}/ ${_args}

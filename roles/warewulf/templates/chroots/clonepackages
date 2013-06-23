@@ -1,0 +1,15 @@
+#!/bin/bash
+### install repos
+./clonebook centos-6 playbooks/repos.yml
+
+### update package cache
+./cloneyum centos-6 makecache
+
+### install kernel
+./cloneyum centos-6 install kernel
+
+### install slurm packages
+./cloneyum centos-6 install munge slurm slurm-munge slurm-pam_slurm slurm-perlapi slurm-plugins slurm-sjobexit slurm-sjstat
+
+### install ganglia packages
+./cloneyum centos-6 install ganglia-gmond ganglia-gmond-modules-python

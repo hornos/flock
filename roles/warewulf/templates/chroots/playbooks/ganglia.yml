@@ -1,0 +1,20 @@
+#
+# Mind the gap!
+#
+---
+- hosts: all
+  connection: chroot
+  tasks:
+    - name: Install multicast route
+      copy: src=templates/route-eth0
+            dest=/etc/sysconfig/network-scripts/route-eth0
+      tags:
+        - config
+        - route
+
+    - name: Install configuration
+      copy: src=templates/gmond.conf
+            dest=/etc/ganglia/gmond.conf
+      tags:
+        - config
+        - ganglia

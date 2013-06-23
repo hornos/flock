@@ -1,6 +1,14 @@
 ---
 - hosts: all
 
+  vars_files:
+    - networks.yml
+    - vars/warewulf.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_backup: "'$inventory_hostname' == '$backup'"
+
   tasks:
     - name: Install packages
       yum: name={{item}}
@@ -13,13 +21,61 @@
       tags:
         - packages
 
+### INVENTORY
     - name: Install clone inventory
-      templates: src
-                 dest
+      template: src=templates/chroots/hosts.j2
+                dest={{warewulf.common}}/chroots/hosts
       tags:
         - clone
+        - inventory
 
+### DIRECTORIES
+    - name: Create directories
+      file: path={{warewulf.common}}/chroots/{{item}}
+            state=directory
+      with_items:
+        - playbooks
+        - playbooks/templates
+      tags:
+        - clone
+        - directories
+
+### PLAYBOOKS
+    # lightweight clone playbooks
     - name: Install clone playbooks
+      copy: src=templates/chroots/playbooks/{{item}}
+            dest={{warewulf.common}}/chroots/playbooks/{{item}}
+      with_items:
+        - repos.yml
+        - rsyslog.yml
+        - ganglia.yml
+      tags:
+        - clone
+        - playbooks
 
+### SCRIPTS
     - name: Install clone scripts
-    
+      copy: src=templates/chroots/{{item}}
+            dest={{warewulf.common}}/chroots/{{item}}
+            owner=root
+            group=root
+            mode=0755
+      with_items:
+        - clonebook
+        - cloneyum
+        - clonepackages
+      tags:
+        - clone
+        - scripts
+
+### TEMPLATES
+    - name: Install clone templates
+      copy: src=templates/chroots/playbooks/templates/{{item}}
+            dest={{warewulf.common}}/chroots/playbooks/templates/{{item}}
+      with_items:
+        - rsyslog.conf
+        - gmond.conf
+        - route-eth0
+      tags:
+        - clone
+        - templates

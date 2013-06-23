@@ -1,0 +1,12 @@
+#
+# Mind the gap!
+#
+---
+- hosts: all
+  connection: chroot
+  tasks:
+    - name: Install config
+      copy: src=templates/rsyslog.conf
+            dest=/etc/rsyslog.conf
+      tags:
+        - config
