@@ -54,6 +54,8 @@
         - munge.yml
         - slurm.yml
         - ntpd.yml
+        - autofs.yml
+        - tune.yml
       tags:
         - clone
         - playbooks
@@ -70,7 +72,7 @@
         - cloneyum
         - clonepackages
         - cloneimage
-        - cloneupx
+        - clonemini
         - clonekernel
         - cloneos
         - clonescan
@@ -88,6 +90,9 @@
         - gmond.conf
         - route-eth0
         - ntp.conf
+        - auto.common
+        - auto.master
+        - sysctl.conf
       tags:
         - clone
         - templates

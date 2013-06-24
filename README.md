@@ -390,6 +390,10 @@ Put on the mask:
 
     flock play @@core warewulf
 
+Rerun clones:
+
+    flock play @@core roles/warewulf/ansible.yml --tag clone --extra-vars='master=core'
+
 Enable health check (TODO):
 
     flock play @@core roles/warewulf/healthcheck
@@ -431,7 +435,7 @@ Configure Munge:
 
     ./clonebook centos-6 playbooks/munge
 
-Configure Slurm (TODO: remote logs via syslog, queues, nodes, state, dynamic host file like):
+Configure Slurm:
 
     ./clonebook centos-6 playbooks/slurm
 
@@ -441,7 +445,13 @@ Configure NTP (TODO: ntpdate + ptp no ntpd):
 
 Configure NFS and automount:
 
+    ./clonebook centos-6 playbooks/autofs
 
+Enable some tune options:
+
+    ./clonebook centos-6 playbooks/tune
+
+TODO: http://blog.kreyolys.com/2011/03/17/no-panic-its-just-a-kernel-panic/
 
 TODO: LDAP & storage
 
@@ -454,11 +464,6 @@ Enable services:
 
     ./cloneimage centos-6
 
-or try to compress it as well (TODO minify, busybox tranzitus, sysuuid boot, HPC kernel tune):
-
-    ./cloneupx centos-6
-    ./cloneimage centos-6-upx
-
 Bootstrap the kernel:
 
     ./clonekernel list centos-6
@@ -470,13 +475,15 @@ Provision:
 
 Start the VMs.
 
-Reconfigure the scheduler:
+Reconfigure the scheduler (TODO):
 
     ./slurmconf cn-0[1-3]
 
-Try them out:
+Try them out (TODO):
 
     srun -N 3 hostname
+
+MPI batch tests:
 
 Service restart (TODO):
 

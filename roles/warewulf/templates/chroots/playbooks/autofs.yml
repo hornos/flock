@@ -1,0 +1,24 @@
+#
+# Mind the gap!
+#
+---
+- hosts: all
+  connection: chroot
+  tasks:
+    - name: Create directories
+      file: path=/common
+            state=directory
+      tags:
+        - directories
+
+    - name: Install /etc/auto.master
+      template: src=templates/auto.master
+                dest=/etc/auto.master
+      tags:
+        - autofs
+
+    - name: Install /etc/auto.common
+      template: src=templates/auto.common
+                dest=/etc/auto.common
+      tags:
+        - autofs

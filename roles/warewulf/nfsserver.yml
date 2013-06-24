@@ -40,10 +40,20 @@
 
     - name: Install /etc/syconfig/nfs
       template: src=templates/etc/sysconfig/nfs.j2
-              dest=/etc/sysconfig/nfs
-              backup=yes
+                dest=/etc/sysconfig/nfs
+                backup=yes
       tags:
         - config
+
+### EXPORTS
+    - name: Install /etc/exports
+      template: src=templates/etc/exports.j2
+                dest=/etc/exports
+                backup=yes
+      notify:
+        - Reload nfs
+      tags:
+        - exports
 
 ### FIREWALL
     - name: Install firewall rules
@@ -57,7 +67,27 @@
       notify:
         - Restart shorewall
 
+### SERVICES
+    - name: Start rpcbind
+      service: name=rpcbind
+               state=started
+               enabled=yes
+
+    - name: Start nfs
+      service: name=nfs
+               state=started
+               enabled=yes
+
+    - name: Start nfslock
+      service: name=nfslock
+               state=started
+               enabled=yes
+
   handlers:
     - name: Restart shorewall
       service: name=shorewall
                state=restarted
+
+    - name: Reload nfs
+      service: name=nfs
+               state=reloaded

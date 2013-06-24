@@ -1,0 +1,16 @@
+#!/bin/bash
+_hosts=${1:-centos-6}
+shift
+_opts=${*}
+
+rsync -ar ${_hosts}/* ${_hosts}-mini
+./cloneyum ${_hosts}-mini install busybox
+
+pushd ${_hosts}-mini
+echo ""
+echo "Compress shared objects"
+for i in $(find . -type f \( -iname "*.so" ! -iname "libdl*" \)) ; do upx -qq --best $i;done
+echo ""
+echo "Compress executables"
+for i in $(find . -executable) ; do upx -qq --best $i;done
+popd
