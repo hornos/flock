@@ -164,6 +164,8 @@
       - Restart slurm
     tags:
       - slurm
+      - config
+      - slurmctld
 
   - name: Start slurmdbd
     service: name=slurmdbd

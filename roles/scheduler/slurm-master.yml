@@ -2,6 +2,7 @@
 # Slurm Scheduler
 #
 # flock play @@core roles/scheduler/slurm-master.yml --extra-vars='master=core'
+# mysqlcheck --repair mysql proc -u root -proot
 #
 ---
 - hosts: all
@@ -166,6 +167,8 @@
       - Restart slurm
     tags:
       - slurm
+      - config
+      - slurmctld
 
   - name: Start slurmdbd
     service: name=slurmdbd

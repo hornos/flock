@@ -4,8 +4,8 @@ $ModLoad imklog
 $ModLoad immark
 $ActionFileDefaultTemplate RSYSLOG_FileFormat
 $IncludeConfig /etc/rsyslog.d/*.conf
-kern.*         /dev/console
+# kern.*         /dev/console
 local7.*       /var/log/boot.log
 ### begin forwarding rule ###
-*.* @core:514
+*.* @{{warewulf.loghost}}:514
 ### end of the forwarding rule ###

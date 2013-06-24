@@ -1,5 +1,0 @@
-#!/bin/bash
-_hosts=${1:-centos-6}
-shift
-_kernel=$*
-wwbootstrap --chroot=/common/warewulf/chroots/{_hosts} ${_kernel}

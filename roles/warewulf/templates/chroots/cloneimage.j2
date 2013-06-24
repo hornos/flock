@@ -1,4 +1,4 @@
 #!/bin/bash
-_hosts=${1:-centos-6}
+_hosts=${1:-{{warewulf.os}}}
 shift
 wwvnfs --chroot=${PWD}/${_hosts}

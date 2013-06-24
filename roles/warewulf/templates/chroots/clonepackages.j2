@@ -1,0 +1,18 @@
+#!/bin/bash
+### install repos
+./clonebook {{warewulf.os}} playbooks/repos.yml
+
+### update package cache
+./cloneyum {{warewulf.os}} makecache
+
+### install kernel and utils
+./cloneyum {{warewulf.os}} install kernel htop sysstat ntp ntpdate rsync
+
+### install slurm packages
+./cloneyum {{warewulf.os}} install munge slurm slurm-munge slurm-pam_slurm slurm-perlapi slurm-plugins slurm-sjobexit slurm-sjstat
+
+### install ganglia packages
+./cloneyum {{warewulf.os}} install ganglia-gmond ganglia-gmond-modules-python
+
+### install warewulf packages
+./cloneyum {{warewulf.os}} install warewulf-nhc

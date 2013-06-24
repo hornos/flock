@@ -1,0 +1,27 @@
+#!/bin/bash
+_nodes=${1:-cn-0[1-3]}
+shift
+_group=${1:-compute}
+
+read -p "Install new Slurm config?"
+_config=/etc/slurm/slurm.conf
+cat ${_config} | \
+sed s/^NodeName.*/NodeName=${_nodes}/ | \
+sed s/^PartitionName=DEFAULT.*/PartitionName=DEFAULT\ Nodes=${_nodes}\ MaxTime=INFINITE\ State=UP/ \
+> ${_config}.tmp
+cp -v ${_config}.tmp ${_config}
+
+read -p "Install new Genders?"
+echo "${_nodes} compute" > /etc/genders
+
+read -p "Provision nodes?"
+wwsh file import ${_config}
+wwsh provision set ${_nodes} --fileadd=slurm.conf
+
+wwsh file import /etc/nhc/nhc-${_group}.conf --name=nhc.conf --path=/etc/nhc/nhc.conf
+wwsh provision set ${_nodes} --fileadd=nhc.conf
+# TODO
+PSSH_OPTIONS="IdentityFile=playbooks/keys/cluster" pssh -H $(nodeattr -n ${_group}) -v /warewulf/bin/wwgetfiles
+
+read -p "Reconfigure Slurm?"
+scontrol reconfigure

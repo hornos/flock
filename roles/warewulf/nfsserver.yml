@@ -1,0 +1,63 @@
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - vars/warewulf.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_backup: "'$inventory_hostname' == '$backup'"
+
+  tasks:
+    - name: Install packages
+      yum: name={{item}}
+           state=installed
+      with_items:
+        - nfs4-acl-tools
+        - nfs-utils
+        - nfswatch
+        - rpcbind
+      tags:
+        - packages
+
+### DIRECTORIES
+    - name: Create scratch directory
+      file: path={{warewulf.scratch}}
+            state=directory
+      tags:
+        - scratch
+        - directories
+
+    - name: Create home directory
+      file: path={{warewulf.home}}
+            state=directory
+      tags:
+        - home
+        - directories
+
+### CONFIGURATION
+
+    - name: Install /etc/syconfig/nfs
+      template: src=templates/etc/sysconfig/nfs.j2
+              dest=/etc/sysconfig/nfs
+              backup=yes
+      tags:
+        - config
+
+### FIREWALL
+    - name: Install firewall rules
+      template: src=templates/etc/shorewall/rules.d/nfsserver.j2
+                dest=/etc/shorewall/rules.d/nfsserver
+                owner=root
+                group=root
+                mode=0640
+      tags:
+        - firewall
+      notify:
+        - Restart shorewall
+
+  handlers:
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted

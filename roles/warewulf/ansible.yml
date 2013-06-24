@@ -53,17 +53,18 @@
         - users.yml
         - munge.yml
         - slurm.yml
+        - ntpd.yml
       tags:
         - clone
         - playbooks
 
 ### SCRIPTS
     - name: Install clone scripts
-      copy: src=templates/chroots/{{item}}
-            dest={{warewulf.common}}/chroots/{{item}}
-            owner=root
-            group=root
-            mode=0755
+      template: src=templates/chroots/{{item}}.j2
+                dest={{warewulf.common}}/chroots/{{item}}
+                owner=root
+                group=root
+                mode=0755
       with_items:
         - clonebook
         - cloneyum
@@ -71,18 +72,22 @@
         - cloneimage
         - cloneupx
         - clonekernel
+        - cloneos
+        - clonescan
+        - slurmconf
       tags:
         - clone
         - scripts
 
 ### TEMPLATES
     - name: Install clone templates
-      copy: src=templates/chroots/playbooks/templates/{{item}}
-            dest={{warewulf.common}}/chroots/playbooks/templates/{{item}}
+      template: src=templates/chroots/playbooks/templates/{{item}}.j2
+                dest={{warewulf.common}}/chroots/playbooks/templates/{{item}}
       with_items:
         - rsyslog.conf
         - gmond.conf
         - route-eth0
+        - ntp.conf
       tags:
         - clone
         - templates

@@ -1,0 +1,17 @@
+#!/bin/bash
+_hosts=${1:-{{warewulf.os}}}
+
+case "${_hosts}" in
+  list)
+    shift
+    __hosts=${1:-{{warewulf.os}}}
+    for i in $(ls ${__hosts}/boot/vmlinuz*); do
+      basename ${i/*vmlinuz-//}
+    done
+  ;;
+  *)
+    shift
+    _kernel=$*
+    wwbootstrap --chroot=${PWD}/${_hosts} ${_kernel}
+  ;;
+esac

@@ -20,5 +20,6 @@
         - home:hornos:centos.repo
         - opennebula-testing.repo
         - rpmforge.repo
+        - warewulf-rhel6.repo
       tags:
         - repo

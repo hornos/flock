@@ -1,0 +1,17 @@
+#
+# Mind the gap!
+#
+---
+- hosts: all
+  connection: chroot
+  tasks:
+    - name: Install config
+      copy: src=templates/ntp.conf
+            dest=/etc/ntp.conf
+      tags:
+        - config
+
+    - name: Set options
+      lineinfile: dest=/etc/sysconfig/ntpd regexp='^OPTIONS' line='OPTIONS="-u ntp:ntp -p /var/run/ntpd.pid -gq"'
+      tags:
+        - config

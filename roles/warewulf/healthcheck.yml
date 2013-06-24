@@ -1,0 +1,43 @@
+
+---
+- hosts: all
+  vars_files:
+    - vars/warewulf.yml
+
+  tasks:
+    - name: Install configuration
+      template: src=templates/etc/nhc/{{item}}.j2
+                dest=/etc/nhc/{{item}}
+                backup=yes
+      with_items:
+        - nhc.conf
+        - nhc-compute.conf
+      tags:
+        - config
+
+    - name: Enable Slurm health check
+      lineinfile: dest=/etc/slurm/slurm.conf
+                  regexp='^HealthCheckProgram'
+                  line='HealthCheckProgram=/usr/sbin/nhc'
+                  insertafter='^#HEALTHCHECK'
+                  backup=yes
+      notify:
+        - Restart slurm
+      tags:
+        - config
+
+    - name: Enable Slurm health check
+      lineinfile: dest=/etc/slurm/slurm.conf
+                  regexp='^HealthCheckInterval'
+                  line='HealthCheckInterval=300'
+                  insertafter='^#HEALTHCHECK'
+                  backup=yes
+      notify:
+        - Restart slurm
+      tags:
+        - config
+
+  handlers:
+    - name: Restart slurm
+      service: name=slurm
+               state=restarted

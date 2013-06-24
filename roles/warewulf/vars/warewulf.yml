@@ -1,10 +1,22 @@
 url: http://warewulf.lbl.gov/downloads/repo
 repo: warewulf-rhel6.repo
 
+# TODO: addr range
+# TODO: masterhost
 warewulf:
   db: 'warewulf'
   user: 'warewulf'
   password: 'warewulf'
   common: '/common/warewulf'
+  # merge
+  cn_first_ip: '10.1.1.11'
   range: '10.1.1.11 10.1.1.21'
   interface: 'eth0'
+  # merge
+  loghost: 'core'
+  ntphost: '10.1.1.1'
+  os: 'centos-6'
+  # omitt
+  compute: 'cn-01'
+  scratch: '/common/scratch'
+  home: '/common/home'

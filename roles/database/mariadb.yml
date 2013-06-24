@@ -177,7 +177,6 @@
       tags:
         - config
 
-
 ### REDHAT
     - name: Setup PHP mysql socket
       lineinfile: dest=/etc/php.ini

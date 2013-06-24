@@ -1,0 +1,60 @@
+# Based on: http://edin.no-ip.com/blog/hswong3i/mariadb-galera-mastermaster-replication-ubuntu-12-04-howto
+#
+# On a single cloud controller:
+#
+#  --extra-vars "master=cc-01"
+#
+# yum clean all
+#
+# TODO: ssl rsync
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - vars/mariadb.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+
+  tasks:
+
+    - name: Setup /etc/my.cnf
+      template: src=templates/etc/my-master.cnf.j2
+                dest=/etc/my.cnf
+                owner=root
+                group=root
+                mode=0644
+                backup=yes
+      notify:
+        - Restart mysql
+      when: ansible_os_family == "RedHat"
+      tags:
+        - config
+
+
+### COMMON
+    - name: Setup /etc/my.cnf.d/server.cnf
+      file: path=/etc/my.cnf.d/server.cnf
+            state=absent
+      notify:
+        - Restart mysql
+      tags:
+        - config
+
+
+  ### HANDLERS
+  handlers:
+    - name: Restart gmond
+      service: name={{service.gmond}}
+               state=restarted
+
+    - name: Restart mysql
+      service: name={{service.mysql}}
+               state=restarted
+
+    - name: Restart httpd
+      service: name={{service.httpd}}
+               state=restarted

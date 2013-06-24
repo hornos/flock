@@ -1,0 +1,26 @@
+# http://www.cyberciti.biz/faq/centos-fedora-rhel-iptables-open-nfs-server-ports/
+# TCP/UDP 111 - RPC 4.0 portmapper
+ACCEPT       sys:+warewulf           $FW       tcp      111
+ACCEPT       sys:+warewulf           $FW       udp      111
+# TCP/UDP 2049 - NFSD (nfs server)
+ACCEPT       sys:+warewulf           $FW       tcp     2049
+ACCEPT       sys:+warewulf           $FW       udp     2049
+# RQUOTAD_PORT=875
+ACCEPT       sys:+warewulf           $FW       tcp      875
+ACCEPT       sys:+warewulf           $FW       udp      875
+# LOCKD_TCPPORT=32803
+ACCEPT       sys:+warewulf           $FW       tcp    32803
+# LOCKD_UDPPORT=32769
+ACCEPT       sys:+warewulf           $FW       tcp    32769
+# MOUNTD_PORT=892
+ACCEPT       sys:+warewulf           $FW       tcp      892
+ACCEPT       sys:+warewulf           $FW       udp      892
+# STATD_PORT=662
+ACCEPT       sys:+warewulf           $FW       tcp      662
+ACCEPT       sys:+warewulf           $FW       udp      662
+# STATD_OUTGOING_PORT=2020
+ACCEPT       $FW           sys:+warewulf       tcp     2020
+ACCEPT       $FW           sys:+warewulf       udp     2020
+# RDMA_PORT=20049
+ACCEPT       sys:+warewulf           $FW       tcp    20049
+ACCEPT       sys:+warewulf           $FW       udp    20049

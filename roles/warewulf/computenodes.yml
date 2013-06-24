@@ -1,0 +1,31 @@
+
+---
+- hosts: all
+  vars_files:
+    - vars/warewulf.yml
+
+  tasks:
+    - name: Enable Compute nodes
+      lineinfile: dest=/etc/slurm/slurm.conf
+                  regexp='^NodeName'
+                  line='NodeName={{warewulf.compute}}'
+                  backup=yes
+      notify:
+        - Restart slurm
+      tags:
+        - config
+
+    - name: Enable Compute nodes
+      lineinfile: dest=/etc/slurm/slurm.conf
+                  regexp='^PartitionName=DEFAULT'
+                  line='PartitionName=DEFAULT Nodes={{warewulf.compute}} MaxTime=INFINITE State=UP'
+                  backup=yes
+      notify:
+        - Restart slurm
+      tags:
+        - config
+
+  handlers:
+    - name: Restart slurm
+      service: name=slurm
+               state=restarted

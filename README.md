@@ -382,10 +382,21 @@ Hosts are collected in `ting/hosts` as json files. Create an Tunnelblick client 
 Now connect with Tunnelblick.
 
 ### Warewulf
-TODO: mysql no wsrep master
-Warewulf is a badass cluster kit.
+Warewulf is a badass HPC cluster kit. If you have a standalone master disable galera wsrep:
+
+    flock play @@core roles/database/mariadb_master.yml
+
+Put on the mask:
 
     flock play @@core warewulf
+
+Enable health check (TODO):
+
+    flock play @@core roles/warewulf/healthcheck
+
+Start NFS server:
+
+    flock play @@core roles/warewulf/nfsserver
 
 Create compute VMs:
 
@@ -393,18 +404,16 @@ Create compute VMs:
 
 Login to the master node and make a child:
 
-    wwmkchroot centos-6 /common/warewulf/chroots/centos-6
+    pushd /common/warewulf/chroots
+    ./cloneos centos-6
 
 Install basic packages (NTP, Munge, Slurm):
 
-    pushd /common/warewulf/chroots
-    ./clonepackages
+    ./clonepackages centos-6
 
-Enable remote syslog (TODO: no console log):
+Enable remote syslog:
 
     ./clonebook centos-6 playbooks/rsyslog
-
-TODO: tty monitors + upx
 
 Configure Ganglia:
 
@@ -430,52 +439,48 @@ Configure NTP (TODO: ntpdate + ptp no ntpd):
 
     ./clonebook centos-6 playbooks/ntpd
 
-TODO: templates with networks.yml
+Configure NFS and automount:
+
+
+
+TODO: LDAP & storage
 
 Enable services:
 
-    chroot centos-6
-    chkconfig munge on
-    chkconfig ntpd on
-    exit
+    chroot centos-6 chkconfig munge on
+    chroot centos-6 chkconfig ntpd on
 
 (re)Make the image:
 
     ./cloneimage centos-6
 
-or try to compress it as well (TODO minify, busybox tranzitus, sysuuid boot):
+or try to compress it as well (TODO minify, busybox tranzitus, sysuuid boot, HPC kernel tune):
 
     ./cloneupx centos-6
     ./cloneimage centos-6-upx
 
 Bootstrap the kernel:
 
-    for i in $(ls centos-6/boot/vmlinuz*); do basename ${i/*vmlinuz-//};done
-    ./clonekernel centos-6 <KERNEL>
+    ./clonekernel list centos-6
+    ./clonekernel centos-6 2.6.32-358.11.1.el6.x86_64
 
-    wwbootstrap --chroot=/common/warewulf/chroots/centos-6 2.6.32-358.el6.x86_64
+Provision:
 
-Provision (TODO: from networks.yml):
-
-    ./clonescan centos-6/<KERNEL> compute/cn-0[1-3]
-
-    wwnodescan --netdev=eth0 --ipaddr=10.1.1.11 --netmask=255.255.255.0 --vnfs=centos-6 --bootstrap=2.6.32-358.el6.x86_64 cn-0[1-3] -g compute
+    ./clonescan centos-6/2.6.32-358.11.1.el6.x86_64 compute/cn-0[1-3]
 
 Start the VMs.
 
-Make a Slurm configuration:
+Reconfigure the scheduler:
 
-    srun -N 2 hostname
+    ./slurmconf cn-0[1-3]
 
-Clear them:
+Try them out:
 
-    wwsh node delete cn-0[1-3]
+    srun -N 3 hostname
 
-    /root/bin/wwservice compute gmond restart
+Service restart (TODO):
 
-munge slurm pcp group passw packages ldap autofs nfs home
-
-queue confs
+    ./cloneservice compute gmond restart
 
 #### Ansible
 TODO: paramiko problem

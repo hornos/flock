@@ -1,0 +1,6 @@
+#!/bin/bash
+_hosts=${1:-{{warewulf.os}}}
+shift
+_opts=${*}
+
+wwmkchroot ${_hosts} ${PWD}/${_hosts}
