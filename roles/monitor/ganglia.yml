@@ -189,7 +189,6 @@
              state=started
              enabled=yes
 
-
   handlers:
     - name: Restart gmond
       service: name={{service.gmond}}

@@ -1,0 +1,8 @@
+---
+url: http://www.igniterealtime.org/downloadServlet?filename=openfire
+rpm: openfire-3.8.2-1.i386.rpm
+
+openfire:
+  db: openfire
+  user: openfire
+  password: openfire

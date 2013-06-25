@@ -1,0 +1,7 @@
+# inventory for space jockey
+
+boot_server=10.1.1.254
+dhcp_range="10.1.1.1,10.1.1.128,255.255.255.0,6h"
+gateway=10.1.1.254
+ntp_server=10.1.1.254
+interface=eth1

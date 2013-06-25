@@ -537,11 +537,11 @@ Compile the latest OpenMPI:
     cd /common/scratch/examples
     module load openmpi/1.6.4
 
-Performance tests:
+Performance tests (TODO):
 
     ftp://ftp.mcs.anl.gov/pub/mpi/tools/perftest.tar.gz
 
-Soft IB:
+Soft IB (TODO):
 
 
 Edit `/etc/exports`, export fs by `exportfs -a`. Edit Push out a new `autofs.common` config:
@@ -561,10 +561,37 @@ Pending (slurmd):
 ### Hadoop
 #### CDH4
 
+### Communication Center
+Install MariaDB master:
+
+    flock play @@com roles/database/mariadb --extra-vars "master=com"
+    flock play @@com roles/database/mariadb_master --extra-vars "master=com"
+
+Log in and secure:
+
+    mysql_secure_installation
+
+Install openfire:
+
+    flock play @@com roles/com/openfire --extra-vars \"schema=yes master=com\"
+
+Setup the wizard:
+
+    jdbc:mysql://127.0.0.1:3306/openfire?rewriteBatchedStatements=true
+
+Clustering:
+
+SSL:
+
 ## Kernel
 ### Kdump
 Remote kdump
 http://blog.kreyolys.com/2011/03/17/no-panic-its-just-a-kernel-panic/
 
 ## Home Server
- 
+
+## XenServer 6.2
+Mount the ISO under `boot/xs62/repo` and copy `xcp.c32` (TODO) from the install media into jockey's root directory.
+
+    flock-vbox create xs62 RedHat_64 2 2048
+    jockey kick xs62 @xs62 10.1.1.30 xs62

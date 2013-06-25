@@ -1,0 +1,97 @@
+#
+# http://www.igniterealtime.org/projects/openfire/
+#
+# Import schemas:
+# --extra-vars "schema=yes"
+# Master host
+# --extra-vars "master=com"
+#
+---
+- hosts: all
+
+  vars_files:
+    - vars/openfire.yml
+    - vars/mariadb.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_backup: "'$inventory_hostname' == '$backup'"
+    is_schema: "'$schema' == 'yes'"
+
+  tasks:
+### REDHAT
+  - name: Download packages
+    get_url: url=${url}/${rpm} dest=/root/${rpm}
+    tags:
+      - packages
+
+  - name: Install packages
+    command: yum -y localinstall /root/${rpm}
+    tags:
+      - packages
+
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - java-1.7.0-openjdk
+    tags:
+      - packages
+      - java
+
+  - name: Create database
+    mysql_db: db={{openfire.db}}
+              login_user={{mariadb.user}}
+              login_password={{mariadb.password}}
+              login_unix_socket={{mariadb.socket}}
+    only_if: '$is_master'
+    tags:
+      - db
+
+  - name: Create database user
+    mysql_user: name={{openfire.user}} password={{openfire.password}} priv={{openfire.db}}.*:ALL
+                login_user={{mariadb.user}}
+                login_password={{mariadb.password}}
+                login_unix_socket={{mariadb.socket}}
+    only_if: '$is_master'
+    tags:
+      - db
+
+  - name: Import database schema
+    shell: cat /opt/openfire/resources/database/openfire_mysql.sql | mysql -u {{openfire.user}} --password={{openfire.password}} {{openfire.db}}
+    only_if: '$is_master and $is_schema'
+    tags:
+      - db
+      - schema
+
+### SYSCONFIG
+  - name: Configure sysconfig
+    lineinfile: dest=/etc/sysconfig/openfire
+                regexp='^JAVA_HOME'
+                line='JAVA_HOME=/usr/lib/jvm/jre'
+                backup=yes
+    tags:
+      - config
+      - sysconfig
+
+### Firewall
+  - name: Install firewall rules
+    template: src=templates/etc/shorewall/rules.d/openfire.j2
+              dest=/etc/shorewall/rules.d/openfire
+              owner=root
+              group=root
+              mode=0640
+    tags:
+      - firewall
+    notify:
+      - Restart shorewall
+
+  - name: Start openfire
+    service: name=openfire
+             state=started
+             enabled=yes
+
+  handlers:
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted

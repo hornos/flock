@@ -1,0 +1,22 @@
+### admin
+ACCEPT     sys:+sysop        $FW       tcp      9090
+ACCEPT     sys:+sysop        $FW       tcp      9091
+### vpn admin TODO
+### com ports
+# All addresses	5222		Client to Server
+ACCEPT     ext:+whitelist    $FW       tcp      5222
+
+# All addresses	5223		Client to Server
+ACCEPT     ext:+whitelist    $FW       tcp      5223
+
+# All addresses	7777		File Transfer Proxy
+ACCEPT     ext:+whitelist    $FW       tcp      7777
+
+# All addresses	7070		HTTP Binding
+ACCEPT     ext:+whitelist    $FW       tcp      7070
+
+# All addresses	7443		HTTP Binding
+ACCEPT     ext:+whitelist    $FW       tcp      7443
+
+# All addresses	5229		Flash Cross Domain
+ACCEPT     ext:+whitelist    $FW       tcp      5229
