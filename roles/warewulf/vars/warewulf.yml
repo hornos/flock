@@ -20,3 +20,4 @@ warewulf:
   compute: 'cn-01'
   scratch: '/common/scratch'
   home: '/common/home'
+  software: '/common/software'

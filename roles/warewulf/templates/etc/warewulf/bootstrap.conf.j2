@@ -1,0 +1,24 @@
+# List of drivers that should be included in the built initramfs. This could
+# be a list of relative paths starting from /lib/modules/`uname -r`/, or
+# specific driver names that you want to integrate.
+drivers += kernel/drivers/net/, kernel/drivers/scsi/, kernel/drivers/ata/
+drivers += kernel/drivers/message, kernel/drivers/md
+drivers += kernel/drivers/block/, kernel/drivers/usb/host/
+drivers += kernel/fs/nfs, nfsd, nfs_common
+drivers += fuse, ext2, ext3, ext4
+drivers += autofs4, ceph, xfs
+drivers += ipmi_si, ipmi_devintf
+
+# Infiniband drivers and Mellanox drivers
+drivers += ib_ipath, ib_iser, ib_srpt, ib_sdp, ib_mthca, ib_qib, iw_cxgb3, cxgb3
+drivers += iw_nes, mlx4_ib, ib_srp, ib_ipoib, ib_addr, rdma_cm, ib_ucm
+drivers += ib_ucm, ib_uverbs, ib_umad, ib_cm, ib_mad, iw_cm, ib_core
+drivers += rdma_ucm, ib_sa, mlx4_en, mlx4_core
+drivers += rds, rds_rdma, rds_tcp, mlx4_vnic, mlx4_vnic_helper
+
+# Required for getting CPU frequency scaling to work right (SpeedStep/Turbo)
+drivers += kernel/drivers/cpufreq/, kernel/arch/x86/kernel/cpu/cpufreq/
+
+# What Firmware images should be included in the bootstrap image.
+firmware += 3com/*, acenic/*, bnx2*, cxgb3/*, e100/*, myricom/*, ti_*
+firmware += tigon/*

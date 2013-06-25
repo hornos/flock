@@ -1,0 +1,10 @@
+#!/bin/bash
+_group=${1:-compute}
+shift
+
+wwsh file import ${PWD}/playbooks/templates/auto.common --name=auto.common --path=/etc/auto.common
+wwsh provision set $(nodeattr -q ${_group}) --fileadd=auto.common
+
+export PSSH_OPTIONS="IdentityFile=playbooks/keys/cluster"
+pssh -H "$(nodeattr -n ${_group})" -v /warewulf/bin/wwgetfiles
+pssh -H "$(nodeattr -n ${_group})" service autofs reload

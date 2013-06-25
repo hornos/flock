@@ -233,19 +233,20 @@
       tags:
         - start
 
-    ### GANGLIA MONITOR
-    - name: Setup mysql.pyconf
-      template: src=templates/etc/ganglia/conf.d/mysql.pyconf.j2
-                dest=/etc/ganglia/conf.d/mysql.pyconf
-                owner=root
-                group=root
-                mode=0644
-                backup=yes
-      notify:
-        - Restart gmond
-      tags:
-        - monitor
-        - mysql
+# TODO: fix missing gmond innodb errors
+#    ### GANGLIA MONITOR
+#    - name: Setup mysql.pyconf
+#      template: src=templates/etc/ganglia/conf.d/mysql.pyconf.j2
+#                dest=/etc/ganglia/conf.d/mysql.pyconf
+#                owner=root
+#                group=root
+#                mode=0644
+#                backup=yes
+#      notify:
+#        - Restart gmond
+#      tags:
+#        - monitor
+#        - mysql
 
   ### HANDLERS
   handlers:

@@ -443,7 +443,7 @@ Configure NTP (TODO: ntpdate + ptp no ntpd):
 
     ./clonebook centos-6 playbooks/ntpd
 
-Configure NFS and automount:
+Configure NFS and automount (TODO):
 
     ./clonebook centos-6 playbooks/autofs
 
@@ -451,7 +451,9 @@ Enable some tune options:
 
     ./clonebook centos-6 playbooks/tune
 
-TODO: http://blog.kreyolys.com/2011/03/17/no-panic-its-just-a-kernel-panic/
+Install the mainline kernel:
+
+    ./clonebook centos-6 playbooks/kernel
 
 TODO: LDAP & storage
 
@@ -459,6 +461,13 @@ Enable services:
 
     chroot centos-6 chkconfig munge on
     chroot centos-6 chkconfig ntpd on
+
+FIX
+FIX Edit /usr/bin/wwvnfs exclude_files part
+FIX
+
+    change foreach my $file (glob("$tmpdir/$line")) {
+    to foreach my $file (glob("$line")) {
 
 (re)Make the image:
 
@@ -469,44 +478,93 @@ Bootstrap the kernel:
     ./clonekernel list centos-6
     ./clonekernel centos-6 2.6.32-358.11.1.el6.x86_64
 
+Mainline kernel:
+
+    ./cloneyum centos-6 --enablerepo=elrepo-kernel install kernel-ml
+    ./clonekernel list centos-6
+    ./clonekernel centos-6 3.9.7-1.el6.elrepo.x86_64
+    wwsh provision set cn-01 -b 3.9.7-1.el6.elrepo.x86_64
+
+UPX (TODO):
+
+    ./clonemini centos-6
+    ./cloneimage centos-6-mini
+    wwsh provision set cn-01 -v centos-6-mini
+
 Provision:
 
     ./clonescan centos-6/2.6.32-358.11.1.el6.x86_64 compute/cn-0[1-3]
 
 Start the VMs.
 
-Reconfigure the scheduler (TODO):
+Reconfigure the scheduler:
 
     ./slurmconf cn-0[1-3]
 
 Try them out (TODO):
 
     srun -N 3 hostname
+    srun -N 2 -D /common/scratch hostname
 
-MPI batch tests:
+Batch test:
 
-Service restart (TODO):
+    cd /common/scratch
+    Create slurm.sh:
+    #!/bin/sh 
+    #SBATCH -o StdOut
+    #SBATCH -e StdErr
+    srun hostname
+
+    sbatch -N 2 slurm.sh
+
+MPI test on the host:
+
+    git clone git://github.com/NIIF/nce.git /common/software/nce
+    module use /common/software/nce/modulefiles/
+    export NCE_ROOT=/common/software/nce
+    module load nce/global
+
+Compile the latest OpenMPI:
+
+    yum install gcc gcc-c++ make gcc-gfortran environment-modules
+    mkdir -p ${NCE_PACKAGES}/openmpi/1.6.4
+    ./configure --prefix=${NCE_PACKAGES}/openmpi/1.6.4
+    make && make install
+    cd examples
+    make
+    cd ..
+    cp -R examples /common/scratch/
+    cd /common/scratch/examples
+    module load openmpi/1.6.4
+
+Performance tests:
+
+    ftp://ftp.mcs.anl.gov/pub/mpi/tools/perftest.tar.gz
+
+Soft IB:
+
+
+Edit `/etc/exports`, export fs by `exportfs -a`. Edit Push out a new `autofs.common` config:
+
+    ./autofsconf compute
+
+Service restart:
 
     ./cloneservice compute gmond restart
 
-#### Ansible
-TODO: paramiko problem
+Pending (slurmd):
 
-    flock play @@core roles/warewulf/ansible
-
-    pushd /common/warewulf
-    wwsh node list | grep cn | awk -F. '{print $1}' > hosts
-
-### Scheduler
-
-    flock play @@core scheduler
-
+    error: /usr/sbin/nhc: exited with status 0x0100
 
 ### Message Queue
 
 ### Hadoop
 #### CDH4
 
+## Kernel
+### Kdump
+Remote kdump
+http://blog.kreyolys.com/2011/03/17/no-panic-its-just-a-kernel-panic/
 
 ## Home Server
  

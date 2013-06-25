@@ -1,0 +1,5 @@
+#!/bin/bash
+_group=${1:-compute}
+shift
+export PSSH_OPTIONS="IdentityFile=playbooks/keys/cluster"
+pssh -H "$(nodeattr -n ${_group})" service $*

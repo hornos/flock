@@ -15,3 +15,41 @@
     tags:
       - ip
       - config
+
+### FIX postfix
+# fatal: parameter inet_interfaces: no local interface found for ::1
+
+  - name: Fix Postfix interfaces
+    lineinfile: dest=/etc/postfix/main.cf
+                regexp='^inet_interfaces'
+                line='inet_interfaces=127.0.0.1'
+                backup=yes
+    tags:
+      - fix
+      - postfix
+    notify:
+      - Restart postfix
+
+### FIX sshd
+# https://bugs.launchpad.net/ubuntu/+source/openssh/+bug/882878
+
+  - name: Fix SSHD X11 bind
+    lineinfile: dest=/etc/ssh/sshd_config
+                regexp='^AddressFamily'
+                line='AddressFamily inet'
+                insertafter='^Port'
+                backup=yes
+    tags:
+      - fix
+      - sshd
+    notify:
+      - Restart sshd
+
+  handlers:
+    - name: Restart postfix
+      service: name=postfix
+               state=restarted
+
+    - name: Restart sshd
+      service: name=sshd
+               state=restarted

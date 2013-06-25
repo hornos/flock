@@ -76,6 +76,8 @@
         - clonekernel
         - cloneos
         - clonescan
+        - cloneservice
+        - autofsconf
         - slurmconf
       tags:
         - clone

@@ -36,6 +36,13 @@
         - home
         - directories
 
+    - name: Create software directory
+      file: path={{warewulf.software}}
+            state=directory
+      tags:
+        - home
+        - directories
+
 ### CONFIGURATION
 
     - name: Install /etc/syconfig/nfs

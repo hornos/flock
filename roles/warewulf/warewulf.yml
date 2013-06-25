@@ -185,28 +185,25 @@
     notify:
       - Update dhcp
 
-#  - name: Exclude /boot
-#    lineinfile: dest=/etc/warewulf/vnfs.conf
-#                regexp='^excludes \+= \/boot'
-#                line='excludes += /boot'
-#                backup=yes
-#    tags:
-#      - exclude
-
-#  - name: Exclude /lib/modules
-#    lineinfile: dest=/etc/warewulf/vnfs.conf
-#                regexp='^excludes \+= \/lib\/modules'
-#                line='excludes += /lib/modules'
-#                backup=yes
-#    tags:
-#      - exclude
-
+### CONFIGURATION
   - name: Install /etc/warewulf/vnfs.conf
     template: src=templates/etc/warewulf/vnfs.conf.j2
               dest=/etc/warewulf/vnfs.conf
               owner=root
               group=root
               mode=0644
+              backup=yes
+    tags:
+      - config
+      - vnfs
+
+  - name: Install /etc/warewulf/bootstrap.conf
+    template: src=templates/etc/warewulf/bootstrap.conf.j2
+              dest=/etc/warewulf/bootstrap.conf
+              owner=root
+              group=root
+              mode=0644
+              backup=yes
     tags:
       - config
       - vnfs
