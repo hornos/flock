@@ -6,6 +6,7 @@
 - include: roles/warewulf/warewulf.yml
 - include: roles/warewulf/tools.yml
 - include: roles/warewulf/ansible.yml
+- include: roles/warewulf/slurmscripts.yml
 
 - hosts: all
   tasks:

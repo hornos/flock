@@ -167,6 +167,18 @@
       - config
       - slurmctld
 
+### keep the original for slurmconf
+  - name: Install /etc/slurm/slurm.conf
+    template: src=templates/etc/slurm/slurm-master.conf.j2
+              dest=/etc/slurm/slurm.slurmconf
+              owner=slurm
+              group=slurm
+              mode=0644
+    tags:
+      - slurm
+      - config
+      - slurmctld
+
   - name: Start slurmdbd
     service: name=slurmdbd
              state=started
@@ -175,7 +187,6 @@
     tags:
       - slurm
       - database
-
 
   - name: Create cluster
     shell: /usr/bin/sacctmgr -i create cluster name={{slurm.cluster}}

@@ -231,6 +231,8 @@ Enter Grid state:
 
     flock play @@core grid
 
+Check `ssl.conf` for a strong [PFS](http://vincent.bernat.im/en/blog/2011-ssl-perfect-forward-secrecy.html) cipher setting.
+
 ### Clustering
 Create common authentication key (`keys/authkey`):
 
@@ -462,6 +464,7 @@ Enable services:
     chroot centos-6 chkconfig munge on
     chroot centos-6 chkconfig ntpd on
 
+TODO: update/create warewulf packages
 FIX
 FIX Edit /usr/bin/wwvnfs exclude_files part
 FIX
@@ -497,13 +500,31 @@ Provision:
 
 Start the VMs.
 
-Reconfigure the scheduler:
+Reconfigure the scheduler, `slurmconf` copies pro/epi scripts as well:
 
     ./slurmconf cn-0[1-3]
 
+Parameter       | srun option | When Run  | Run by | As User
+--- | --- | --- | ---
+PrologSlurmCtld |             | job start | slurmctld | SlurmUser
+Prolog          |             | job start | slurmd    | SlurmdUser
+TaskProlog (batch) |          | script start | slurmstepd | User
+SrunProlog      | --prolog    | step start | srun     | User
+TaskProlog      |             | step start | slurmstepd | User
+                | --task-prolog | step start | slurmstepd | User
+                | --task-epilog | step finish | slurmstepd | User
+TaskEpilog      |             | step finish | slurmstepd | User
+SrunEpilog      | --epilog    | step finish | srun  | User
+TaskEpilog (batch) |          | script finish | slurmstepd | User
+Epilog          |             | job finish | slurmd | SlurmdUser
+EpilogSlurmCtld |             | job finish | slurmctld | SlurmUser
+
+Mind the time if needed:
+
+    ./cloneservice compute ntpd restart
+
 Try them out (TODO):
 
-    srun -N 3 hostname
     srun -N 2 -D /common/scratch hostname
 
 Batch test:
@@ -541,8 +562,15 @@ Performance tests (TODO):
 
     ftp://ftp.mcs.anl.gov/pub/mpi/tools/perftest.tar.gz
 
-Soft IB (TODO):
+[Soft RoCE](http://www.systemfabricworks.com/downloads/roce) (TODO):
 
+    yum --enablerepo=elrepo-kernel install kernel-ml-devel kernel-ml-headers rpm-build
+    yum install libibverbs-devel libibverbs-utils libibverbs
+    yum install librdmacm-devel librdmacm-utils librdmacm
+
+Downlod rxe package:
+
+    wget http://198.171.48.62/pub/OFED-1.5.2-rxe.tgz
 
 Edit `/etc/exports`, export fs by `exportfs -a`. Edit Push out a new `autofs.common` config:
 
@@ -552,9 +580,11 @@ Service restart:
 
     ./cloneservice compute gmond restart
 
-Pending (slurmd):
-
-    error: /usr/sbin/nhc: exited with status 0x0100
+TODO
+* Cgroup
+* Wake-on-lan with compute suspend
+* Kernel 3.10 full nohz cpuset scheduler numa shit ptp
+* error: /usr/sbin/nhc: exited with status 0x0100
 
 ### Message Queue
 

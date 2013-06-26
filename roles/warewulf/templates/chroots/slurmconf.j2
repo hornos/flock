@@ -1,29 +1,133 @@
 #!/bin/bash
+
+### vars
+_template=/etc/slurm/slurm.slurmconf
+_config=/etc/slurm/slurm.conf
+_compute_config=/etc/slurm/${_group}-slurm.conf
+
+
+function slurmconf/__master() {
+  cat ${_template} | \
+  sed s/^NodeName.*/NodeName=${_nodes}/ | \
+  sed s/^PartitionName=DEFAULT.*/PartitionName=DEFAULT\ Nodes=${_nodes}\ MaxTime=INFINITE\ State=UP/ \
+  > ${_config}
+}
+
+function slurmconf/master() {
+  cat ${_template} | \
+  sed s/^NodeName.*/NodeName=${_nodes}/ | \
+  sed s/^PartitionName=DEFAULT.*/PartitionName=DEFAULT\ Nodes=${_nodes}\ MaxTime=INFINITE\ State=UP/ | \
+  if test -r /common/home/slurm/Prolog ; then
+    sed "s/^\\#Prolog.*/Prolog=\/common\/home\/slurm\/Prolog/"
+  else
+    cat
+  fi | \
+  if test -r /common/home/slurm/TaskProlog ; then
+    sed "s/^\\#TaskProlog.*/TaskProlog=\/common\/home\/slurm\/TaskProlog/"
+  else
+    cat
+  fi | \
+  if test -r /common/home/slurm/SrunProlog ; then
+    sed "s/^\\#SrunProlog.*/SrunProlog=\/common\/home\/slurm\/SrunProlog/"
+  else
+    cat
+  fi | \
+  if test -r /common/home/slurm/Epilog ; then
+    sed "s/^\\#Epilog.*/Epilog=\/common\/home\/slurm\/Epilog/"
+  else
+    cat
+  fi | \
+  if test -r /common/home/slurm/TaskEpilog ; then
+    sed "s/^\\#TaskEpilog.*/TaskEpilog=\/common\/home\/slurm\/TaskEpilog/"
+  else
+    cat
+  fi | \
+  if test -r /common/home/slurm/SrunEpilog ; then
+    sed "s/^\\#SrunEpilog.*/SrunEpilog=\/common\/home\/slurm\/SrunEpilog/"
+  else
+    cat
+  fi \
+  > ${_config}
+}
+
+function slurmconf/nodes() {
+  # remote logging
+  cat ${_template} | \
+  sed s/^NodeName.*/NodeName=${_nodes}/ | \
+  sed s/^PartitionName=DEFAULT.*/PartitionName=DEFAULT\ Nodes=${_nodes}\ MaxTime=INFINITE\ State=UP/ | \
+  grep -v LogFile | \
+  if test -r /common/home/slurm/Prolog ; then
+    sed "s/^\\#Prolog.*/Prolog=\/common\/home\/slurm\/Prolog/"
+  else
+    cat
+  fi | \
+  if test -r /common/home/slurm/TaskProlog ; then
+    sed "s/^\\#TaskProlog.*/TaskProlog=\/common\/home\/slurm\/TaskProlog/"
+  else
+    cat
+  fi | \
+  if test -r /common/home/slurm/SrunProlog ; then
+    sed "s/^\\#SrunProlog.*/SrunProlog=\/common\/home\/slurm\/SrunProlog/"
+  else
+    cat
+  fi | \
+  if test -r /common/home/slurm/Epilog ; then
+    sed "s/^\\#Epilog.*/Epilog=\/common\/home\/slurm\/Epilog/"
+  else
+    cat
+  fi | \
+  if test -r /common/home/slurm/TaskEpilog ; then
+    sed "s/^\\#TaskEpilog.*/TaskEpilog=\/common\/home\/slurm\/TaskEpilog/"
+  else
+    cat
+  fi | \
+  if test -r /common/home/slurm/SrunEpilog ; then
+    sed "s/^\\#SrunEpilog.*/SrunEpilog=\/common\/home\/slurm\/SrunEpilog/"
+  else
+    cat
+  fi \
+  > ${_compute_config}
+}
+
+function slurmconf/genders() {
+  echo "${_nodes} compute" > /etc/genders
+}
+
+function slurmconf/provision() {
+  # slurm config
+  echo "Import slurm.conf"
+  wwsh file import ${_compute_config} --name=slurm.conf --path=/etc/slurm/slurm.conf
+  wwsh provision set ${_nodes} --fileadd=slurm.conf
+
+  # node health check
+  echo "Import nhc.conf"
+  wwsh file import /etc/nhc/nhc-${_group}.conf --name=nhc.conf --path=/etc/nhc/nhc.conf
+  wwsh provision set ${_nodes} --fileadd=nhc.conf
+
+  # wake on lan
+  echo "Import rc.local"
+  wwsh file import ${PWD}/playbooks/templates/rc.local --name=rc.local --path=/etc/rc.d/rc.local --mode=0755
+  wwsh provision set ${_nodes} --fileadd=rc.local
+
+  # trigger file download
+  echo "Get files"
+  export PSSH_OPTIONS="IdentityFile=playbooks/keys/cluster"
+  pssh -H "$(nodeattr -n ${_group})" -v /warewulf/bin/wwgetfiles
+}
+
+
+### args
 _nodes=${1:-cn-0[1-3]}
 shift
 _group=${1:-compute}
 
+### main
 read -p "Install new Slurm config?"
-_config=/etc/slurm/slurm.conf
-cat ${_config} | \
-sed s/^NodeName.*/NodeName=${_nodes}/ | \
-sed s/^PartitionName=DEFAULT.*/PartitionName=DEFAULT\ Nodes=${_nodes}\ MaxTime=INFINITE\ State=UP/ | \
-grep -v LogFile \
-> ${_config}.tmp
-cp -v ${_config}.tmp ${_config}
-
+slurmconf/master
+slurmconf/nodes
 read -p "Install new Genders?"
-echo "${_nodes} compute" > /etc/genders
-
+slurmconf/genders
 read -p "Provision nodes?"
-wwsh file import ${_config}
-wwsh provision set ${_nodes} --fileadd=slurm.conf
-
-wwsh file import /etc/nhc/nhc-${_group}.conf --name=nhc.conf --path=/etc/nhc/nhc.conf
-wwsh provision set ${_nodes} --fileadd=nhc.conf
-
-export PSSH_OPTIONS="IdentityFile=playbooks/keys/cluster"
-pssh -H "$(nodeattr -n ${_group})" -v /warewulf/bin/wwgetfiles
-
+slurmconf/provision
 read -p "Reconfigure Slurm?"
 scontrol reconfigure

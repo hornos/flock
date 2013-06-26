@@ -95,6 +95,7 @@
         - auto.common
         - auto.master
         - sysctl.conf
+        - rc.local
       tags:
         - clone
         - templates

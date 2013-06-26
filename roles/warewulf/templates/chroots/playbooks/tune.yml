@@ -4,23 +4,32 @@
 # http://www.cyberciti.biz/faq/linux-kernel-etcsysctl-conf-security-hardening/
 # http://blog.kreyolys.com/2011/03/05/kernel-performance-tuning-is-art-not-science-part-1/
 # http://www.slashroot.in/how-do-linux-nfs-performance-tuning-and-optimization
+# https://doc.opensuse.org/documentation/html/openSUSE/opensuse-reference/cha.udev.html
 #
 ---
 - hosts: all
   connection: chroot
   tasks:
-    - name: Create cpuset directory
-      file: path=/cpuset
+# cpuset version
+#    - name: Create cpuset directory
+#      file: path=/lib/udev/devices/cpuset
+#            state=directory
+#      tags:
+#        - directories
+#
+#    - name: Enable cpuset
+#      lineinfile: dest=/etc/fstab
+#                  regexp='^cpuset'
+#                  line='cpuset /dev/cpuset cpuset defaults 0 0'
+#      tags:
+#        - cpuset
+
+# cgroup
+    - name: Create cgroup directory
+      file: path=/cgroup
             state=directory
       tags:
         - directories
-
-    - name: Enable cpuset
-      lineinfile: dest=/etc/fstab
-                  regexp='^cpuset'
-                  line='cpuset /cpuset cpuset defaults 0 0'
-      tags:
-        - cpuset
 
     - name: Install config
       template: src=templates/sysctl.conf
