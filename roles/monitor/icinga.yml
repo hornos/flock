@@ -1,0 +1,163 @@
+# TODO: mariadb icinga vars and pass
+# http://www.6tech.org/2013/01/how-to-setup-icinga-1-8-4-centos-6-3/
+# http://wiki.nikoforge.org/Icinga_Setup_on_CentOS_6
+#
+# Import schemas:
+# --extra-vars "schema=yes"
+# TODO: icinga-web schema
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - vars/mariadb.yml
+    - vars/icinga.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_schema: "'$schema' == 'yes'"
+
+  tasks:
+
+### REDHAT
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - icinga
+      - icinga-web
+      - nagios-plugins-all
+      - icinga-idoutils-libdbi-mysql
+      - icinga-gui
+      - icinga-api
+      - php-mysql
+      - MySQL-python
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+### DEBIAN
+  - name: Install icinga packages
+    apt: name={{item}}
+         state=installed
+    with_items:
+      - icinga
+      - icinga-cgi
+      - nagios-plugins
+      - icli
+      - python-mysqldb
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+### MYSQL
+  - name: Setup icinga mysql db
+    mysql_db: db=icinga
+              login_user=root
+              login_password={{mariadb.password}}
+              login_unix_socket={{mariadb.socket}}
+    tags:
+      - sql
+    only_if: '$is_master'
+
+  - name: Setup icinga mysql user
+    mysql_user: name=icinga password={{icinga.password}} priv=icinga.*:ALL
+                login_user=root
+                login_password={{mariadb.password}}
+                login_unix_socket={{mariadb.socket}}
+    tags:
+      - sql
+    only_if: '$is_master'
+
+  - name: Setup icingaweb mysql db
+    mysql_db: db=icingaweb
+              login_user=root
+              login_password={{mariadb.password}}
+              login_unix_socket={{mariadb.socket}}
+    tags:
+      - sql
+    only_if: '$is_master'
+
+  - name: Setup icingaweb mysql user
+    mysql_user: name=icingaweb password={{icinga.password}} priv=icingaweb.*:ALL
+                login_user=root
+                login_password={{mariadb.password}}
+                login_unix_socket={{mariadb.socket}}
+    tags:
+      - sql
+    only_if: '$is_master'
+
+  - name: Import icinga schema
+    shell: cat /usr/share/doc/icinga-idoutils-libdbi-mysql-*/db/mysql/mysql.sql | mysql -u icinga --password={{icinga.password}} icinga
+    only_if: '$is_master and $is_schema'
+    notify:
+      - Restart ido2db
+      - Restart icinga
+    tags:
+      - schema
+
+  - name: Import icingaweb schema
+    shell: cat /usr/share/icinga-web/etc/schema/mysql.sql | mysql -u icingaweb --password={{icinga.password}} icingaweb
+    only_if: '$is_master and $is_schema'
+    notify:
+      - Restart ido2db
+      - Restart icinga
+    tags:
+      - schema
+
+  - name: Setup localhost monitor
+    template: src=templates/etc/icinga/objects/localhost.cfg.j2
+              dest=/etc/icinga/objects/localhost.cfg
+              owner=root
+              group=root
+              mode=0644
+    notify:
+      - Restart icinga
+      - Restart httpd
+
+  - name: Setup mysql socket
+    lineinfile: dest=/etc/icinga/ido2db.cfg
+                regexp='^db_socket='
+                line="db_socket={{mariadb.socket}}"
+                insertafter='^#db_socket'
+    notify:
+      - Restart ido2db
+
+  - name: Setup icinga-web
+    template: src=templates/usr/share/icinga-web/app/config/databases.xml.j2
+              dest=/usr/share/icinga-web/app/config/databases.xml
+              owner=root
+              group=root
+              mode=0644
+    tags:
+      - icinga-web
+      - Restart httpd
+
+  - name: Start ido2db
+    service: name=ido2db
+             state=started
+             enabled=yes
+
+  - name: Start icinga
+    service: name=icinga
+             state=started
+             enabled=yes
+
+  - name: Start httpd
+    service: name={{service.httpd}}
+             state=started
+             enabled=yes
+
+  handlers:
+    - name: Restart icinga
+      service: name=icinga
+               state=restarted
+
+    - name: Restart ido2db
+      service: name=ido2db
+               state=restarted
+
+    - name: Restart httpd
+      service: name={{service.httpd}}
+               state=restarted

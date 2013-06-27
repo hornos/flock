@@ -1,0 +1,64 @@
+#
+# http://docs.openstack.org/grizzly/openstack-compute/install/yum/content/install-keystone.html
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - vars/mariadb.yml
+    - vars/openstack.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_schema: "'$schema' == 'yes'"
+
+  tasks:
+### REDHAT
+  - name: Install packages
+    when: ansible_os_family == "RedHat"
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - openstack-utils
+      - openstack-keystone
+      - python-keystoneclient
+    tags:
+      - packages
+
+  - name: Setup database
+    mysql_db: db=keystone
+              login_user=root
+              login_password={{mariadb.password}}
+              login_unix_socket={{mariadb.socket}}
+    tags:
+      - sql
+    only_if: '$is_master'
+
+  - name: Setup database user
+    mysql_user: name=keystone password={{keystone.password}} priv=keystone.*:ALL
+                login_user=root
+                login_password={{mariadb.password}}
+                login_unix_socket={{mariadb.socket}}
+    tags:
+      - sql
+    only_if: '$is_master'
+
+  - name: Set admin token
+    lineinfile: dest=/etc/keystone/keystone.conf
+                regexp='^admin_token'
+                line="admin_token={{lookup('file', 'keys/admin_token')}}"
+                insertafter='^#\ admin_token'
+                backup=yes
+    tags:
+      - keys
+      - config
+
+  - name: Set connection
+    lineinfile: dest=/etc/keystone/keystone.conf
+                regexp='^connection'
+                line='connection=mysql://keystone:{{keystone.password}}@localhost/keystone'
+                backup=yes
+    tags:
+      - connection
+      - config

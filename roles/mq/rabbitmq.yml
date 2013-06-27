@@ -1,0 +1,130 @@
+
+---
+- hosts: all
+
+  vars_files:
+    - vars/rabbitmq.yml
+
+  tasks:
+### REDHAT
+  - name: Download Erlang repo
+    get_url: url={{erlang.url}}/{{erlang.repo}}
+             dest=/etc/yum.repos.d/{{erlang.repo}}
+    when: ansible_os_family == "RedHat"
+    tags:
+      - repo
+
+  - name: Install Erlang repo key
+    shell: /bin/rpm --import {{erlang.key}}
+    when: ansible_os_family == "RedHat"
+    tags:
+      - repo
+
+  - name: Install Erlang
+    when: ansible_os_family == "RedHat"
+    yum: name=erlang
+         state=latest
+    tags:
+      - packages
+
+  - name: Download rabbitmq-server
+    get_url: url={{url}}/{{rpm}} dest=/root
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+  - name: Install rabbitmq key
+    shell: /bin/rpm --import {{key}}
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+# purge epel version
+#  - name: Uninstall rabbitmq-server
+#    yum: name=rabbitmq-server
+#         state=absent
+
+  - name: Install rabbitmq-server
+    command: yum -y localinstall /root/{{rpm}}
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+### DEBIAN
+  - name: Install Rabbitmq repo key
+    apt_key: url=http://www.rabbitmq.com/rabbitmq-signing-key-public.asc
+             state=present
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+      - repo
+
+  - name: Install Rabbitmq repo
+    apt_repository: repo='deb http://www.rabbitmq.com/debian/ testing main'
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+      - repo
+
+  - name: Install packages
+    apt: name=$item
+    with_items:
+      - rabbitmq-server
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+### CONFIGURATION
+  - name: Enable rabbitmq_management
+    rabbitmq_plugin: names={{item}}
+                     state=enabled
+    with_items:
+      - rabbitmq_management
+      - rabbitmq_stomp
+    tags:
+      - plugins
+    notify:
+      - Restart rabbitmq
+
+  - name: Start rabbitmq
+    service: name=rabbitmq-server
+             state=started
+             enabled=yes
+
+  - name: Create root user
+    rabbitmq_user: user={{rabbitmq.user}}
+                   password={{rabbitmq.password}}
+                   vhost=/
+                   configure_priv=.*
+                   read_priv=.*
+                   write_priv=.*
+                   tags=administrator
+                   state=present
+    tags:
+      - users
+
+  - name: Delete guest user
+    rabbitmq_user: user=guest
+                   state=absent
+    tags:
+      - users
+
+  - name: Install /etc/shorewall/rules.d/rabbitmq
+    template: src=templates/etc/shorewall/rules.d/rabbitmq.j2
+              dest=/etc/shorewall/rules.d/rabbitmq
+              owner=root
+              group=root
+              mode=0640
+    tags:
+      - firewall
+    notify:
+      - Restart shorewall
+
+  handlers:
+    - name: Restart rabbitmq
+      service: name=rabbitmq-server
+               state=restarted
+
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted

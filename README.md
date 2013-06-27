@@ -52,6 +52,11 @@ Generate SSH keys:
 Keys and certificates are in the `keys` directory.
 
 ## Network Install
+Download [syslinux 4.X](https://www.kernel.org/pub/linux/utils/boot/syslinux/) and the following files to `space/boot`:
+
+    core/pxelinux.0
+    com32/mboot/mboot.c32
+
 Get install images eg. for Debian (mind the trailing slash!):
 
     pushd space/boot
@@ -627,7 +632,7 @@ http://blog.kreyolys.com/2011/03/17/no-panic-its-just-a-kernel-panic/
 ## Home Server
 
 ## XenServer 6.2
-Mount the ISO under `boot/xs62/repo` and copy `xcp.c32` (TODO) from the install media into jockey's root directory.
+Mount (link) the ISO under `boot/xs62/repo` into jockey's root directory.
 
     flock-vbox create xs62 RedHat_64 2 2048
     jockey kick xs62 @xs62 10.1.1.30 xs62
@@ -640,4 +645,16 @@ Controller:
     flock reboot @@xc
     flock play @@xc ground
     flock reboot @@xc
+
+    flock play @@xc roles/database/mariadb --extra-vars "master=xc"
+    flock play @@xc roles/database/mariadb_master --extra-vars "master=xc"
+    > mysql_secure_installation
+    flock play @@xc roles/database/memcache.yml
+    flock play @@xc roles/mq/rabbitmq.yml
+    flock play @@xc roles/monitor/icinga.yml --extra-vars \"schema=yes master=xc\"
+
+Create admin token:
+
+    openssl rand -hex 10 > keys/admin_token
+
 
