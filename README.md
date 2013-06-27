@@ -52,13 +52,19 @@ Generate SSH keys:
 Keys and certificates are in the `keys` directory.
 
 ## Network Install
-Get install images eg. for Debian:
+Get install images eg. for Debian (mind the trailing slash!):
 
     pushd space/boot
     rsync -avP ftp.us.debian.org::debian/dists/wheezy/main/installer-amd64/current/images/netboot/ ./wheezy
     popd
 
 Debian-based systems should be installed with NAT.
+
+Or get the kickass Debian killer CentOS (mind the trailing slash!):
+
+    pushd space/boot
+    rsync -avP rsync.hrz.tu-chemnitz.de::ftp/pub/linux/centos/6.4/os/x86_64/isolinux/ ./centos64
+    popd
 
 Space Jockey (`jockey`) is a simple Cobbler replacement. You need a simple inventory file like this (`space/hosts`):
 
@@ -625,3 +631,13 @@ Mount the ISO under `boot/xs62/repo` and copy `xcp.c32` (TODO) from the install 
 
     flock-vbox create xs62 RedHat_64 2 2048
     jockey kick xs62 @xs62 10.1.1.30 xs62
+
+Controller:
+
+    export ANSIBLE_HOSTS=xen
+    flock play root@xc bootstrap
+    flock play @@xc secure
+    flock reboot @@xc
+    flock play @@xc ground
+    flock reboot @@xc
+

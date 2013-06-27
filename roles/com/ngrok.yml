@@ -1,0 +1,20 @@
+#
+# https://ngrok.com
+#
+---
+- hosts: all
+
+  vars_files:
+    - vars/ngrok.yml
+
+  tasks:
+### REDHAT
+  - name: Download packages
+    get_url: url=${url}/${zip} dest=/opt/${zip}
+    tags:
+      - packages
+
+  - name: Install packages
+    shell: cd /opt; unzip -o ${zip}
+    tags:
+      - packages

@@ -1,6 +1,7 @@
 #!/bin/bash
-\curl -L https://get.rvm.io | bash -s stable --ruby --autolibs=3
+# \curl -L https://get.rvm.io | bash -s stable --ruby --autolibs=3
+\curl -L https://get.rvm.io | bash --ruby={{ruby.version}}
 source /usr/local/rvm/scripts/rvm
 gem install bundle
 gem update
-rvm reinstall {{ruby.version}}
+# rvm reinstall {{ruby.version}}

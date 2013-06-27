@@ -1,0 +1,18 @@
+#
+# https://xen-orchestra.com/install-and-update-xo-from-git/
+#
+
+<Directory "/opt/xo-web">
+  AllowOverride FileInfo
+  RewriteEngine On
+  RewriteOptions Inherit
+  Order Deny,Allow
+  Deny from all
+  Allow from {{ networks.vpn }}/{{ masks.vpn }}
+{% for host in sysops %}
+  Allow from {{host}}/32
+{% endfor %}
+  Allow from 127.0.0.1
+</Directory>
+
+Alias /xo-web /opt/xo-web

@@ -179,10 +179,11 @@
              state=started
              enabled=yes
 
+# TODO: NPT sync problem!
   - name: Start gmetad
     service: name=gmetad
              state=started
-             enabled=yes
+             enabled=no
 
   - name: Start httpd
     service: name={{service.httpd}}

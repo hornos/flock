@@ -1,0 +1,26 @@
+#
+# http://packages.openqrm.com/
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+
+  tasks:
+### REDHAT
+  - name: Install repository
+    template: src=templates/etc/yum.repos.d/openQRM.repo.j2
+              dest=/etc/yum.repos.d/openQRM.repo
+    tags:
+      - repo
+
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+         disable_gpg_check=yes
+    with_items:
+      - openqrm
+    tags:
+      - packages

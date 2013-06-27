@@ -1,0 +1,66 @@
+#
+# https://xen-orchestra.com/install-and-update-xo-from-git/
+# NOT READY
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+
+  tasks:
+### REDHAT
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - php
+      - php-xmlrpc
+    tags:
+      - packages
+
+  - name: Download composer
+    shell: cd /opt;curl -sS https://getcomposer.org/installer | php
+    tags:
+      - packages
+      - composer
+
+  - name: Download xo-server
+    git: repo=git://github.com/vatesfr/xo-server
+         dest=/opt/xo-server
+    tags:
+      - server
+      - packages
+
+  - name: Download xo-web
+    git: repo=git://github.com/vatesfr/xo-web
+         dest=/opt/xo-web
+    tags:
+      - web
+      - packages
+
+  - name: Install php packages
+    shell: cd /opt/{{item}};php ../composer.phar install
+    with_items:
+      - xo-server
+      - xo-web
+    tags:
+      - packages
+      - php
+
+  - name: Enable orchestra
+    template: src=templates/etc/httpd/conf.d/orchestra.conf.j2
+              dest=/etc/{{service.httpd}}/conf.d/orchestra.conf
+              owner=root
+              group=root
+              mode=0644
+    notify:
+      - Restart httpd
+    tags:
+      - config
+
+  handlers:
+    - name: Restart httpd
+      service: name={{service.httpd}}
+               state=restarted
