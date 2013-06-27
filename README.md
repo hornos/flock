@@ -438,6 +438,12 @@ Configure the clone directory (TODO one playbook):
 
 TODO: LDAP & storage
 
+
+TODO: disable munge and slurm and start them from rc.local after ntpd clock sync? run a basic node health check first! if failed log and shutdown do not delete init
+
+https://www.redhat.com/archives/rhl-list/2007-October/msg02313.html
+
+
 Enable services (TODO: from playbook):
 
     chroot centos-6 chkconfig munge on

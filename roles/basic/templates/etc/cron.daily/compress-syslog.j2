@@ -1,0 +1,3 @@
+#!/bin/bash
+# compress logs older than 3 days
+find /var/log/loghost -type f -mtime +3 -name messages -exec bzip2 {} \;
