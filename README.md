@@ -428,49 +428,17 @@ Install basic packages (NTP, Munge, Slurm):
 
     ./clonepackages centos-6
 
-Enable remote syslog:
-
-    ./clonebook centos-6 playbooks/rsyslog
-
-Configure Ganglia:
-
-    ./clonebook centos-6 playbooks/ganglia
-
 Generate cluster keys:
 
     ssh-keygen -b2048 -N "" -f playbooks/keys/cluster
 
-Configure Users (mind the uid/gid numbers!):
+Configure the clone directory (TODO one playbook):
 
-    ./clonebook centos-6 playbooks/users
-
-Configure Munge:
-
-    ./clonebook centos-6 playbooks/munge
-
-Configure Slurm:
-
-    ./clonebook centos-6 playbooks/slurm
-
-Configure NTP (TODO: ntpdate + ptp no ntpd):
-
-    ./clonebook centos-6 playbooks/ntpd
-
-Configure NFS and automount (TODO):
-
-    ./clonebook centos-6 playbooks/autofs
-
-Enable some tune options:
-
-    ./clonebook centos-6 playbooks/tune
-
-Install the mainline kernel:
-
-    ./clonebook centos-6 playbooks/kernel
+    ./clonesetup centos-6
 
 TODO: LDAP & storage
 
-Enable services:
+Enable services (TODO: from playbook):
 
     chroot centos-6 chkconfig munge on
     chroot centos-6 chkconfig ntpd on
