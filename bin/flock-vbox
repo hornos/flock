@@ -118,6 +118,9 @@ case ${cmd} in
   off)
     ${vbox} controlvm "${1}" poweroff
   ;;
+  reset)
+    ${vbox} controlvm "${1}" reset
+  ;;
   boot)
     name=${1:-test}
     boot=${2:-net}

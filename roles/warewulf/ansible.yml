@@ -56,6 +56,7 @@
         - ntpd.yml
         - autofs.yml
         - tune.yml
+        - inittab.yml
       tags:
         - clone
         - playbooks

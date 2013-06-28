@@ -3,6 +3,19 @@
 ---
 - hosts: all
 
+  tasks:
+    - group_by: key=${ansible_os_family}
+
+
+########  ######## ########  ####    ###    ##    ## 
+##     ## ##       ##     ##  ##    ## ##   ###   ## 
+##     ## ##       ##     ##  ##   ##   ##  ####  ## 
+##     ## ######   ########   ##  ##     ## ## ## ## 
+##     ## ##       ##     ##  ##  ######### ##  #### 
+##     ## ##       ##     ##  ##  ##     ## ##   ### 
+########  ######## ########  #### ##     ## ##    ##
+
+- hosts: Debian
   vars_files:
     - vars/inittab.yml
 
@@ -10,38 +23,49 @@
     is_reinit: "'$reinit' == 'yes'"
 
   tasks:
-### REDHAT
-  - name: Install packages
-    yum: name={{item}}
-         state=installed
-    with_items:
-      - htop
-      - sysstat
-    when: ansible_os_family == "RedHat"
-    tags:
-      - packages
-
-### DEBIAN
   - name: Install packages
     apt: name={{item}}
          state=installed
     with_items:
       - htop
       - sysstat
-    when: ansible_os_family == "Debian"
     tags:
       - packages
 
   - name: Ubuntu Warning
     debug: msg="Ubuntu's init is a fuckin mess!"
-    when: ansible_os_family == "Debian"
+
+
+
+########  ######## ########  ##     ##    ###    ######## 
+##     ## ##       ##     ## ##     ##   ## ##      ##    
+##     ## ##       ##     ## ##     ##  ##   ##     ##    
+########  ######   ##     ## ######### ##     ##    ##    
+##   ##   ##       ##     ## ##     ## #########    ##    
+##    ##  ##       ##     ## ##     ## ##     ##    ##    
+##     ## ######## ########  ##     ## ##     ##    ## 
+
+- hosts: RedHat
+  vars_files:
+    - vars/inittab.yml
+
+  vars:
+    is_reinit: "'$reinit' == 'yes'"
+  tasks:
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - htop
+      - sysstat
+    tags:
+      - packages
 
 ### CONFIGURATION
   - name: Set ttys
     lineinfile: dest=/etc/sysconfig/init
                 regexp='^ACTIVE_CONSOLES'
                 line="ACTIVE_CONSOLES={{ttys.consoles}}"
-    when: ansible_os_family == "RedHat"
     tags:
       - tty
 
@@ -49,7 +73,6 @@
     lineinfile: dest=/etc/init/start-ttys.conf
                 regexp='^env X_TTY'
                 line="env X_TTY={{ttys.x}}"
-    when: ansible_os_family == "RedHat"
     tags:
       - tty
 
@@ -60,7 +83,6 @@
               owner=root
               group=root
               mode=0640
-    when: ansible_os_family == "RedHat"
     tags:
       - messages
 
@@ -70,7 +92,6 @@
               owner=root
               group=root
               mode=0640
-    when: ansible_os_family == "RedHat"
     tags:
       - messages
 
@@ -81,7 +102,6 @@
               owner=root
               group=root
               mode=0640
-    when: ansible_os_family == "RedHat"
     tags:
       - glances
 
@@ -91,7 +111,6 @@
               owner=root
               group=root
               mode=0640
-    when: ansible_os_family == "RedHat"
     tags:
       - glances
 
@@ -102,7 +121,6 @@
               owner=root
               group=root
               mode=0640
-    when: ansible_os_family == "RedHat"
     tags:
       - iostat
 
@@ -112,7 +130,6 @@
               owner=root
               group=root
               mode=0640
-    when: ansible_os_family == "RedHat"
     tags:
       - iostat
 
@@ -123,7 +140,6 @@
               owner=root
               group=root
               mode=0640
-    when: ansible_os_family == "RedHat"
     tags:
       - mpstat
 
@@ -133,7 +149,6 @@
               owner=root
               group=root
               mode=0640
-    when: ansible_os_family == "RedHat"
     tags:
       - mpstat
 
@@ -144,7 +159,6 @@
               owner=root
               group=root
               mode=0640
-    when: ansible_os_family == "RedHat"
     tags:
       - gstat
 
@@ -154,13 +168,22 @@
               owner=root
               group=root
               mode=0640
-    when: ansible_os_family == "RedHat"
     tags:
       - gstat
 
+  # https://www.redhat.com/archives/rhl-list/2007-October/msg02313.html
+  - name: Mingetty noclear
+    lineinfile: dest=/etc/init/tty.conf
+                regexp='^exec'
+                line='^exec /sbin/mingetty \$TTY --noclear'
+                backup=yes
+    tags:
+      - fix
+      - mingetty
+
+  ### TODO
   - name: Restart init
     shell: /sbin/telinit q
-    when: ansible_os_family == "RedHat"
 
   - name: Reinit
     command: /root/bin/reinit

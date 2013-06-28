@@ -1,9 +1,9 @@
 # TODO: better roles in ansible
 #
-# ANSIBLE_HOSTS=core flock play @@core database --extra-vars='master=core'
+# ANSIBLE_HOSTS=core flock play @@core mysql --extra-vars='master=core'
 #
 ---
-- include: roles/database/galera.yml
+- include: roles/database/mysql.yml
 
 - hosts: all
   tasks:

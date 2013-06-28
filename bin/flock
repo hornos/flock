@@ -19,6 +19,7 @@ inventory=${ANSIBLE_HOSTS:-./hosts}
 cmd=${1:-help}
 shift
 hosts=${1:-root}
+_arg1=${hosts}
 shift
 module=${1:-ping}
 shift
@@ -80,6 +81,10 @@ EOF
 
 ### main
 case ${cmd} in
+  password)
+    jockey password ${_arg1}
+    exit $?
+    ;;
   init)
     # create SSH keys
     echo ""
@@ -151,6 +156,10 @@ case ${cmd} in
   shutdown)
     command="ansible"
     command_options="${hosts} -m command -a \"/sbin/shutdown -h now\""
+    ;;
+  bootlog)
+    command="ansible"
+    command_options="${hosts} -m command -a \"cat /var/log/boot.log\""
     ;;
   update)
     command="ansible"

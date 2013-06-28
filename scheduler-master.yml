@@ -1,7 +1,7 @@
 # TODO: better roles in ansible
 ---
 - include: roles/scheduler/munge.yml
-- include: roles/scheduler/slurm.yml
+- include: roles/scheduler/slurm-master.yml
 - include: roles/scheduler/sbank.yml
 
 - hosts: all

@@ -1,0 +1,22 @@
+#
+# Mind the gap!
+#
+---
+- hosts: all
+  connection: chroot
+  tasks:
+    - name: Mingetty noclear
+      lineinfile: dest=/etc/init/tty.conf
+                  regexp='^exec'
+                  line='exec /sbin/mingetty \$TTY --noclear'
+      tags:
+        - fix
+        - mingetty
+
+    - name: Set active consoles
+      lineinfile: dest=/etc/init/start-ttys.conf
+                  regexp='^env\ ACTIVE_CONSOLES='
+                  line='env ACTIVE_CONSOLES=/dev/tty1'
+      tags:
+        - fix
+        - consoles

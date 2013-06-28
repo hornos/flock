@@ -11,19 +11,25 @@ echo "Configure users"
 ./clonebook ${_hosts} playbooks/users
 
 echo "Configure munge"
+chroot ${_hosts} chkconfig munge off
 ./clonebook ${_hosts} playbooks/munge
+chroot ${_hosts} chkconfig munge on
 
 echo "Configure slurm"
 ./clonebook ${_hosts} playbooks/slurm
 
 echo "Configure ntpd"
 ./clonebook ${_hosts} playbooks/ntpd
+chroot ${_hosts} chkconfig ntpd on
 
 echo "Configure autofs"
 ./clonebook ${_hosts} playbooks/autofs
 
 echo "Enable tuning"
 ./clonebook ${_hosts} playbooks/tune
+
+echo "Change inittab"
+./clonebook ${_hosts} playbooks/inittab
 
 echo "Install mainline kernel"
 ./clonebook ${_hosts} playbooks/kernel

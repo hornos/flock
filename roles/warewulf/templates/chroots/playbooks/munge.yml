@@ -40,3 +40,8 @@
             mode=0600
       tags:
         - munge
+
+    - name: Munge should start after ntpd
+      lineinfile: "dest=/etc/init.d/munge regexp='^#\ chkconfig' line='# chkconfig: - 60 60'"
+      tags:
+        - service

@@ -179,11 +179,27 @@
              state=started
              enabled=yes
 
-# TODO: NPT sync problem!
+# cycle
+  - name: Stop gmetad
+    service: name=gmetad
+             state=stopped
+             enabled=no
+    tags:
+      - gmeatd
+
+  - name: Gmetad should start after ntpd
+    lineinfile: "dest=/etc/init.d/gmetad regexp='^#\ chkconfig' line='# chkconfig: 2345 65 80' backup=yes"
+    tags:
+      - service
+      - gmeatd
+
   - name: Start gmetad
     service: name=gmetad
              state=started
-             enabled=no
+             enabled=yes
+    tags:
+      - gmeatd
+
 
   - name: Start httpd
     service: name={{service.httpd}}

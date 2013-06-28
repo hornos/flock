@@ -394,10 +394,86 @@ Hosts are collected in `ting/hosts` as json files. Create an Tunnelblick client 
 
 Now connect with Tunnelblick.
 
-### Warewulf
-Warewulf is a badass HPC cluster kit. If you have a standalone master disable galera wsrep:
+## Warewulf HPC Cluster
+Warewulf is a badass HPC cluster kit. Create a controller node or nodes and converge them into ground state. In this example I will use 1 controller (core) and 2 compute machines (cn-0[1-2]). Use two network card on the controller, eth0 is on the `system` network. In reality, this network should be on a separated internal LAN (VLAN is not secure by design) since its unsecure and vulnerable to DOS attacks.
 
-    flock play @@core roles/database/mariadb_master.yml
+### Create and install the controller
+
+    flock-vbox create core
+    for i in 1 2 ; do flock-vbox create cn-0$i RedHat_64 2; done
+
+Compute nodes are diskless stateless nodes, you have to kickstart onyl the `core` machine:
+
+    jockey kick centos64 @core 10.1.1.1 core
+
+Create a `hpc` inventory file with the following content:
+
+    core ansible_ssh_host=10.1.1.1
+
+Export this inventory:
+
+    export ANSIBLE_HOSTS=hpc
+
+In another two terminals start the boot servers:
+
+    jockey http
+    jockey masq
+
+Start the `core` machine:
+
+    flock-vbox start core
+
+If the initial seup is ready stop the boot servers (Ctrl-C) and reset the machines:
+
+    flock-vbox reset core
+
+### Configure the controller
+You have to go through the regular procedure to reach the common server ground state. I assume that `flock init` is done and the `networks.yml` file is correct. You have to reboot the machine twice like in the good old windows days. Start with bootstrap and secure:
+
+    flock password @core
+    flock play root@core bootstrap
+    flock play @@core secure
+    flock reboot @@core
+
+reach the ground state:
+
+    flock play @@core ground
+
+finally, change the kernel for good, mind that this disables `kdump` service:
+
+    flock play @@core roles/system/kernel
+    flock reboot @@core
+
+Check the `boot.log` for sure:
+
+    flock bootlog @@core
+
+By default, sysop machines can access the system information page at `http://10.1.1.1/phpsysinfo` and reach Ganglia cluster monitor at `http://10.1.1.1/ganglia`. You can also get live monitoring with PCP:
+
+    pmstat -h 10.1.1.1
+
+or with the pmchart GUI:
+
+    pmchart -h 10.1.1.1 -c Overview
+
+For the HPC cluster we need MariaDB, Slurm and Warewulf. For the standalone controller install the MariaDB as mysql:
+
+    flock play @@core mysql --extra-vars='master=core'
+
+Login to the machine and secure mysql by hand:
+
+    [core] ~ (0)# mysql_secure_installation
+
+The mysql admin page is at `http://10.1.1.1/phpmyadmin` .If you want `https` check the Globus section above.
+
+In the second step install the Slurm scheduler. Generate a munge key for the compute cluster and setup the scheduler services. For the standalone version you have to use the `-master` playbook:
+
+    dd if=/dev/random bs=1 count=1024 > keys/munge.key
+    flock play @@core scheduler-master --extra-vars='master=core'
+
+The basic Slurm setup contains only one compute machine, the controller itself.
+
+Next, you have to setup the Warewulf cluster subsystem.
 
 Put on the mask:
 
@@ -428,6 +504,12 @@ Install basic packages (NTP, Munge, Slurm):
 
     ./clonepackages centos-6
 
+TODO: ditch kdump
+
+TODO: node firewalls
+
+TODO: trusted login node
+
 Generate cluster keys:
 
     ssh-keygen -b2048 -N "" -f playbooks/keys/cluster
@@ -438,16 +520,7 @@ Configure the clone directory (TODO one playbook):
 
 TODO: LDAP & storage
 
-
-TODO: disable munge and slurm and start them from rc.local after ntpd clock sync? run a basic node health check first! if failed log and shutdown do not delete init
-
-https://www.redhat.com/archives/rhl-list/2007-October/msg02313.html
-
-
-Enable services (TODO: from playbook):
-
-    chroot centos-6 chkconfig munge on
-    chroot centos-6 chkconfig ntpd on
+TODO: disable munge and slurm and start them from rc.local after ntpd clock sync server as well ! run a basic node health check first! if failed log and shutdown do not delete init no cron and cron jobs ! no disk cache and flush memory tune irq tune cluster uptime cluster vmstat ganglia event overlays gmetad ncurses, ncurses info menu dashboard
 
 TODO: update/create warewulf packages
 FIX

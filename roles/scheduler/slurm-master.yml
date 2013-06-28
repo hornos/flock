@@ -29,7 +29,6 @@
          state=installed
          enablerepo={{slurm.repo}}
     with_items:
-      - munge
       - slurm
       - slurm-munge
       - slurm-pam_slurm
@@ -48,63 +47,9 @@
     user: name={{item}}
           createhome=no
     with_items:
-      - munge
       - slurm
     tags:
       - users
-
-  # https://code.google.com/p/munge/wiki/InstallationGuide
-  - name: Set munge user
-    lineinfile: dest=/etc/sysconfig/munge
-                regexp='^USER'
-                line='USER="munge"'
-    tags:
-      - munge
-
-  - name: Set munge permissions
-    file: path=/var/{{item}}/munge
-          owner=munge
-          group=munge
-          state=directory
-    with_items:
-      - run
-      - lib
-      - log
-    tags:
-      - munge
-
-  - name: Set munge permissions /etc/munge
-    file: path=/etc/munge
-          owner=munge
-          group=munge
-          state=directory
-    tags:
-      - munge
-
-  - name: Setup munge key
-    copy: src=keys/munge.key
-          dest=/etc/munge/munge.key
-          owner=munge
-          group=munge
-          mode=0600
-    tags:
-      - munge
-    notify:
-      - Restart munge
-
-  - name: Start munge
-    service: name=munge
-             state=started
-             enabled=yes
-
-  - name: Setup slurmdbd mysql db
-    mysql_db: db={{slurm.db}}
-              login_user={{mariadb.user}}
-              login_password={{mariadb.password}}
-              login_unix_socket={{mariadb.socket}}
-    only_if: '$is_master'
-    tags:
-      - slurm
 
   - name: Setup slurmdbd mysql user
     mysql_user: name={{slurm.user}} password={{slurm.password}} priv={{slurm.db}}.*:ALL
@@ -303,10 +248,6 @@
              enabled=yes
 
   handlers:
-    - name: Restart munge
-      service: name=munge
-               state=restarted
-
     - name: Restart slurmdbd
       service: name=slurmdbd
                state=restarted

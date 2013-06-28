@@ -1,0 +1,95 @@
+#
+# Slurm Scheduler
+#
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    - vars/slurm.yml
+    - vars/mariadb.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_backup: "'$inventory_hostname' == '$backup'"
+
+  tasks:
+  - name: Install munge packages
+    yum: name={{item}}
+         state=installed
+         enablerepo={{slurm.repo}}
+    with_items:
+      - munge
+    tags:
+      - packages
+
+  - name: Create users
+    user: name={{item}}
+          createhome=no
+    with_items:
+      - munge
+    tags:
+      - users
+
+  # https://code.google.com/p/munge/wiki/InstallationGuide
+  - name: Set munge user
+    lineinfile: dest=/etc/sysconfig/munge
+                regexp='^USER'
+                line='USER="munge"'
+    tags:
+      - munge
+
+  - name: Set munge permissions
+    file: path=/var/{{item}}/munge
+          owner=munge
+          group=munge
+          state=directory
+    with_items:
+      - run
+      - lib
+      - log
+    tags:
+      - munge
+
+  - name: Set munge permissions /etc/munge
+    file: path=/etc/munge
+          owner=munge
+          group=munge
+          state=directory
+    tags:
+      - munge
+
+  - name: Setup munge key
+    copy: src=keys/munge.key
+          dest=/etc/munge/munge.key
+          owner=munge
+          group=munge
+          mode=0600
+    tags:
+      - munge
+    notify:
+      - Restart munge
+
+  ### cycle
+  - name: Stop munge
+    service: name=munge
+             state=stopped
+             enabled=no
+    tags:
+      - service
+
+  - name: Munge should start after ntpd
+    lineinfile: "dest=/etc/init.d/munge regexp='^#\ chkconfig' line='# chkconfig: - 60 60' backup=yes"
+    tags:
+      - service
+
+  - name: Start munge
+    service: name=munge
+             state=started
+             enabled=yes
+    tags:
+      - service
+
+  handlers:
+    - name: Restart munge
+      service: name=munge
+               state=restarted

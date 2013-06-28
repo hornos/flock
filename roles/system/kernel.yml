@@ -1,11 +1,17 @@
 #
 # Install Mainline Kernel
 #
+# Clean old kernel stuff:
+# --extra-vars "clean=yes"
+#
 ---
 - hosts: all
 
   vars_files:
     - vars/kernel.yml
+
+  vars:
+    is_clean: "'$clean' == 'yes'"
 
   tasks:
 
@@ -16,7 +22,7 @@
     with_items:
       - kernel-headers
       - kernel-devel
-    when: ansible_os_family == "RedHat"
+    only_if: '$is_clean'
     tags:
       - packages
 
@@ -39,6 +45,14 @@
     when: ansible_os_family == "RedHat"
     tags:
       - grub
+
+  - name: Disable kdump
+    service: name=kdump
+             state=stopped
+             enabled=no
+    when: ansible_os_family == "RedHat"
+    tags:
+      - kdmup
 
 ### DEBIAN
   - name: Install repository
