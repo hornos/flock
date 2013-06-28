@@ -4,11 +4,7 @@
 #
 # TODO: consider /usr/bin/cluster-env for regular users
 #
-# TODO: http protect xinted restart
-# standalone kernel network ips
 # ldap inetgration
-# slurm integration
-# ganglia integration
 # storage integration
 ---
 - hosts: all
@@ -51,6 +47,7 @@
     tags:
       - packages
 
+### DATABASE
   - name: Setup warewulf mysql db
     mysql_db: db={{warewulf.db}}
               login_user={{mariadb.user}}
@@ -78,6 +75,7 @@
     tags:
       - config
 
+### DIRECTORIES
   - name: Create common directory
     file: path={{warewulf.common}}
           owner=root
@@ -110,6 +108,7 @@
       - ftp
     only_if: '$is_master'
 
+### TFTP
   - name: Create common tftpboot/warewulf directory
     file: path={{warewulf.common}}/tftpboot/warewulf
           owner=root
@@ -139,6 +138,7 @@
     notify:
       - Restart xinetd
 
+### CONFIGURATION
   - name: Install /etc/warewulf/provision.conf
     template: src=templates/etc/warewulf/provision.conf.j2
               dest=/etc/warewulf/provision.conf
@@ -149,6 +149,8 @@
       - config
       - provision
 
+### DHCP
+# for a HA setup use the failover
   - name: Install master /etc/warewulf/dhcpd-template.conf
     template: src=templates/etc/warewulf/dhcpd-template-master.conf.j2
               dest=/etc/warewulf/dhcpd-template.conf
@@ -216,6 +218,7 @@
       - config
       - defaults
 
+### FIREWALL
   - name: Install ipset tables
     template: src=templates/etc/ipset.d/{{item}}.j2
               dest=/etc/ipset.d/{{item}}

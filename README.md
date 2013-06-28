@@ -394,6 +394,16 @@ Hosts are collected in `ting/hosts` as json files. Create an Tunnelblick client 
 
 Now connect with Tunnelblick.
 
+
+<!--
+##      ##    ###    ########  ######## ##      ## ##     ## ##       ######## 
+##  ##  ##   ## ##   ##     ## ##       ##  ##  ## ##     ## ##       ##       
+##  ##  ##  ##   ##  ##     ## ##       ##  ##  ## ##     ## ##       ##       
+##  ##  ## ##     ## ########  ######   ##  ##  ## ##     ## ##       ######   
+##  ##  ## ######### ##   ##   ##       ##  ##  ## ##     ## ##       ##       
+##  ##  ## ##     ## ##    ##  ##       ##  ##  ## ##     ## ##       ##       
+ ###  ###  ##     ## ##     ## ########  ###  ###   #######  ######## ##          
+-->
 ## Warewulf HPC Cluster
 Warewulf is a badass HPC cluster kit. Create a controller node or nodes and converge them into ground state. In this example I will use 1 controller (core) and 2 compute machines (cn-0[1-2]). Use two network card on the controller, eth0 is on the `system` network. In reality, this network should be on a separated internal LAN (VLAN is not secure by design) since its unsecure and vulnerable to DOS attacks.
 
@@ -473,27 +483,19 @@ In the second step install the Slurm scheduler. Generate a munge key for the com
 
 The basic Slurm setup contains only one compute machine, the controller itself.
 
-Next, you have to setup the Warewulf cluster subsystem.
+Next, you have to setup the Warewulf cluster subsystem. Generate a cluster key. The cluster key is used to SSH to the compute nodes:
 
-Put on the mask:
+    ssh-keygen -b2048 -N "" -f keys/cluster
 
-    flock play @@core warewulf
+# >>> STARTHERE
 
-Rerun clones:
+    flock play @@core warewulf --extra-vars='master=core'
 
-    flock play @@core roles/warewulf/ansible.yml --tag clone --extra-vars='master=core'
-
-Enable health check (TODO):
-
-    flock play @@core roles/warewulf/healthcheck
-
-Start NFS server:
-
-    flock play @@core roles/warewulf/nfsserver
+TODO: generate slurm.conf template
 
 Create compute VMs:
 
-     for i in 1 2 3; do flock-vbox create cn-0$i;done
+     for i in 1 2 ; do flock-vbox create cn-0$i;done
 
 Login to the master node and make a child:
 
@@ -509,10 +511,6 @@ TODO: ditch kdump
 TODO: node firewalls
 
 TODO: trusted login node
-
-Generate cluster keys:
-
-    ssh-keygen -b2048 -N "" -f playbooks/keys/cluster
 
 Configure the clone directory (TODO one playbook):
 

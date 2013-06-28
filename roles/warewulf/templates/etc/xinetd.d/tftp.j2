@@ -11,7 +11,6 @@ service tftp
 	wait			= yes
 	user			= root
 	server			= /usr/sbin/in.tftpd
-	# server_args		= -s /var/lib/tftpboot
 	server_args		= -s {{warewulf.common}}/tftpboot
 	per_source		= 11
 	cps			= 100 2

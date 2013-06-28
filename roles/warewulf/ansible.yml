@@ -41,6 +41,19 @@
         - clone
         - directories
 
+### KEYS
+    - name: Install cluster keys
+      copy: src=keys/{{item}}
+            dest={{warewulf.common}}/chroots/playbooks/keys/{{item}}
+            owner=sysop
+            group=root
+            mode=0600
+      with_items:
+        - cluster
+        - cluster.pub
+      tags:
+        - keys
+
 ### PLAYBOOKS
     # lightweight clone playbooks
     - name: Install clone playbooks

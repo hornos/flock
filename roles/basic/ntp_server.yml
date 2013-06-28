@@ -40,6 +40,13 @@
         - configs
       only_if: '$is_bcast'
 
+    - name: Set start options
+      lineinfile: dest=/etc/sysconfig/ntpd regexp="^OPTIONS=" line='OPTIONS="-u ntp:ntp -p /var/run/ntpd.pid -gq"' backup=yes
+      notify:
+        - Restart ntpd
+      tags:
+        - configs
+        - options
 
     - name: Start ntpd
       service: name={{service.ntpd}}
