@@ -487,7 +487,7 @@ Next, you have to setup the Warewulf cluster subsystem. Generate a cluster key. 
 
     ssh-keygen -b2048 -N "" -f keys/cluster
 
-# >>> STARTHERE
+Warewulf it:
 
     flock play @@core warewulf --extra-vars='master=core'
 
@@ -506,59 +506,42 @@ Install basic packages (NTP, Munge, Slurm):
 
     ./clonepackages centos-6
 
-TODO: ditch kdump
-
 TODO: node firewalls
 
 TODO: trusted login node
 
-Configure the clone directory (TODO one playbook):
+Configure the clone directory (TODO: playbook):
 
     ./clonesetup centos-6
 
 TODO: LDAP & storage
 
-TODO: disable munge and slurm and start them from rc.local after ntpd clock sync server as well ! run a basic node health check first! if failed log and shutdown do not delete init no cron and cron jobs ! no disk cache and flush memory tune irq tune cluster uptime cluster vmstat ganglia event overlays gmetad ncurses, ncurses info menu dashboard
-
 TODO: update/create warewulf packages
-FIX
-FIX Edit /usr/bin/wwvnfs exclude_files part
-FIX
 
-    change foreach my $file (glob("$tmpdir/$line")) {
-    to foreach my $file (glob("$line")) {
+FIX: Edit `/usr/share/perl5/vendor_perl/Warewulf/Provision/Pxelinux.pm` line 201 delete the if block
 
-(re)Make the image:
+FIX: Edit `/usr/share/perl5/vendor_perl/Warewulf/Provision/Dhcp/Isc.pm` line 273 delete if block
+
+Edit `/etc/warewulf/vnfs.conf` to exclude unnecessary files and make the image (database tables are created automatically):
 
     ./cloneimage centos-6
 
-Bootstrap the kernel:
+Edit `/etc/warewulf/bootstrap.conf` to load kernel modules/drivers/firmwares and bootstrap the kernel:
 
     ./clonekernel list centos-6
-    ./clonekernel centos-6 2.6.32-358.11.1.el6.x86_64
+    ./clonekernel centos-6 3.10.0-1.el6.elrepo.x86_64
 
-Mainline kernel:
-
-    ./cloneyum centos-6 --enablerepo=elrepo-kernel install kernel-ml
-    ./clonekernel list centos-6
-    ./clonekernel centos-6 3.9.7-1.el6.elrepo.x86_64
-    wwsh provision set cn-01 -b 3.9.7-1.el6.elrepo.x86_64
-
-UPX (TODO):
-
-    ./clonemini centos-6
-    ./cloneimage centos-6-mini
-    wwsh provision set cn-01 -v centos-6-mini
+TODO: NTPD for the core for the compute nodes
 
 Provision:
 
-    ./clonescan centos-6/2.6.32-358.11.1.el6.x86_64 compute/cn-0[1-3]
+    ./clonescan centos-6/3.10.0-1.el6.elrepo.x86_64 compute/cn-0[1-2]
 
 Start the VMs.
 
 Reconfigure the scheduler, `slurmconf` copies pro/epi scripts as well:
 
-    ./slurmconf cn-0[1-3]
+    ./slurmconf cn-0[1-2]
 
 Parameter       | srun option | When Run  | Run by | As User
 --- | --- | --- | ---

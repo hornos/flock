@@ -8,7 +8,7 @@
 # exclude before building the VNFS. /usr/share is needed by dracut
 # excludes += /home
 excludes += /tmp
-excludes += /dev
+# excludes += /dev
 excludes += /usr/share
 excludes += /usr/X11R6
 excludes += /usr/lib/locale
@@ -28,7 +28,7 @@ excludes += /usr/include
 
 # TODO: /lib/firmware
 excludes += /boot
-excludes += /lib/modules
+excludes += /lib/modules/*
 excludes += /var/cache/yum
 excludes += /var/lib/yum
 excludes += /var/lib/rpm

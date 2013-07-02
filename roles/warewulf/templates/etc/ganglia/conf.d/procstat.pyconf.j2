@@ -1,0 +1,48 @@
+#
+# procstat for HPC controller
+#
+
+modules {
+  module {
+    name = 'procstat'
+    language = 'python'
+
+    param gmond {
+      value = '/gmond/'
+    }
+
+    param gmetad {
+      value = '/gmetad/'
+    }
+
+    param mariadb {
+      value = '{{mariadb.pid}}'
+    }
+
+    param httpd {
+      value = '/var/run/httpd/httpd.pid'
+    }
+
+    param slurmctld {
+      value = '/var/run/slurm/slurmctld.pid'
+    }
+
+    param slurmdbd {
+      value = '/var/run/slurm/slurmdbd.pid'
+    }
+
+  }
+}
+
+collection_group {
+  collect_every = 30
+  time_threshold = 30
+
+  metric {
+    name_match = "procstat_(.+)_cpu"
+  }
+
+  metric {
+    name_match = "procstat_(.+)_mem"
+  }
+}

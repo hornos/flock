@@ -17,6 +17,13 @@
       tags:
         - slurm
 
+    - name: Install /etc/nhc/nhc.conf
+      template: src=templates/nhc.conf
+                dest=/etc/nhc/nhc.conf
+      tags:
+        - slurm
+        - nhc
+
     - name: Install /etc/slurm/slurm.conf
       template: src=/etc/slurm/slurm.conf
                 dest=/etc/slurm/slurm.conf

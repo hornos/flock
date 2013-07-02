@@ -74,6 +74,15 @@
               mode=0644
     tags:
       - config
+      - database
+
+  - name: Delete /etc/warewulf/database-root.conf
+    file: path=/etc/warewulf/database-root.conf
+          state=absent
+    tags:
+      - config
+      - database
+      - clean
 
 ### DIRECTORIES
   - name: Create common directory

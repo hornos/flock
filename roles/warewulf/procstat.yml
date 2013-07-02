@@ -1,0 +1,26 @@
+
+---
+- hosts: all
+
+  vars_files:
+    - vars/mariadb.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+
+  tasks:
+
+  - name: Ganglia procstat monitor
+    template: src=templates/etc/ganglia/conf.d/procstat.pyconf.j2
+              dest=/etc/ganglia/conf.d/procstat.pyconf
+              owner=root
+              group=root
+              mode=0644
+              backup=yes
+    notify:
+      - Restart gmond
+    tags:
+      - config
+
+  handlers:
+    - name: Restart gmond
+      service: name={{service.gmond}}
+               state=restarted

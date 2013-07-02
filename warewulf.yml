@@ -3,12 +3,21 @@
 # ANSIBLE_HOSTS=core flock play @@core warewulf --extra-vars='master=core'
 #
 ---
+# install warewulf toolkit
+# TODO: make upstream packages
 - include: roles/warewulf/warewulf.yml
 - include: roles/warewulf/tools.yml
+# ansible for the clones
 - include: roles/warewulf/ansible.yml
+# slurm stuff
 - include: roles/warewulf/slurmscripts.yml
+# nfs server for homes
+# TODO: lustre ceph and FhGfs
 - include: roles/warewulf/nfsserver.yml
+# basic node helth check
 - include: roles/warewulf/healthcheck.yml
+# ganglia procstat
+- include: roles/warewulf/procstat.yml
 
 - hosts: all
   tasks:

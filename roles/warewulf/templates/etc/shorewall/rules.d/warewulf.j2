@@ -1,5 +1,7 @@
 # Syslog
 ACCEPT       sys:+warewulf           $FW       udp      514
+# NTP
+ACCEPT       sys:+warewulf           $FW       udp      123
 # Boot
 ACCEPT       sys:+warewulf           $FW       udp       69
 ACCEPT       sys:+warewulf           $FW       tcp       80

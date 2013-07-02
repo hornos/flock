@@ -15,16 +15,6 @@
       tags:
         - config
 
-# >>> STARTHERE
-    - name: Install compute nhc
-      template: src=templates/chroots/etc/nhc/{{item}}.j2
-                dest=/etc/nhc/{{item}}
-                backup=yes
-      with_items:
-        - nhc.conf
-      tags:
-        - config
-
 ### SLURM
     - name: Enable Slurm health check
       lineinfile: dest=/etc/slurm/slurm.conf

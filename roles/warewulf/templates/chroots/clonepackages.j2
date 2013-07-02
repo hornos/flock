@@ -1,18 +1,27 @@
 #!/bin/bash
+_hosts=${1:-{{warewulf.os}}}
+
+### random stuff
+chroot ${_hosts} mknod /dev/random c 1 8
+chroot ${_hosts} mknod /dev/urandom c 1 9
+
 ### install repos
-./clonebook {{warewulf.os}} playbooks/repos.yml
+./clonebook ${_hosts} playbooks/repos.yml
 
 ### update package cache
-./cloneyum {{warewulf.os}} makecache
+./cloneyum ${_hosts} makecache
 
 ### install kernel and utils
-./cloneyum {{warewulf.os}} install kernel htop sysstat ntp ntpdate rsync autofs x86info tuna
+./cloneyum ${_hosts} install htop sysstat ntp ntpdate rsync autofs x86info tuna
+
+### install mainline kernel
+./cloneyum ${_hosts} install kernel-ml kernel-ml-firmware --enablerepo=elrepo-kernel
 
 ### install slurm packages
-./cloneyum {{warewulf.os}} install munge slurm slurm-munge slurm-pam_slurm slurm-perlapi slurm-plugins slurm-sjobexit slurm-sjstat
+./cloneyum ${_hosts} install munge slurm slurm-munge slurm-pam_slurm slurm-perlapi slurm-plugins slurm-sjobexit slurm-sjstat
 
 ### install ganglia packages
-./cloneyum {{warewulf.os}} install ganglia-gmond ganglia-gmond-modules-python
+./cloneyum ${_hosts} install ganglia-gmond ganglia-gmond-modules-python
 
 ### install warewulf packages
-./cloneyum {{warewulf.os}} install warewulf-nhc
+./cloneyum ${_hosts} install warewulf-nhc

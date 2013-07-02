@@ -1,5 +1,12 @@
 #!/bin/bash
-_hosts=${1:-centos-6}
+#
+# http://stackoverflow.com/questions/8591394/openssl-inside-a-chroot
+#
+# TODO: fail test
+#
+_hosts=${1:-{{warewulf.os}}}
+
+chroot ${_hosts} mknod /dev/urandom c 1 9
 
 echo "Configure rsyslog"
 ./clonebook ${_hosts} playbooks/rsyslog
@@ -31,5 +38,4 @@ echo "Enable tuning"
 echo "Change inittab"
 ./clonebook ${_hosts} playbooks/inittab
 
-echo "Install mainline kernel"
-./clonebook ${_hosts} playbooks/kernel
+chroot ${_hosts} rm /dev/urandom

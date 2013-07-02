@@ -111,6 +111,7 @@
         - auto.master
         - sysctl.conf
         - rc.local
+        - nhc.conf
       tags:
         - clone
         - templates
