@@ -1,0 +1,10 @@
+#
+# PTPD Configuration
+#
+# See man ptpd for arguments and /usr/share/doc/ptpd
+#
+# Example client (slave) arguments
+#PTPDARGS="-n Example -D -b eth0 -L -D -g -i 1 -w 10000 -R /var/log/ptpd2_sync.log -f /var/log/ptpd2.log"
+#
+# Example server arguments
+PTPDARGS="-n Example -D -b {{interfaces.system}} -L -D -i 1 -s 1 -G -w 10000 -R /var/log/ptpd2_sync.log -f /var/log/ptpd.log"

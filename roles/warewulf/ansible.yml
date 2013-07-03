@@ -67,6 +67,7 @@
         - munge.yml
         - slurm.yml
         - ntpd.yml
+        - ptpd.yml
         - autofs.yml
         - tune.yml
         - inittab.yml

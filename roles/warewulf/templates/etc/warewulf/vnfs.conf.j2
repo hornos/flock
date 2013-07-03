@@ -7,8 +7,8 @@
 # If you are doing a stateful install, comment out the /usr/share
 # exclude before building the VNFS. /usr/share is needed by dracut
 # excludes += /home
-excludes += /tmp
-# excludes += /dev
+excludes += /tmp/*
+excludes += /dev/*
 excludes += /usr/share
 excludes += /usr/X11R6
 excludes += /usr/lib/locale

@@ -5,7 +5,6 @@ _template=/etc/slurm/slurm.slurmconf
 _config=/etc/slurm/slurm.conf
 _compute_config=/etc/slurm/${_group}-slurm.conf
 
-
 function slurmconf/__master() {
   cat ${_template} | \
   sed s/^NodeName.*/NodeName=${_nodes}/ | \
@@ -101,7 +100,7 @@ function slurmconf/provision() {
 
   # node health check
   echo "Import nhc.conf"
-  wwsh file import /etc/nhc/nhc-${_group}.conf --name=nhc.conf --path=/etc/nhc/nhc.conf
+  wwsh file import ${PWD}/playbooks/templates/nhc.conf --name=nhc.conf --path=/etc/nhc/nhc.conf
   wwsh provision set ${_nodes} --fileadd=nhc.conf
 
   # wake on lan
@@ -131,3 +130,4 @@ read -p "Provision nodes?"
 slurmconf/provision
 read -p "Reconfigure Slurm?"
 scontrol reconfigure
+

@@ -4,38 +4,89 @@
 #
 # TODO: fail test
 #
-_hosts=${1:-{{warewulf.os}}}
 
-chroot ${_hosts} mknod /dev/urandom c 1 9
+### args
+_hosts=${1:-centos-6}
+shift
+_opts=$*
 
-echo "Configure rsyslog"
-./clonebook ${_hosts} playbooks/rsyslog
+### func
+function clonesetup/init() {
+  chroot ${_hosts} mknod /dev/urandom c 1 9
+}
 
-echo "Configure ganglia"
-./clonebook ${_hosts} playbooks/ganglia
+function clonesetup/syslog() {
+  echo "Configure rsyslog"
+  ./clonebook ${_hosts} playbooks/rsyslog
+}
 
-echo "Configure users"
-./clonebook ${_hosts} playbooks/users
+function clonesetup/ganglia() {
+  echo "Configure ganglia"
+  ./clonebook ${_hosts} playbooks/ganglia
+}
 
-echo "Configure munge"
-chroot ${_hosts} chkconfig munge off
-./clonebook ${_hosts} playbooks/munge
-chroot ${_hosts} chkconfig munge on
+function clonesetup/users() {
+  echo "Configure users"
+  ./clonebook ${_hosts} playbooks/users
+}
 
-echo "Configure slurm"
-./clonebook ${_hosts} playbooks/slurm
+function clonesetup/munge() {
+  echo "Configure munge"
+  chroot ${_hosts} chkconfig munge off
+  ./clonebook ${_hosts} playbooks/munge
+  chroot ${_hosts} chkconfig munge on
+}
 
-echo "Configure ntpd"
-./clonebook ${_hosts} playbooks/ntpd
-chroot ${_hosts} chkconfig ntpd on
+function clonesetup/slurm() {
+  echo "Configure slurm"
+  ./clonebook ${_hosts} playbooks/slurm
+}
 
-echo "Configure autofs"
-./clonebook ${_hosts} playbooks/autofs
+function clonesetup/ntpd() {
+  echo "Configure ntpd"
+  chroot ${_hosts} chkconfig ntpd off
+  ./clonebook ${_hosts} playbooks/ntpd
+  chroot ${_hosts} chkconfig ntpd on
+}
 
-echo "Enable tuning"
-./clonebook ${_hosts} playbooks/tune
+function clonesetup/ptpd() {
+  echo "Configure ntpd"
+  chroot ${_hosts} chkconfig --add ptpd2
+  chroot ${_hosts} chkconfig ptpd2 off
+  ./clonebook ${_hosts} playbooks/ptpd
+  chroot ${_hosts} chkconfig ptpd2 on
+}
 
-echo "Change inittab"
-./clonebook ${_hosts} playbooks/inittab
+function clonesetup/autofs() {
+  echo "Configure autofs"
+  ./clonebook ${_hosts} playbooks/autofs
+}
 
-chroot ${_hosts} rm /dev/urandom
+function clonesetup/inittab() {
+  echo "Change inittab"
+  ./clonebook ${_hosts} playbooks/inittab
+}
+
+function clonesetup/tune() {
+  echo "Enable tuning"
+  ./clonebook ${_hosts} playbooks/tune
+}
+
+function clonesetup/finish() {
+  chroot ${_hosts} rm /dev/urandom
+}
+
+### main
+clonesetup/init
+clonesetup/syslog
+clonesetup/ganglia
+clonesetup/users
+clonesetup/munge
+clonesetup/slurm
+clonesetup/ntpd
+clonesetup/ptpd
+clonesetup/autofs
+clonesetup/inittab
+clonesetup/tune
+clonesetup/finish
+

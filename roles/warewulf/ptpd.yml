@@ -1,0 +1,39 @@
+#
+# http://ptpd.sourceforge.net/
+#
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    - vars/warewulf.yml
+
+  tasks:
+    - name: Install packages
+      yum: name=ptpd
+           state=installed
+      tags:
+        - packages
+
+    - name: Enable service
+      command: chkconfig --add ptpd2
+      tags:
+        - packages
+
+    - name: Configure ptpd
+      template: src=templates/etc/sysconfig/ptpd2.j2
+                dest=/etc/sysconfig/ptpd2
+                backup=yes
+      tags:
+        - configs
+      notify:
+        - Restart ptpd2
+
+    - name: Start service
+      service: name=ptpd2
+               state=started
+               enabled=yes
+
+  handlers:
+    - name: Restart ptpd2
+      service: name=ptpd2
+               state=restarted

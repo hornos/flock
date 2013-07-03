@@ -11,7 +11,15 @@
       tags:
         - config
 
+### cycle
+    - name: Start NTP early
+      lineinfile: "dest=/etc/init.d/ntpd regexp='^#\ chkconfig' line='# chkconfig: - 25 74'"
+      tags:
+        - service
+        - cycle
+
+### initial time sync
     - name: Set options
-      lineinfile: dest=/etc/sysconfig/ntpd regexp='^OPTIONS' line='OPTIONS="-u ntp:ntp -p /var/run/ntpd.pid -gq"'
+      lineinfile: dest=/etc/sysconfig/ntpd regexp='^OPTIONS' line='OPTIONS="-u ntp:ntp -p /var/run/ntpd.pid -g"'
       tags:
         - config

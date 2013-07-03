@@ -8,4 +8,10 @@ ACCEPT       sys:+warewulf           $FW       tcp       80
 # Ganglia
 ACCEPT       sys:+warewulf           $FW       udp     8649
 ACCEPT       sys:+warewulf           $FW       tcp     8649
+# Slurm
+ACCEPT       sys:+warewulf           $FW       tcp     6817
+# http://www.ncftp.com/ncftpd/doc/misc/ephemeral_ports.html
+# cat /proc/sys/net/ipv4/ip_local_port_range
+ACCEPT       sys:+warewulf           $FW       tcp     32768:61000
+# Ping
 Ping(ACCEPT) sys                     $FW

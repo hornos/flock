@@ -137,6 +137,15 @@ and ping the by `sysop`:
 
     flock ping @@core
 
+<!--
+ ######   ########   #######  ##     ## ##    ## ########  
+##    ##  ##     ## ##     ## ##     ## ###   ## ##     ## 
+##        ##     ## ##     ## ##     ## ####  ## ##     ## 
+##   #### ########  ##     ## ##     ## ## ## ## ##     ## 
+##    ##  ##   ##   ##     ## ##     ## ##  #### ##     ## 
+##    ##  ##    ##  ##     ## ##     ## ##   ### ##     ## 
+ ######   ##     ##  #######   #######  ##    ## ######## 
+-->
 ### Ground State
 You need a simple network topology (`networks.yml`):
 
@@ -491,8 +500,6 @@ Warewulf it:
 
     flock play @@core warewulf --extra-vars='master=core'
 
-TODO: generate slurm.conf template
-
 Create compute VMs:
 
      for i in 1 2 ; do flock-vbox create cn-0$i;done
@@ -502,17 +509,23 @@ Login to the master node and make a child:
     pushd /common/warewulf/chroots
     ./cloneos centos-6
 
-Install basic packages (NTP, Munge, Slurm):
+Install basic packages:
 
     ./clonepackages centos-6
 
-TODO: node firewalls
+Ad-hoc installations done by eg.:
 
-TODO: trusted login node
+    ./cloneyum centos-6 install ptpd
 
 Configure the clone directory (TODO: playbook):
 
     ./clonesetup centos-6
+
+On the compute nodes NTP is used for initial time sync and PTP is used for fine sync. The controller node is a PTP master running both NTP and PTP.
+
+TODO: node firewalls
+
+TODO: trusted login node
 
 TODO: LDAP & storage
 
@@ -531,8 +544,6 @@ Edit `/etc/warewulf/bootstrap.conf` to load kernel modules/drivers/firmwares and
     ./clonekernel list centos-6
     ./clonekernel centos-6 3.10.0-1.el6.elrepo.x86_64
 
-TODO: NTPD for the core for the compute nodes
-
 Provision:
 
     ./clonescan centos-6/3.10.0-1.el6.elrepo.x86_64 compute/cn-0[1-2]
@@ -542,6 +553,10 @@ Start the VMs.
 Reconfigure the scheduler, `slurmconf` copies pro/epi scripts as well:
 
     ./slurmconf cn-0[1-2]
+
+At first, you have to start slurm execute service as well:
+
+    ./cloneservice compute slurm start
 
 Parameter       | srun option | When Run  | Run by | As User
 --- | --- | --- | ---
@@ -558,11 +573,7 @@ TaskEpilog (batch) |          | script finish | slurmstepd | User
 Epilog          |             | job finish | slurmd | SlurmdUser
 EpilogSlurmCtld |             | job finish | slurmctld | SlurmUser
 
-Mind the time if needed:
-
-    ./cloneservice compute ntpd restart
-
-Try them out (TODO):
+Interactive test:
 
     srun -N 2 -D /common/scratch hostname
 

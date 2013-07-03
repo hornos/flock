@@ -20,6 +20,9 @@ masks:
   home: 24
   vpn: 24
 
+ntps:
+  - 148.6.0.1
+
 dhcp_masks:
   system: 255.255.0.0
   compute: 255.255.255.0

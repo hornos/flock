@@ -3,6 +3,8 @@
 # ANSIBLE_HOSTS=core flock play @@core warewulf --extra-vars='master=core'
 #
 ---
+# PTP
+- include: roles/warewulf/ptpd.yml
 # install warewulf toolkit
 # TODO: make upstream packages
 - include: roles/warewulf/warewulf.yml

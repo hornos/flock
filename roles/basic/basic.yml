@@ -9,7 +9,7 @@
 - include: top.yml
 ### services
 - include: dnsmasq.yml
-- include: ntp_server.yml
+- include: ntpd.yml
 - include: syslog.yml
 - include: syslog_loghost.yml
 - include: syslog_client.yml

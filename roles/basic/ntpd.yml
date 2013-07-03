@@ -10,6 +10,7 @@
     - networks.yml
     - [ "vars/{{ansible_os_family}}.yml", "vars/Defaults.yml" ]
 
+### FEATURE SWITCHES
   vars:
     is_bcast: "'$bcast' == 'yes'"
 
@@ -28,20 +29,39 @@
       tags:
         - packages
 
-    - name: Setup NTP Server
-      lineinfile: dest=/etc/ntp.conf
-                  regexp="^broadcast .* autokey version 4"
-                  insertafter="# broadcast server"
-                  line="broadcast ${broadcasts.system} autokey version 4"
-                  backup=yes
+    - name: Configure NTP Server
+      template: src=templates/etc/ntp.conf.j2
+                dest=/etc/ntp.conf
+                backup=yes
       notify:
         - Restart ntpd
       tags:
         - configs
-      only_if: '$is_bcast'
+
+### CYCLE BEGIN
+    - name: Disable NTP
+      service: name=ntpd
+               state=stopped
+               enabled=no
+      tags:
+        - cycle
+
+    - name: Start NTP early
+      lineinfile: "dest=/etc/init.d/ntpd regexp='^#\ chkconfig' line='# chkconfig: - 25 74' backup=yes"
+      tags:
+        - service
+        - cycle
+
+    - name: Enable NTP
+      service: name=ntpd
+               state=started
+               enabled=yes
+      tags:
+        - cycle
+### CYCLE END
 
     - name: Set start options
-      lineinfile: dest=/etc/sysconfig/ntpd regexp="^OPTIONS=" line='OPTIONS="-u ntp:ntp -p /var/run/ntpd.pid -gq"' backup=yes
+      lineinfile: dest=/etc/sysconfig/ntpd regexp="^OPTIONS=" line='OPTIONS="-u ntp:ntp -p /var/run/ntpd.pid -g -m"' backup=yes
       notify:
         - Restart ntpd
       tags:
