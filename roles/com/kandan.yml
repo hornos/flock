@@ -1,0 +1,133 @@
+#
+# https://github.com/kandanapp/kandan/blob/master/DEPLOY.md#standalone-server
+#
+# Import schemas:
+# --extra-vars "schema=yes"
+# Master host
+# --extra-vars "master=com"
+#
+---
+- hosts: all
+
+  vars_files:
+    - vars/kandan.yml
+    - vars/mariadb.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_backup: "'$inventory_hostname' == '$backup'"
+    is_schema: "'$schema' == 'yes'"
+
+  tasks:
+  - name: Download repository
+    git: repo=https://github.com/kandanapp/kandan.git
+         dest=/opt/kandan
+    tags:
+      - repo
+      - packages
+
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - libxslt-devel
+      - libxml2-devel
+      - postgresql-devel
+      - sqlite-devel
+      - MariaDB-devel
+    tags:
+      - packages
+      - devel
+# TODO: mysql adapter
+  - name: Install gem packages
+    gem: name={{item}}
+         state=present
+    with_items:
+      - execjs
+      - activerecord-mysql-adapter
+      - mysql2
+    tags:
+      - packages
+      - gem
+
+  - name: Install bundle scripts
+    template: src=templates/{{item}}.j2
+              dest=/opt/kandan/{{item}}
+              mode=0700
+    with_items:
+      - install
+      - bootstrap
+      - thin
+    tags:
+      - packages
+      - install
+      - scripts
+
+  # TODO: rvm vs debugger install problem
+  - name: Run bundle installer
+    shell: cd /opt/kandan; ./install
+    tags:
+      - packages
+      - bundle
+
+  - name: Create database
+    mysql_db: db={{kandan.db}}
+              login_user={{mariadb.user}}
+              login_password={{mariadb.password}}
+              login_unix_socket={{mariadb.socket}}
+    only_if: '$is_master'
+    tags:
+      - db
+
+  - name: Create database user
+    mysql_user: name={{kandan.user}} password={{kandan.password}} priv={{kandan.db}}.*:ALL
+                login_user={{mariadb.user}}
+                login_password={{mariadb.password}}
+                login_unix_socket={{mariadb.socket}}
+    only_if: '$is_master'
+    tags:
+      - db
+
+  - name: Configure database
+    template: src=templates/kandan/config/database.yml.j2
+              dest=/opt/kandan/config/database.yml
+              backup=yes
+    tags:
+      - db
+      - config
+
+  - name: Production on Thin
+    copy: content="config.serve_static_assets = true"
+          dest=/opt/kandan/config/environments/production.rb
+    tags:
+      - config
+      - thin
+
+  - name: Bootstrap
+    shell: cd /opt/kandan; ./bootstrap
+    tags:
+      - config
+      - bootstrap
+
+### FIREWALL
+#  - name: Install firewall rules
+#    template: src=templates/etc/shorewall/rules.d/kandan.j2
+#              dest=/etc/shorewall/rules.d/kandan
+#              owner=root
+#              group=root
+#              mode=0640
+#    tags:
+#      - firewall
+#    notify:
+#      - Restart shorewall
+
+# TODO: service
+#  - name: Start openfire
+#    service: name=openfire
+#             state=started
+#             enabled=yes
+
+  handlers:
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted

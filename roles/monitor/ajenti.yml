@@ -1,0 +1,49 @@
+#
+# http://ajenti.org/
+#
+---
+- hosts: all
+
+  vars_files:
+    - vars/ajenti.yml
+
+  tasks:
+### REDHAT
+    - name: Download repository
+      get_url: url={{url}}/{{rpm}} dest=/root/{{rpm}}
+      when: ansible_os_family == "RedHat"
+      tags:
+        - packages
+
+    - name: Install repository
+      command: yum -y localinstall /root/{{rpm}}
+      when: ansible_os_family == "RedHat"
+      tags:
+        - packages
+        - repo
+
+    - name: Install Ajenti packages
+      yum: name={{item}}
+           state=installed
+      with_items:
+        - ajenti
+      when: ansible_os_family == "RedHat"
+      tags:
+        - packages
+
+### CONFIGURATION
+    - name: Install /etc/shorewall/rules.d/ajenti
+      template: src=templates/etc/shorewall/rules.d/ajenti.j2
+                dest=/etc/shorewall/rules.d/ajenti
+                owner=root
+                group=root
+                mode=0640
+      tags:
+        - firewall
+      notify:
+        - Restart shorewall
+
+  handlers:
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted
