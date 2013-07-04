@@ -1,0 +1,55 @@
+# Elasticsearch for Graylog2
+# http://www.6tech.org/2013/01/install-graylog-2-on-centos-6-3-elastic-search-20-1/
+#
+# CHECK
+# curl -XGET 'http://localhost:9200/_cluster/health?pretty=true'
+#
+---
+- hosts: all
+
+  vars_files:
+    - vars/elasticsearch.yml
+
+  tasks:
+    - name: Install packages
+      yum: name={{item}}
+           state=installed
+      with_items:
+        - java-1.7.0-openjdk
+      tags:
+        - packages
+
+    - name: Download elasticsearch
+      get_url: url={{url}}/{{rpm}} dest=/root/{{rpm}}
+      tags:
+        - packages
+
+    - name: Install elasticsearch
+      command: yum -y localinstall /root/{{rpm}}
+      tags:
+        - packages
+
+    - name: Configure elasticsearch
+      template: src=templates/etc/elasticsearch/elasticsearch.yml.j2
+                dest=/etc/elasticsearch/elasticsearch.yml
+                owner=root
+                group=root
+                mode=0644
+      tags:
+        - configs
+      notify:
+        - Restart elasticsearch
+
+### FIREWALL
+# TCP 9200-9400
+
+### SERVICES
+    - name: Enable elasticsearch
+      service: name=elasticsearch
+               state=started
+               enabled=yes
+
+  handlers:
+    - name: Restart elasticsearch
+      service: name=elasticsearch
+               state=restarted

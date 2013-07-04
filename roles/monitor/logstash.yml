@@ -1,0 +1,44 @@
+#
+# http://crankysysadmin.com/secure-logstash-install/
+#
+---
+- hosts: all
+
+  vars_files:
+    - vars/logstash.yml
+
+  tasks:
+    - name: Install packages
+      yum: name={{item}}
+           state=installed
+      with_items:
+        - java-1.7.0-openjdk
+      tags:
+        - packages
+
+    - name: Create /opt/logstash
+      file: path=/opt/logstash
+            state=directory
+      tags:
+        - directories
+
+    - name: Download logstash
+      get_url: url={{url}}/{{jar}} dest=/opt/logstash/{{jar}}
+      tags:
+        - packages
+
+    # TODO
+
+### FIREWALL
+# TCP 9200-9400
+
+### SERVICES
+    - name: Enable elasticsearch
+      service: name=elasticsearch
+               state=started
+               enabled=yes
+
+  handlers:
+    - name: Restart elasticsearch
+      service: name=elasticsearch
+               state=restarted

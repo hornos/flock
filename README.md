@@ -612,7 +612,7 @@ Performance tests (TODO):
 
     ftp://ftp.mcs.anl.gov/pub/mpi/tools/perftest.tar.gz
 
-[Soft RoCE](http://www.systemfabricworks.com/downloads/roce) (TODO):
+TODO: [Soft RoCE](http://www.systemfabricworks.com/downloads/roce)
 
     yum --enablerepo=elrepo-kernel install kernel-ml-devel kernel-ml-headers rpm-build
     yum install libibverbs-devel libibverbs-utils libibverbs
@@ -630,18 +630,25 @@ Service restart:
 
     ./cloneservice compute gmond restart
 
-TODO
+TODO:
 * Cgroup
 * Wake-on-lan with compute suspend
 * Kernel 3.10 full nohz cpuset scheduler numa shit ptp
 * error: /usr/sbin/nhc: exited with status 0x0100
 
-### Message Queue
+### Logstash with Kibana
+Enable elasticsearch:
 
-### Hadoop
-#### CDH4
+    flock play @@core roles/monitor/elasticsearch
 
-### Communication Center
+
+
+## Message Queue
+
+## Hadoop
+### CDH4
+
+## Communication Center
 Install MariaDB master:
 
     flock play @@com roles/database/mariadb --extra-vars "master=com"
