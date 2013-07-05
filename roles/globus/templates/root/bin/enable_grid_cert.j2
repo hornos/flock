@@ -1,0 +1,12 @@
+#!/bin/bash
+ca_cert=/etc/grid-security/certificates/{{globus.default}}.0
+ca_bundle=/etc/ssl/certs/ca-bundle.crt
+ca_fp=$(openssl x509 -fingerprint -noout -in ${ca_cert})
+
+grep "${ca_fp}" ${ca_bundle} >/dev/null
+if test $? -eq 0 ; then
+  echo "Certificate added"
+  exit 0
+fi
+
+openssl x509 -text -fingerprint -noout -in ${ca_cert} >> ${ca_bundle}

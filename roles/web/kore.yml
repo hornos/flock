@@ -1,0 +1,71 @@
+#
+# https://kore.io/doc/
+#
+# TODO: globus service key/cert
+#
+---
+- hosts: all
+
+  vars_files:
+    - vars/kore.yml
+
+  tasks:
+    - name: Download axivo repository
+      get_url: url={{url}}/{{rpm}} dest=/root/{{rpm}}
+      tags:
+        - repo
+
+    - name: Install axivo repository
+      command: yum -y localinstall /root/{{rpm}}
+      when: ansible_os_family == "RedHat"
+      tags:
+        - packages
+        - repo
+
+    - name: Install packages
+      yum: name={{item}}
+           state=installed
+      with_items:
+        - gcc
+      tags:
+        - packages
+
+    - name: Install axivo packages
+      yum: name={{item}}
+           state=latest
+           enablerepo=axivo
+      with_items:
+        - openssl
+        - openssl-devel
+      tags:
+        - packages
+
+    - name: Install repository
+      git: repo=https://github.com/jorisvink/kore.git
+           dest=/opt/kore.io
+      tags:
+        - packages
+
+    - name: Create kore user
+      user: name=kore
+            state=present
+      tags:
+        - users
+
+    - name: Create directories
+      file: path={{item}}
+            owner=root
+            group=kore
+            mode=0770
+      with_items:
+        - /var/log/kore
+        - /var/run/kore
+        - /var/www/kore
+      tags:
+        - directories
+
+    - name: Install kore config
+      template: src=templates/opt/kore.io/kore.conf
+                dest=/opt/kore.io/kore.conf
+      tags:
+        - configs

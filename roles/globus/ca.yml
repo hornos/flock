@@ -71,3 +71,5 @@
                 mode=0755
       with_items:
         - check_grid
+        - enable_grid_cert
+

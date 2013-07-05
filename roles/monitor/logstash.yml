@@ -27,7 +27,25 @@
       tags:
         - packages
 
-    # TODO
+    - name: Create logstash user
+      user: name=logstash
+            state=present
+      tags:
+        - users
+
+    - name: Create directories
+      file: path={{item}}
+            state=directory
+            owner=root
+            group=logstash
+            mode=0755
+      with_items:
+        - /var/run/logstash
+        - /var/lib/logstash
+        - /var/lib/logstash/data
+
+### CONFIGURATION
+    - name: Install configuration
 
 ### FIREWALL
 # TCP 9200-9400

@@ -253,6 +253,10 @@ Enter Grid state:
 
 Check `ssl.conf` for a strong [PFS](http://vincent.bernat.im/en/blog/2011-ssl-perfect-forward-secrecy.html) cipher setting.
 
+If you want to enable the CA certificate system-wide run:
+
+    /root/bin/enable_grid_cert
+
 ### Clustering
 Create common authentication key (`keys/authkey`):
 
