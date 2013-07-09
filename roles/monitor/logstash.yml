@@ -46,17 +46,23 @@
 
 ### CONFIGURATION
     - name: Install configuration
+      template: src=templates/etc/logstash.conf
+                dest=/etc/logstash.conf
+      tags:
+        - config
+
+#    - name: Install sevice
 
 ### FIREWALL
 # TCP 9200-9400
 
-### SERVICES
-    - name: Enable elasticsearch
-      service: name=elasticsearch
-               state=started
-               enabled=yes
-
-  handlers:
-    - name: Restart elasticsearch
-      service: name=elasticsearch
-               state=restarted
+#### SERVICES
+#    - name: Enable elasticsearch
+#      service: name=elasticsearch
+#               state=started
+#               enabled=yes
+#
+#  handlers:
+#    - name: Restart elasticsearch
+#      service: name=elasticsearch
+#               state=restarted

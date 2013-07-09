@@ -1,17 +1,6 @@
+# OBSOLETE OBSOLETE OBSOLETE
 #
 # Ganglia cluster monitor
-#
-# http://vuksan.com/centos/RPMS/x86_64/
-#
-# rollback:
-# --extra-vars "rollback=yes"
-#
-# latest version repo bug
-# http://vuksan.com/centos/RPMS-6/x86_64/ganglia-devel-3.6.0-1.x86_64.rpm
-# http://vuksan.com/centos/RPMS-6/x86_64/ganglia-gmetad-3.6.0-1.x86_64.rpm
-# http://vuksan.com/centos/RPMS-6/x86_64/ganglia-gmond-3.6.0-1.x86_64.rpm
-# http://vuksan.com/centos/RPMS-6/x86_64/ganglia-gmond-modules-python-3.6.0-1.x86_64.rpm
-# http://vuksan.com/centos/RPMS-6/x86_64/libganglia-3.6.0-1.x86_64.rpm
 #
 ---
 - hosts: all
@@ -19,33 +8,53 @@
   vars_files:
     - networks.yml
     - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
-    - vars/ganglia.yml
-
-  vars:
-    is_rollback: "'$rollback' == 'yes'"
+    - vars/ganglia-3.4.0.yml
 
   tasks:
 ### REDHAT
   - name: Install repository
-    template: src=templates/etc/yum.repos.d/vuksan.repo.j2
-              dest=/etc/yum.repos.d/vuksan.repo
+    get_url: url={{url}}/{{repo}} dest=/etc/yum.repos.d/{{repo}}
+    when: ansible_os_family == "RedHat"
     tags:
+      - packages
       - repo
 
   - name: Install packages
     yum: name={{item}}
-         state=latest
-         enablerepo=vuksan
+         state=installed
     with_items:
       - ganglia-gmond
       - ganglia-gmond-modules-python
       - ganglia-gmetad
-      - libganglia
+      - ganglia-web
     when: ansible_os_family == "RedHat"
     tags:
       - packages
 
+
+### DEBIAN
+  - name: Install repository
+    apt_repository: repo='deb http://ppa.launchpad.net/rufustfirefly/ganglia/ubuntu precise main'
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+      - repo
+
+  - name: Install packages
+    apt: name={{item}}
+         state=latest
+    with_items:
+      - ganglia-monitor
+      - ganglia-monitor-python
+      - ganglia-modules-linux
+      - ganglia-webfrontend
+      - gmetad
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
 ### CONFIGURATION
+
   - name: Ganglia monitor
     template: src=templates/etc/ganglia/{{ganglia.version}}/gmond.conf.j2
               dest=/etc/ganglia/gmond.conf
@@ -152,8 +161,8 @@
 ### rearrange service order
   - name: Stop gmetad
     service: name=gmetad
-             state=started
-             enabled=yes
+             state=stopped
+             enabled=no
     tags:
       - gmetad
 

@@ -1,0 +1,26 @@
+#
+# https://developer.nvidia.com/cuda-pre-production
+#
+---
+- hosts: all
+
+  vars_files:
+    - vars/cuda.yml
+
+  tasks:
+    - name: Download CUDA repository
+      get_url: url={{url}}/{{rpm}} dest=/root/{{rpm}}
+      tags:
+        - packages
+
+    - name: Install CUDA repository
+      command: yum -y localinstall /root/{{rpm}}
+      tags:
+        - packages
+
+    - name: Install packages
+      yum: name=cuda
+           state=latest
+           enablerepo=cuda
+      tags:
+        - packages

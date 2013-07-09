@@ -1,0 +1,3 @@
+---
+url: http://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
+rpm: cuda-repo-rhel6-5.5-0.x86_64.rpm

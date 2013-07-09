@@ -1,0 +1,20 @@
+input {
+  tcp {
+    port => 5140
+    type => "syslog"
+  }
+  udp {
+    port => 5140
+    type => "syslog"
+  }
+}
+
+output {
+  stdout { debug => true debug_format => "json"}
+
+  elasticsearch {
+    host => "127.0.0.1"
+    cluster => "logstash"
+    tags => "syslog"
+  }
+}

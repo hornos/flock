@@ -2,8 +2,14 @@
 # Shorewall firewall
 #
 # TODO: dhcp from networks.yml
+#
+# Standalone: --extra-vars="nosys=yes"
+#
 ---
 - hosts: all
+
+  vars:
+    is_nosys: "'$nosys' == 'yes'"
 
   vars_files:
     - networks.yml

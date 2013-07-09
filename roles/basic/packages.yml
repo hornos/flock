@@ -30,6 +30,7 @@
       - pyOpenSSL
       - make
       - nodejs
+      - npm
       - multitail
       - rsstail
       - yum-security
@@ -41,6 +42,7 @@
       - sqlite
       - xz
       - pxz
+      - unzip
     when: ansible_os_family == "RedHat"
     tags:
       - packages

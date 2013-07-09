@@ -1,8 +1,10 @@
 #SOURCE    DEST        POLICY      LOG LEVEL    LIMIT:BURST
+{% if not is_nosys %}
 # system to system
 sys        sys         ACCEPT
 # me to system
 $FW        sys         ACCEPT
+{% endif %}
 # me to me
 $FW        $FW         ACCEPT
 # me to internet

@@ -2,5 +2,9 @@
 #INTERFACE	HOST(S)			OPTIONS		PROTO	DEST	SOURCE
 #								PORT(S)	PORT(S)
 # SSH should always go
+{% if is_nosys %}
+{{interfaces.nosys}}    -               -               TCP     22
+{% else %}
 {{interfaces.system}}   -               -               TCP     22
+{% endif %}
 #LAST LINE -- ADD YOUR ENTRIES BEFORE THIS ONE -- DO NOT REMOVE

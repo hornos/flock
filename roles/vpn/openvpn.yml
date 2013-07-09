@@ -132,6 +132,15 @@
       notify:
         - Restart openvpn
 
+    - name: Ubuntu fix
+      lineinfile: dest=/etc/openvpn/server.conf
+                  regexp='^group'
+                  line='group nogroup'
+                  backup=yes
+      when: ansible_os_family == "Debian"
+      tags:
+        - config
+
     - name: Start openvpn
       service: name=openvpn
                state=started

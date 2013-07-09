@@ -1,8 +1,12 @@
 #ZONE      INTERFACE     BROADCAST     OPTIONS
 # system network for inter node communications
+{% if is_nosys %}
+ext        {{interfaces.nosys}} detect dhcp,tcpflags,nosmurfs,routefilter,logmartians,upnpclient
+{% else %}
 sys        {{interfaces.system}}   detect dhcp
 # external network (internet)
 ext        {{interfaces.external}} detect dhcp,tcpflags,nosmurfs,routefilter,logmartians,upnpclient
+{% endif %}
 # openvpn tunnel
 vpn        tun+
 # docker.io

@@ -6,6 +6,8 @@
 #
 # ldap inetgration
 # storage integration
+# TODO: http://buttersideup.com/edacwiki/Main_Page
+#
 ---
 - hosts: all
   vars_files:
