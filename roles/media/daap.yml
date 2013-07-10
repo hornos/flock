@@ -1,0 +1,52 @@
+#
+# https://github.com/jasonmc/forked-daapd
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+
+  tasks:
+### DEBIAN
+  - name: Install packages
+    apt: name={{item}}
+         state=installed
+    with_items:
+      - forked-daapd
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+  - name: Install configuration
+    template: src=templates/etc/forked-daap.conf.j2
+              dest=/etc/forked-daap.conf
+              backup=yes
+    notify:
+      - Restart daap
+
+### FIREWALL
+# TODO: homelist
+  - name: Install firewall rules
+    template: src=templates/etc/shorewall/rules.d/daap.j2
+              dest=/etc/shorewall/rules.d/daap
+              owner=root
+              group=root
+              mode=0640
+    tags:
+      - firewall
+    notify:
+      - Restart shorewall
+
+  - name: Start daap
+    service: name=forked-daapd
+             state=started
+
+  handlers:
+    - name: Restart daap
+      service: name=forked-daapd
+               state=restarted
+
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted

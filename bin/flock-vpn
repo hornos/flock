@@ -136,7 +136,7 @@ case "${cmd}" in
   blick)
     ca_cn=${1:-vpnca}
     shift
-    fqdn=${1:-server}
+    fqdn=${1:-sysop}
     shift
     opts=${*}
 
@@ -151,6 +151,27 @@ case "${cmd}" in
     cp -v ta.key "${dest}"
     cp -v ca.crt "${dest}"
     popd
+  ;;
+
+  iphone)
+    ca_cn=${1:-vpnca}
+    shift
+    fqdn=${1:-iphone}
+    shift
+    opts=${*}
+    dest="${PWD}/ca/${ca_cn}/${fqdn}"
+    if ! test -d "${dest}"; then
+      mkdir ${dest}
+    fi
+
+    pushd "ca/${ca_cn}/${ca_ver}/keys"
+    cp -v ${fqdn}.crt "${dest}/client.crt"
+    cp -v ${fqdn}.key "${dest}/client.key"
+    cp -v ta.key "${dest}"
+    cp -v ca.crt "${dest}"
+    popd
+
+    cp -v roles/vpn/ovpn/iphone.ovpn "${dest}"
   ;;
 
   ting)

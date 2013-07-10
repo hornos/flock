@@ -249,7 +249,7 @@ case ${cmd} in
     sudo ${masq_bin} -d -C ${masq_conf}
   ;;
 
-  masq)
+  masq|boot)
     trap jockey/masq/exit INT TERM EXIT
     # interfaces="interface=${boot_interface}"
     addresses="listen-address=${boot_server}"

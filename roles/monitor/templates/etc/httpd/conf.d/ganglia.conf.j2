@@ -5,6 +5,7 @@ Alias /ganglia /var/www/html/ganglia
   Deny from all
   Allow from {{ networks.system }}/{{ masks.system }}
   Allow from {{ networks.vpn }}/{{ masks.vpn }}
+  Allow from {{ networks.home }}/{{ masks.home }}
   {% for host in sysops %}
   Allow from {{host}}/32
   {% endfor %}

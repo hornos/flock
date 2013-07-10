@@ -12,6 +12,9 @@
 # reset ipset:
 # --extra-vars "reset=yes"
 #
+# I am in Hungary
+# --extra-vars "hungary=yes"
+#
 # TODO: fix fooX ipset?
 # TODO: ipset at init
 #
@@ -24,6 +27,7 @@
 
   vars:
     is_reset: "'$reset' == 'yes'"
+    is_hungary: "'$hungary' == 'yes'"
 
   tasks:
 ### PACKAGES
@@ -71,8 +75,24 @@
         - core.sh
         - sysop.sh
         - private.sh
+        - ukusa.sh
+        - eu.sh
       tags:
         - config
+
+    - name: Install ipset tables for Hungary
+      template: src=templates/etc/ipset.d/{{item}}.j2
+                dest=/etc/ipset.d/{{item}}
+                owner=root
+                group=root
+                mode=0755
+      with_items:
+        - vh.sh
+        - tmobile.sh
+      only_if: '$is_hungary'
+      tags:
+        - config
+        - hungary
 
     - name: Delete saved ipsets
       file: path=/etc/ipset.d/${item}

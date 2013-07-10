@@ -1,0 +1,75 @@
+#!/bin/bash
+#
+# ipset boilerplate
+#
+# http://www.ipdeny.com/blog/blocking-country-ip-tables-using-our-data-blocks-and-ipset-utility/
+
+### boilers
+gbn=$(basename $0)
+gbn=${gbn%%.sh}
+gdn=$(dirname $0)
+save=${gbn}.save
+type=nethash
+mode=${1:-start}
+shift
+source /etc/ipset.d/functions
+
+# EU Member States
+# Country        Code
+# Austria        AT
+# Belgium        BE
+# Bulgaria    	 BG
+# Croatia        HR
+# Cyprus *       CY
+# Czech Republic CZ
+# Denmark	       DK
+# Estonia	       EE
+# Finland	       FI
+# France	       FR
+# Germany	       DE
+# Greece	       GR
+# Hungary	       HU
+# Irish Republic IE
+# Italy          IT
+# Latvia	       LV
+# Lithuania	     LT
+# Luxembourg	   LU
+# Malta	         MT
+# Netherlands	   NL
+# Poland	       PL
+# Portugal	     PT
+# Romania	       RO
+# Slovakia	     SL
+# Slovenia	     SI
+# Spain	         ES
+# Sweden	       SE
+# United Kingdom UK
+
+countries="at,be,bg,hr,cy,cz,dk,ee,fi,fr,de,gr,hu,ie,it,lv,lt"
+countries="${countries},lu,mt,nl,pl,pt,ro,sl,si,es,se,uk"
+
+### args
+# countries=${*:-{{ipset.whitelist}}}
+url="http://www.ipdeny.com/ipblocks/data/countries"
+
+pushd ${gdn} > /dev/null
+
+### main
+case ${mode} in
+  start)
+    ipset/start
+    echo "Downloading ${gbn} definitions for ${countries}"
+    for net in $(curl --retry 3 -s ${url}/{${countries}}.zone); do
+      ipset -exist -A ${gbn} ${net}
+    done
+    ipset/save
+  ;;
+  stop)
+    ipset/stop
+  ;;
+  x)
+    ipset x ${gbn}
+  ;;
+esac
+
+popd > /dev/null

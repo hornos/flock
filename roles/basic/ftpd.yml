@@ -1,0 +1,31 @@
+#
+# Basic httpd settings
+#
+# https://www.digitalocean.com/community/articles/how-to-set-up-vsftpd-on-ubuntu-12-04
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+
+  tasks:
+### DEBIAN
+  - name: Install packages
+    apt: name={{item}}
+         state=installed
+    with_items:
+      - vsftpd
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+#  - name: Start httpd
+#    service: name={{service.httpd}}
+#             state=started
+#
+#  handlers:
+#    - name: Restart httpd
+#      service: name={{service.httpd}}
+#               state=restarted

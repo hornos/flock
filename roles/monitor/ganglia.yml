@@ -29,6 +29,7 @@
   - name: Install repository
     template: src=templates/etc/yum.repos.d/vuksan.repo.j2
               dest=/etc/yum.repos.d/vuksan.repo
+    when: ansible_os_family == "RedHat"
     tags:
       - repo
 
@@ -42,6 +43,56 @@
       - ganglia-gmetad
       - libganglia
     when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+### DEBIAN
+  # sudo add-apt-repository ppa:rufustfirefly/ganglia
+  #
+  # flock play @@core roles/monitor/ganglia --extra-vars="ganglia.version=3.4.0"
+  #
+  - name: Install repository
+    apt_repository: repo=ppa:rufustfirefly/ganglia
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+      - repo
+
+  - name: F**k Ubuntu shit fix again 1
+    file: path=/usr/share/ganglia-webfrontend/lib/{{item}}
+          owner=root
+          group=www-data
+          state=directory
+    with_items:
+      - dwoo/cache
+      - dwoo/compiled
+    when: ansible_os_family == "Debian"
+    tags:
+      - shit
+      - fix
+
+  - name: F**k Ubuntu shit fix again 2
+    file: path=/var/lib/ganglia-web/{{item}}
+          owner=root
+          group=www-data
+          mode=0775
+          state=directory
+    with_items:
+      - dwoo/cache
+      - dwoo/compiled
+    when: ansible_os_family == "Debian"
+    tags:
+      - shit
+      - fix
+
+  - name: Install packages
+    apt: name={{item}}
+         state=latest
+    with_items:
+      - ganglia-monitor
+      - ganglia-webfrontend
+      - gmetad
+    when: ansible_os_family == "Debian"
     tags:
       - packages
 
@@ -70,15 +121,55 @@
     tags:
       - config
 
+### DEBIAN
+  - name: Ganglia monitor
+    template: src=templates/etc/ganglia/3.4.0/{{ansible_os_family}}/gmond.conf.j2
+              dest=/etc/ganglia/gmond.conf
+              owner=root
+              group=root
+              mode=0644
+              backup=yes
+    when: ansible_os_family == "Debian"
+    notify:
+      - Restart gmond
+    tags:
+      - config
+
+  - name: Ganglia metadata
+    template: src=templates/etc/ganglia/3.4.0/{{ansible_os_family}}/gmetad.conf.j2
+              dest=/etc/ganglia/gmetad.conf
+              owner=root
+              group=root
+              mode=0644
+              backup=yes
+    when: ansible_os_family == "Debian"
+    notify:
+      - Restart gmetad
+    tags:
+      - config
+
+
   - name: Set rrds mode
     file: path=/var/lib/ganglia/rrds/
           state=directory
           recurse=yes
           owner=nobody
           group=nobody
+    when: ansible_os_family == "RedHat"
     tags:
       - perm
 
+  - name: Set rrds mode
+    file: path=/var/lib/ganglia/rrds/
+          state=directory
+          recurse=yes
+          owner=nobody
+          group=nogroup
+    when: ansible_os_family == "Debian"
+    tags:
+      - perm
+
+  # TODO: optional home network
   - name: Enable Ganglia web interface
     template: src=templates/etc/httpd/conf.d/ganglia.conf.j2
               dest=/etc/{{service.httpd}}/conf.d/ganglia.conf
@@ -94,7 +185,8 @@
     lineinfile: dest=/var/www/html/ganglia/styles.css
                 regexp='^@import'
                 line='@import url("/topcoat/css/topcoat-desktop-light.min.css");'
-              backup=yes
+                backup=yes
+    when: ansible_os_family == "RedHat"
     tags:
       - frontend
       - topcoat
@@ -159,6 +251,7 @@
 
   - name: Gmetad should start after ntpd
     lineinfile: "dest=/etc/init.d/gmetad regexp='^#\ chkconfig' line='# chkconfig: 2345 65 80' backup=yes"
+    when: ansible_os_family == "RedHat"
     tags:
       - service
       - gmetad

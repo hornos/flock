@@ -1,4 +1,6 @@
 ACCEPT     ext:+openvpn       $FW       tcp      11940
 ACCEPT     ext:+openvpn       $FW       udp      11940
-# ACCEPT     sys:+sysop         $FW       tcp      11940
-# ACCEPT     sys:+sysop         $FW       udp      11940
+{% if not is_nosys %}
+ACCEPT     sys:+sysop         $FW       tcp      11940
+ACCEPT     sys:+sysop         $FW       udp      11940
+{% endif %}

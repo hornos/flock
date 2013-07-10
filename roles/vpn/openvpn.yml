@@ -4,6 +4,12 @@
 # reset ipset:
 # --extra-vars "reset=yes"  --tag reset
 #
+# I am in Hungary
+# --extra-vars "hungary=yes"
+#
+# Standalone
+# --extra-vars="nosys=yes"
+#
 ---
 - hosts: all
 
@@ -12,6 +18,7 @@
 
   vars:
     is_reset: "'$reset' == 'yes'"
+    is_hungary: "'$hungary' == 'yes'"
 
   tasks:
     - name: Install packages
@@ -119,6 +126,20 @@
         - firewall
       notify:
       - Restart shorewall
+
+    - name: Override firewall rules for Hungary 
+      template: src=templates/etc/shorewall/rules.d/hungary.j2
+                dest=/etc/shorewall/rules.d/openvpn
+                owner=root
+                group=root
+                mode=0640
+      tags:
+        - firewall
+        - hungary
+      only_if: '$is_hungary'
+      notify:
+      - Restart shorewall
+
 
 ### CONFIGURATION
     - name: Install ipset tables

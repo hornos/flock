@@ -368,6 +368,13 @@ Install the sysop certificate for Tunnelblick:
 
     flock-vpn blick vpnca sysop
 
+Prepare VPN configuration for iPhone:
+
+    flock-vpn client vpnca iphone
+    flock-vpn iphone
+
+Edit `ca/vpnca/iphone/iphone.ovpn` and connect iPhone go to DEVICES/Phone Apps tab and File Sharing section. Select OpenVPN and Add all the files in the `iphone` directory.
+
 #### Ting
 You can determine server IPs by Ting. Register a free [pusher.com](https://github.com/NIIF/nce) account. Generate a key:
 

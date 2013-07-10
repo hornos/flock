@@ -15,6 +15,7 @@ networks:
   compute: 10.1.1.0
   vpn: 10.8.0.0
   tinc: 10.10.10.0
+  home: 192.168.1.0
 
 masks:
   system: 16
@@ -22,6 +23,7 @@ masks:
   home: 24
   vpn: 24
   tinc: 24
+  home: 24
 
 ntps:
   - 148.6.0.1
