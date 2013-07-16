@@ -37,13 +37,14 @@ if [ -z "$user" ] ; then
 fi
 
 _opts=""
-# -k
+# change in ansible
+# --sudo
 if [ "${hosts:0:1}" = "@" ] ; then
-  _opts="${_opts} -k"
+  _opts="${_opts} --sudo"
   hosts="${hosts:1}"
-  # --sudo
+  # -k
   if [ "${hosts:0:1}" = "@" ] ; then
-    _opts="${_opts} --sudo"
+    _opts="${_opts} -k"
     hosts="${hosts:1}"
   fi
 fi
@@ -110,6 +111,10 @@ case ${cmd} in
     exit 0
     ;;
   play)
+    if [ ! -r "${module}" ] ; then
+      echo "Not found: ${module}"
+      exit 1
+    fi
     command="ansible-playbook"
     command_options="${module} -l ${hosts}"
     ;;
@@ -170,11 +175,13 @@ case ${cmd} in
     command_options="${hosts} -m ping"
     ;;
   ssh)
-    host=$(cat ${inventory} | \
-    grep ${hosts} | \
-    grep ansible_ssh_host | \
-    sed s/.*=// | uniq)
+    _hosts=$(cat ${inventory} | \
+    grep ^${hosts} | \
+    sed s/${hosts}\ *// | \
+    sed s/\ /\;/)
 
+    eval ${_hosts}
+    host=$ansible_ssh_host
     key=keys/${user}
     _key=""
     if test -r ${_key} ; then
@@ -185,7 +192,11 @@ case ${cmd} in
     if test -r ${ting} ; then
        cat ${ting} | grep fp
     fi
-    ssh -X ${opts} ${_key}  ${user}@${host}
+    ssh -X ${opts} ${_key} ${user}@${host}
+    exit $?
+    ;;
+  http|boot|masq)
+    jockey $cmd
     exit $?
     ;;
   help|*)

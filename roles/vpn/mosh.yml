@@ -1,0 +1,52 @@
+#
+# http://mosh.mit.edu/
+#
+# I am in Hungary
+# --extra-vars "hungary=yes"
+#
+# Standalone
+# --extra-vars="nosys=yes"
+#
+---
+- hosts: all
+
+  vars_files:
+    - vars/openvpn.yml
+
+  vars:
+    is_hungary: "'$hungary' == 'yes'"
+
+  tasks:
+### DEBIAN
+    - name: Install repository
+      apt_repository: repo=ppa:keithw/mosh
+      when: ansible_os_family == "Debian"
+      tags:
+        - packages
+
+    - name: Install packages
+      apt: name={{item}}
+           state=installed
+      with_items:
+        - mosh
+      when: ansible_os_family == "Debian"
+      tags:
+        - packages
+
+### FIREWALL
+    - name: Install firewall rules
+      template: src=templates/etc/shorewall/rules.d/mosh.j2
+                dest=/etc/shorewall/rules.d/mosh
+                owner=root
+                group=root
+                mode=0640
+      tags:
+        - firewall
+      notify:
+      - Restart shorewall
+
+### SERVICES
+  handlers:
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted

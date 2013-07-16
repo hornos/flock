@@ -1,0 +1,4 @@
+ACCEPT     vpn       $FW       udp      60000:61000
+{% if nosys != "yes" %}
+ACCEPT     sys:+sysop         $FW       udp     60000:61000
+{% endif %}

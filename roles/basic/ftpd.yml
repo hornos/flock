@@ -3,6 +3,10 @@
 #
 # https://www.digitalocean.com/community/articles/how-to-set-up-vsftpd-on-ubuntu-12-04
 #
+# http://unix.stackexchange.com/questions/37539/vsftpd-fails-pam-authentication
+# /etc/pam.d/vsftpd
+# # auth       required     pam_shells.so
+#
 ---
 - hosts: all
 
@@ -21,11 +25,47 @@
     tags:
       - packages
 
-#  - name: Start httpd
-#    service: name={{service.httpd}}
-#             state=started
-#
-#  handlers:
-#    - name: Restart httpd
-#      service: name={{service.httpd}}
-#               state=restarted
+  - name: Install configuration
+    template: src=templates/etc/vsftpd.conf.j2
+              dest=/etc/vsftpd.conf
+              backup=yes
+    tags:
+      - config
+    notify:
+      - Restart ftpd
+
+  - name: Create upload user
+    user: name=upload
+          password='$6$IUIk0GpP$UsZqXT8ioFOEM35y5ZPDR1v.hABHXGJBiacpgCpwMyK6WkcdoSgk2Wk3SlXH2.KGF/McWd5E0qlp4Eb8mBAYN/'
+          shell=/sbin/nologin
+    tags:
+      - users
+
+  - name: Fix permission for chroot
+    file: path=/home/upload
+          owner=upload
+          group=users
+          mode=0550
+          state=directory
+    tags:
+      - fix
+      - permissions
+
+  - name: Create files directory
+    file: path=/home/upload/files
+          owner=upload
+          group=upload
+          state=directory
+    tags:
+      - directories
+
+### TODO: FIREWALL
+
+  - name: Start ftpd
+    service: name=vsftpd
+             state=started
+
+  handlers:
+    - name: Restart ftpd
+      service: name=vsftpd
+               state=restarted

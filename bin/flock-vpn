@@ -171,7 +171,7 @@ case "${cmd}" in
     cp -v ca.crt "${dest}"
     popd
 
-    cp -v roles/vpn/ovpn/iphone.ovpn "${dest}"
+    cp -v roles/vpn/ovpn/iphone.ovpn "${dest}/client.ovpn"
   ;;
 
   ting)

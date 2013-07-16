@@ -26,6 +26,7 @@
 
   tasks:
 ### REDHAT
+  # vuksan repo is broken
   - name: Install repository
     template: src=templates/etc/yum.repos.d/vuksan.repo.j2
               dest=/etc/yum.repos.d/vuksan.repo
@@ -33,18 +34,44 @@
     tags:
       - repo
 
-  - name: Install packages
-    yum: name={{item}}
-         state=latest
-         enablerepo=vuksan
-    with_items:
-      - ganglia-gmond
-      - ganglia-gmond-modules-python
-      - ganglia-gmetad
-      - libganglia
+# TODO
+#  - name: Install packages
+#    yum: name={{item}}
+#         state=installed
+#         enablerepo=vuksan
+#    with_items:
+#      - ganglia-gmond
+#      - ganglia-gmond-modules-python
+#      - ganglia-gmetad
+#      - libganglia
+#    when: ansible_os_family == "RedHat"
+#    tags:
+#      - packages
+
+  - name: Install repo fix script
+    template: src=templates/root/install_ganglia.j2
+              dest=/root/install_ganglia
+              mode=0750
     when: ansible_os_family == "RedHat"
     tags:
       - packages
+      - fix
+
+  - name: Run fix script
+    shell: /root/install_ganglia
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - fix
+
+### Ganglia web
+  - name: Install ganglia-web
+    git: repo=https://github.com/ganglia/ganglia-web.git
+         dest=/var/www/html/ganglia
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - web
 
 ### DEBIAN
   # sudo add-apt-repository ppa:rufustfirefly/ganglia
@@ -191,6 +218,8 @@
       - frontend
       - topcoat
 
+# TODO: web interface configuration
+
   - name: Enable gmond service
     lineinfile: dest=/etc/services
                 regexp="^gmond 8649/{{item}}"
@@ -225,6 +254,7 @@
       - services
 
 ### FIREWALL
+# TODO: nosys
   - name: Install firewall rules
     template: src=templates/etc/shorewall/rules.d/ganglia.j2
               dest=/etc/shorewall/rules.d/ganglia

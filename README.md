@@ -182,7 +182,7 @@ Due to selinux you have to reboot now:
 
     flock reboot @@core
 
-Now, reach the ground state:
+Now, reach the ground state, optionally make a checkpoint (`init`):
 
     flock play @@core ground
     flock reboot @@core
@@ -356,7 +356,7 @@ client.key | client | Client Key | YES
 
 Install OpenVPN servers:
 
-    flock play @@core roles/vpn/openvpn
+    flock play @core roles/vpn/openvpn
 
 Install Tunnelblick on your mac and link:
 
@@ -488,7 +488,7 @@ or with the pmchart GUI:
 
 For the HPC cluster we need MariaDB, Slurm and Warewulf. For the standalone controller install the MariaDB as mysql:
 
-    flock play @@core mysql --extra-vars='master=core'
+    flock play @core mysql --extra-vars='master=core'
 
 Login to the machine and secure mysql by hand:
 
@@ -499,7 +499,7 @@ The mysql admin page is at `http://10.1.1.1/phpmyadmin` .If you want `https` che
 In the second step install the Slurm scheduler. Generate a munge key for the compute cluster and setup the scheduler services. For the standalone version you have to use the `-master` playbook:
 
     dd if=/dev/random bs=1 count=1024 > keys/munge.key
-    flock play @@core scheduler-master --extra-vars='master=core'
+    flock play @core scheduler-master --extra-vars='master=core'
 
 The basic Slurm setup contains only one compute machine, the controller itself.
 
@@ -713,8 +713,10 @@ Controller:
     flock play root@xc bootstrap
     flock play @@xc secure
     flock reboot @@xc
+    flock-vbox snap xc init
     flock play @@xc ground
     flock reboot @@xc
+    flock-vbox snap xc ground
 
     flock play @@xc roles/database/mariadb --extra-vars "master=xc"
     flock play @@xc roles/database/mariadb_master --extra-vars "master=xc"
@@ -726,5 +728,3 @@ Controller:
 Create admin token:
 
     openssl rand -hex 10 > keys/admin_token
-
-

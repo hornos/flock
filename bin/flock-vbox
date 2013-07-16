@@ -121,6 +121,9 @@ case ${cmd} in
   reset)
     ${vbox} controlvm "${1}" reset
   ;;
+  snap)
+    ${vbox} snapshot "${1}" take "${2:-init}"
+  ;;
   boot)
     name=${1:-test}
     boot=${2:-net}

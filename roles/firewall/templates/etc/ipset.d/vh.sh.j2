@@ -25,6 +25,7 @@ case ${mode} in
   start)
     ipset/start
     ipset -exist -A vh 193.224.0.0/15
+    ipset -exist -A vh 193.6.0.0/16
     ipset/save
   ;;
   stop)

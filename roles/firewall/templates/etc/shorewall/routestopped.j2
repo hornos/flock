@@ -2,7 +2,7 @@
 #INTERFACE	HOST(S)			OPTIONS		PROTO	DEST	SOURCE
 #								PORT(S)	PORT(S)
 # SSH should always go
-{% if is_nosys %}
+{% if nosys != "yes" %}
 {{interfaces.nosys}}    -               -               TCP     22
 {% else %}
 {{interfaces.system}}   -               -               TCP     22

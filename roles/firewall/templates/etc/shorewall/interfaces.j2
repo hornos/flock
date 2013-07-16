@@ -1,8 +1,9 @@
 #ZONE      INTERFACE     BROADCAST     OPTIONS
 # system network for inter node communications
-{% if is_nosys %}
+{% if nosys == "yes" %}
 ext        {{interfaces.nosys}} detect dhcp,tcpflags,nosmurfs,routefilter,logmartians,upnpclient
 {% else %}
+# detect
 sys        {{interfaces.system}}   detect dhcp
 # external network (internet)
 ext        {{interfaces.external}} detect dhcp,tcpflags,nosmurfs,routefilter,logmartians,upnpclient

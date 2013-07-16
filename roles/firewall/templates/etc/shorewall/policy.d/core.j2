@@ -1,5 +1,5 @@
 #SOURCE    DEST        POLICY      LOG LEVEL    LIMIT:BURST
-{% if not is_nosys %}
+{% if nosys != "yes" %}
 # system to system
 sys        sys         ACCEPT
 # me to system
@@ -14,5 +14,5 @@ $FW        ext         ACCEPT
 vpn        all         ACCEPT
 # me to vpn
 $FW        vpn         ACCEPT
-# ditch otherwise
+# log and drop
 all        all         DROP      info

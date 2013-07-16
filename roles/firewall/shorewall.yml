@@ -3,13 +3,17 @@
 #
 # TODO: dhcp from networks.yml
 #
-# Standalone: --extra-vars="nosys=yes"
+# Standalone
+# --extra-vars="nosys=yes"
 #
+# Switch on NAT for the VPN
+# --extra-vars="natvpn=yes"
 ---
 - hosts: all
 
   vars:
     is_nosys: "'$nosys' == 'yes'"
+    is_natvpn: "'$natvpn' == 'yes'"
 
   vars_files:
     - networks.yml
@@ -134,6 +138,24 @@
       - config
       - rules
       - interfaces
+    notify:
+      - Restart shorewall
+
+  - name: Install natvpn
+    template: src=templates/etc/shorewall/{{item}}.j2
+              dest=/etc/shorewall/{{item}}
+              owner=root
+              group=root
+              mode=0640
+              backup=yes
+    with_items:
+      - masq
+    tags:
+      - config
+      - rules
+      - vpn
+      - masq
+    only_if: '$is_natvpn'
     notify:
       - Restart shorewall
 
