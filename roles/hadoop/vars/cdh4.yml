@@ -11,9 +11,10 @@ java:
   heap: 1024
 
 hadoop:
-  state: '/common/hadoop/state'
+  state: '/common/hadoop/'
   cluster: 'core'
   vg_root: 'vg_root'
   lv_data: 'lv_hadoop'
   lv_size: 256000
   lv_mnt: '/data/hadoop/'
+

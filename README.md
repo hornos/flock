@@ -113,7 +113,9 @@ restart after installation is ready:
     for i in 1 2 3 ; do flock-vbox boot core-0$i disk; done
     for i in 1 2 3 ; do flock-vbox start core-0$i; done
 
-In case of real servers you have to play with ipmi.
+In case of real servers you have to play with ipmi. Make a snapshot for sure:
+
+    for i in 1 2 3 ; do flock-vbox snap core-0$i init; done
 
 ## Provision with Ansible
 You need an inventory file with your hosts, edit `hosts`
@@ -178,14 +180,22 @@ Currently, we have role-like playbooks. First, secure the installation:
 
     flock play @@core secure
 
+Make a snapshot if you want:
+
+    for i in 1 2 3 ; do flock-vbox snap core-0$i secure; done
+
 Due to selinux you have to reboot now:
 
     flock reboot @@core
 
-Now, reach the ground state, optionally make a checkpoint (`init`):
+Now, reach the ground state:
 
     flock play @@core ground
     flock reboot @@core
+
+Make a snaphsot as well:
+
+    for i in 1 2 3 ; do flock-vbox snap core-0$i ground; done
 
 Mind that the system network is not protected, due to performance reasons core servers can reach each other wihtout any serious authentication. Ground monitoring is done by Ganglia in multicast mode.
 
@@ -656,8 +666,43 @@ Enable elasticsearch:
 
 ## Message Queue
 
+<!--
+##     ##    ###    ########   #######   #######  ########  
+##     ##   ## ##   ##     ## ##     ## ##     ## ##     ## 
+##     ##  ##   ##  ##     ## ##     ## ##     ## ##     ## 
+######### ##     ## ##     ## ##     ## ##     ## ########  
+##     ## ######### ##     ## ##     ## ##     ## ##        
+##     ## ##     ## ##     ## ##     ## ##     ## ##        
+##     ## ##     ## ########   #######   #######  ##
+-->
+
 ## Hadoop
+### HA state with Gluster
+Change to the latest mainline kernel:
+
+    flock play @@core roles/system/kernel --extra-vars "clean=yes"
+    flock reboot @@core
+
+Install Gluster and setup a 3-node FS cluster:
+
+    flock play @@core roles/cluster/gluster
+
+Login to the master node and bootstrap the cluster:
+
+    /root/gluster_bootstrap
+
+Finally, mount the common directory:
+
+    flock play @@core roles/cluster/glusterfs
+    flock play @@core roles/cluster/gtop
+
+Monitor the cluster:
+
+    /root/bin/gtop
+
 ### CDH4
+
+    flock play @@core roles/hadoop/cdh4 --extra-vars "init=yes"
 
 ## Communication Center
 Install MariaDB master:

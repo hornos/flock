@@ -5,13 +5,14 @@
 - hosts: all
   vars_files:
     - networks.yml
-    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+    #- [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
     - vars/${inventory_hostname}.yml
     - vars/cdh4.yml
 
   vars:
     is_master: "'$inventory_hostname' == '$master'"
     is_backup: "'$inventory_hostname' == '$backup'"
+    is_init: "'$init' == 'yes'"
 
   tasks:
 ### REDHAT
@@ -55,14 +56,6 @@
       - zookeeper
 
 ### ZOOKEEPER
-  - name: Install myid
-    copy: content={{myid}}
-          dest={{zookeeper.data}}/myid
-    tags:
-      - myid
-      - config
-      - zookeeper
-
   - name: Fix data permissions
     file: path={{zookeeper.data}}
           owner=zookeeper
@@ -72,6 +65,14 @@
     tags:
       - fix
       - directories
+      - zookeeper
+
+  - name: Install myid
+    copy: content={{myid}}
+          dest={{zookeeper.data}}/myid
+    tags:
+      - myid
+      - config
       - zookeeper
 
   - name: Fix log permissions
@@ -96,6 +97,18 @@
       - zookeeper
     notify:
       - Restart zookeeper
+
+  - name: Install zktop
+    git: repo=https://github.com/phunt/zktop.git
+         dest=/opt/zktop
+    tags:
+      - zktop
+
+  - name: Init zookeeper
+    shell: service zookeeper-server init
+    only_if: '$is_init'
+    tags:
+      - init
 
   - name: Start zookeeper
     service: name=zookeeper-server
@@ -122,7 +135,7 @@
       - packages
 
 ### DATA PARTITION
-  - name: Create Hadoop dat partition
+  - name: Create Hadoop data partition
     lvol: vg={{hadoop.vg_root}}
           lv={{hadoop.lv_data}}
           size={{hadoop.lv_size}}
@@ -146,40 +159,40 @@
       - data
 
   - name: Mount hadoop data
-    mount: name={{hadoop.lv_mnt}}
-           src=/dev/{{hadoop.vg_root}}/{{hadoop.lv_data}}
+    mount: name=${hadoop.lv_mnt}
+           src=/dev/${hadoop.vg_root}/${hadoop.lv_data}
            fstype=xfs
-           opts={{hadoop.opts}}
            state=mounted
     tags:
       - partition
       - data
+      - mount
 
-
-### CONFIGURATION
-  - name: Install new cluster
-    command: cp -r /etc/hadoop/conf.dist /etc/hadoop/conf.{{hadoop.cluster}}
-    tags:
-      - config
-      - hadoop
-
-  - name: Link config
-    file: src=/etc/hadoop/conf.{{hadoop.cluster}}
-          dest=/etc/hadoop/conf
-          state=link
-    tags:
-      - config
-      - hadoop
-      - links
-
-  # shared state aka Slurm
-  - name: Create state directory
-    file: path={{hadoop.state}}
+  - name: Create hadoop directories
+    file: path={{hadoop.lv_mnt}}/{{item}}
           state=directory
+    with_items:
+      - 1/dfs/dn
+      - 1/dfs/nn
+      - 2/dfs/dn
+      - 2/dfs/nn
+      - 3/dfs/dn
+      - 3/dfs/nn
     tags:
-      - state
-      - hadoop
+      - directories
+
+  - name: Create hadoop state
+    file: path={{hadoop.state}}/{{item}}
+          state=directory
+    with_items:
+      - dfs/nn
     only_if: '$is_master'
+    tags:
+      - directories
+      - common
+
+#### CONFIGURATION
+
 
 
   handlers:

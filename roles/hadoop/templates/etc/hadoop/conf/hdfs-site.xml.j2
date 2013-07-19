@@ -1,0 +1,71 @@
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!--
+http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH4-High-Availability-Guide/cdh4hag_topic_2_3.html
+-->
+
+<configuration>
+  <property>
+    <name>dfs.permissions.superusergroup</name>
+    <value>hadoop</value>
+  </property>
+
+  <!-- HA CLUSTER -->
+  <property>
+    <name>dfs.nameservices</name>
+    <value>{{hadoop.cluster}}</value>
+  </property>
+
+  <property>
+    <name>dfs.ha.namenodes.{{hadoop.cluster}}</name>
+    <value>nn1,nn2</value>
+  </property>
+
+  <!-- HA RPC -->
+  <property>
+    <name>dfs.namenode.rpc-address.{{hadoop.cluster}}.nn1</name>
+    <value>{{master}}:8020</value>
+  </property>
+  <property>
+    <name>dfs.namenode.rpc-address.{{hadoop.cluster}}.nn2</name>
+    <value>{{backup}}:8020</value>
+  </property>
+
+  <!-- HA HTTP -->
+  <property>
+    <name>dfs.namenode.http-address.{{hadoop.cluster}}.nn1</name>
+    <value>{{master}}:50070</value>
+  </property>
+  <property>
+    <name>dfs.namenode.http-address.{{hadoop.cluster}}.nn2</name>
+    <value>{{backup}}:50070</value>
+  </property>
+
+  <!-- HA SHARED -->
+  <property>
+    <name>dfs.namenode.shared.edits.dir</name>
+    <value>file:///{{hadoop.state}}/dfs/nn</value>
+  </property>
+
+  <!-- CLIENT FAILOVER -->
+  <property>
+    <name>dfs.client.failover.proxy.provider.mycluster</name>
+    <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+  </property>
+
+  <!-- ZOOKEEPER FAILOVER -->
+  <property>
+    <name>dfs.ha.automatic-failover.enabled</name>
+    <value>true</value>
+  </property>
+
+
+  <!-- DATA NODE -->
+  <!--
+  http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH4-Installation-Guide/cdh4ig_topic_11_2.html
+  -->
+  <property>
+    <name>dfs.datanode.data.dir</name>
+    <value>{{hadoop.data}}/1/dfs/dn,{{hadoop.data}}/2/dfs/dn,{{hadoop.data}}/3/dfs/dn</value>
+  </property>
+</configuration>

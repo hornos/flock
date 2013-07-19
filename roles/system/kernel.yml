@@ -46,13 +46,13 @@
     tags:
       - grub
 
-  - name: Disable kdump
-    service: name=kdump
-             state=stopped
-             enabled=no
-    when: ansible_os_family == "RedHat"
-    tags:
-      - kdmup
+#  - name: Disable kdump
+#    service: name=kdump
+#             state=stopped
+#             enabled=no
+#    when: ansible_os_family == "RedHat"
+#    tags:
+#      - kdmup
 
 ### DEBIAN
   - name: Install repository

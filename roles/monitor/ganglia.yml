@@ -13,6 +13,9 @@
 # http://vuksan.com/centos/RPMS-6/x86_64/ganglia-gmond-modules-python-3.6.0-1.x86_64.rpm
 # http://vuksan.com/centos/RPMS-6/x86_64/libganglia-3.6.0-1.x86_64.rpm
 #
+# TODO: gmetad rrd ntpd update problem
+# TODO: ganglia-web
+#
 ---
 - hosts: all
 
@@ -288,8 +291,8 @@
 
   - name: Start gmetad
     service: name=gmetad
-             state=started
-             enabled=yes
+             state=stopped
+             enabled=no
     tags:
       - gmetad
 
