@@ -3,6 +3,7 @@
 url: http://archive.cloudera.com/cdh4/redhat/6/x86_64/cdh
 rpm: cdh4-repository-1-0.noarch.rpm
 key: RPM-GPG-KEY-cloudera
+repo: http://archive.cloudera.com/gplextras/redhat/6/x86_64/gplextras/cloudera-gplextras4.repo
 
 zookeeper:
   data: '/var/zookeeper'
@@ -11,10 +12,10 @@ java:
   heap: 1024
 
 hadoop:
-  state: '/common/hadoop/'
+  state: '/common/hadoop'
   cluster: 'core'
   vg_root: 'vg_root'
   lv_data: 'lv_hadoop'
   lv_size: 256000
-  lv_mnt: '/data/hadoop/'
-
+  lv_mnt: '/data/hadoop'
+  data: '/data/hadoop'

@@ -1,0 +1,88 @@
+# Hadoop default ports
+# http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH4-Installation-Guide/cdh4ig_topic_9_1.html
+
+# access for system operators
+
+{% if nosys != "yes" %}
+### Hadoop HDFS
+## DataNode
+# dfs.datanode.address - DataNode HTTP server port (2nd secure)
+ACCEPT sys:+sysop           $FW       tcp 50010
+ACCEPT sys:+sysop           $FW       tcp 1004
+# dfs.datanode.http.address (2nd secure)
+ACCEPT sys:+sysop           $FW       tcp 50075
+ACCEPT sys:+sysop           $FW       tcp 1006
+# dfs.datanode.ipc.address
+ACCEPT sys:+sysop           $FW       tcp 50020
+
+## NameNode
+# fs.defaultFS
+ACCEPT sys:+sysop           $FW       tcp 8020
+# dfs.namenode.http-address (2nd secure)
+ACCEPT sys:+sysop           $FW       tcp 50070
+ACCEPT sys:+sysop           $FW       tcp 50470
+{% endif %}
+
+
+Secondary NameNode
+
+ 
+
+50090
+
+TCP
+
+Internal
+
+dfs.secondary.
+http.address
+or
+dfs.namenode.
+secondary.
+http-address
+dfs.secondary.
+http.address
+is deprecated (but still works)
+ 
+
+Secondary NameNode
+
+Secure
+
+50495
+
+TCP
+
+Internal
+
+dfs.secondary.
+https.address
+ 
+
+ 
+
+JournalNode
+
+ 
+
+8485
+
+TCP
+
+Internal
+
+dfs.namenode.
+shared.edits.dir
+ 
+
+ 
+
+JournalNode
+
+ 
+
+8480
+
+TCP
+
+Internal

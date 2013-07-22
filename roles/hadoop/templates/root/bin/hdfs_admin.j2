@@ -1,0 +1,23 @@
+#!/bin/bash
+
+cmd=${1:-report}
+shift
+
+case "${cmd}" in
+  report)
+    sudo -u hdfs hdfs dfsadmin -report
+    ;;
+  format)
+    sudo -u hdfs hadoop namenode -format
+    ;;
+  init)
+    # TODO: ansible
+    sudo -u hdfs hadoop fs -mkdir /tmp
+    sudo -u hdfs hadoop fs -chmod -R 1777 /tmp
+    sudo -u hdfs hadoop fs -mkdir /user/history
+    sudo -u hdfs hadoop fs -chmod -R 1777 /user/history
+    sudo -u hdfs hadoop fs -chown yarn /user/history
+    sudo -u hdfs hadoop fs -mkdir /var/log/hadoop-yarn
+    sudo -u hdfs hadoop fs -chown yarn:mapred /var/log/hadoop-yarn
+    ;;
+esac

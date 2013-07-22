@@ -1,2 +1,2 @@
-z ansible_ssh_host=192.168.1.254
-vpn/z ansible_ssh_host=10.8.0.1
+z ansible_ssh_host=192.168.1.254 ansible_connection=paramiko
+vpn/z ansible_ssh_host=10.8.0.1 ansible_connection=paramiko

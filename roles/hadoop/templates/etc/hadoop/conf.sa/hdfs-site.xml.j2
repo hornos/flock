@@ -1,0 +1,37 @@
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!--
+http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH4-Installation-Guide/cdh4ig_topic_11_2.html
+-->
+
+<configuration>
+
+  <property>
+    <name>dfs.permissions.superusergroup</name>
+    <value>hadoop</value>
+  </property>
+
+  <property>
+    <name>dfs.replication</name>
+    <value>3</value>
+  </property>
+
+  <!-- NAME NODE -->
+  <property>
+    <name>dfs.namenode.name.dir</name>
+    <value>file://{{hadoop.data}}/1/dfs/nn,file://{{hadoop.data}}/2/dfs/nn,file://{{hadoop.data}}/3/dfs/nn</value>
+  </property>
+
+  <!-- DATA NODE -->
+  <property>
+    <name>dfs.datanode.data.dir</name>
+    <value>file://{{hadoop.data}}/1/dfs/dn,file://{{hadoop.data}}/2/dfs/dn,file://{{hadoop.data}}/3/dfs/dn</value>
+  </property>
+
+  <!-- MAPRED -->
+  <property>
+    <name>mapred.local.dir</name>
+    <value>file://{{hadoop.data}}/1/dfs/mr,file://{{hadoop.data}}/2/dfs/mr,file://{{hadoop.data}}/3/dfs/mr</value>
+  </property>
+
+</configuration>

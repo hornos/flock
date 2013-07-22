@@ -44,7 +44,12 @@ http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH4-
   <!-- HA SHARED -->
   <property>
     <name>dfs.namenode.shared.edits.dir</name>
-    <value>file:///{{hadoop.state}}/dfs/nn</value>
+    <value>file://{{hadoop.state}}/dfs/nn</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.name.dir</name>
+    <value>file://{{hadoop.data}}/1/dfs/nn,file://{{hadoop.data}}/2/dfs/nn,file://{{hadoop.data}}/3/dfs/nn</value>
   </property>
 
   <!-- CLIENT FAILOVER -->
@@ -66,6 +71,6 @@ http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH4-
   -->
   <property>
     <name>dfs.datanode.data.dir</name>
-    <value>{{hadoop.data}}/1/dfs/dn,{{hadoop.data}}/2/dfs/dn,{{hadoop.data}}/3/dfs/dn</value>
+    <value>file://{{hadoop.data}}/1/dfs/dn,file://{{hadoop.data}}/2/dfs/dn,file://{{hadoop.data}}/3/dfs/dn</value>
   </property>
 </configuration>

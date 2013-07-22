@@ -677,7 +677,7 @@ Enable elasticsearch:
 -->
 
 ## Hadoop
-### HA state with Gluster
+### Prepare
 Change to the latest mainline kernel:
 
     flock play @@core roles/system/kernel --extra-vars "clean=yes"
@@ -701,8 +701,38 @@ Monitor the cluster:
     /root/bin/gtop
 
 ### CDH4
+Deploy standalone HDFS cluster:
 
-    flock play @@core roles/hadoop/cdh4 --extra-vars "init=yes"
+    flock play @@core roles/hadoop/deploy --extra-vars "init=yes"
+
+Login to the master node and format the namenode:
+
+    /root/bin/hdfs_admin format
+
+To remove old data:
+
+    rm -Rf /data/hadoop/{1,2,3}/dfs/dn/*
+    ssh core-02 rm -Rf /data/hadoop/{1,2,3}/dfs/dn/*
+    ssh core-03 rm -Rf /data/hadoop/{1,2,3}/dfs/dn/*
+
+Start the master name node and the data nodes:
+
+    flock play @@core roles/hadoop/start_hdfs
+
+Login to the master node and initialize Yarn:
+
+    /root/bin/hdfs_admin init
+    sudo -u hdfs hadoop fs -ls -R /
+
+Enable Yarn:
+
+    flock play @@core roles/hadoop/start_yarn
+
+### HA
+
+Login to the master node and initilaize Zookeeper HA:
+
+    hdfs zkfc -formatZK
 
 ## Communication Center
 Install MariaDB master:
@@ -773,3 +803,15 @@ Controller:
 Create admin token:
 
     openssl rand -hex 10 > keys/admin_token
+
+## Kali
+Download the installer package:
+
+    mkdir -p space/boot/kali
+    pushd space/boot/kali
+    curl http://repo.kali.org/kali/dists/kali/main/installer-amd64/current/images/netboot/netboot.tar.gz | tar xvzf -
+
+Create a machine and bootstrap:
+
+    flock-vbox create kali Debian_64 1 2048
+    jockey kick kali @kali 10.1.1.42 kali

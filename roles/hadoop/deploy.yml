@@ -5,7 +5,6 @@
 - hosts: all
   vars_files:
     - networks.yml
-    #- [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
     - vars/${inventory_hostname}.yml
     - vars/cdh4.yml
 
@@ -13,6 +12,7 @@
     is_master: "'$inventory_hostname' == '$master'"
     is_backup: "'$inventory_hostname' == '$backup'"
     is_init: "'$init' == 'yes'"
+    type: "sa"
 
   tasks:
 ### REDHAT
@@ -30,18 +30,26 @@
       - packages
       - key
 
-  - name: Download CDH4
+  - name: Download CDH4 repository
     get_url: url={{url}}/{{rpm}} dest=/root/{{rpm}}
     when: ansible_os_family == "RedHat"
     tags:
       - packages
       - key
 
-  - name: Install CDH4
+  - name: Install CDH4 repository
     command: yum -y localinstall /root/{{rpm}}
     when: ansible_os_family == "RedHat"
     tags:
       - packages
+      - repo
+
+  - name: Install CDH4 extra repository
+    get_url: url={{repo}} dest=/etc/yum.repos.d/cdh4-gplextras.repo
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - extra
       - repo
 
   - name: Install packages
@@ -116,19 +124,37 @@
              enabled=yes
 
 ### YARN
+#  - name: Stop services
+#    service: name=hadoop-hdfs-secondarynamenode
+#             state=stopped
+#             enabled=no
+#    when: ansible_os_family == "RedHat"
+#    tags:
+#      - uninstall
+#
+#  - name: Uninstall hadoop packages
+#    yum: name={{item}}
+#         state=absent
+#    with_items:
+#      - hadoop-hdfs-secondarynamenode
+#    when: ansible_os_family == "RedHat"
+#    tags:
+#      - uninstall
+
   - name: Install hadoop packages
     yum: name={{item}}
          state=installed
     with_items:
       - hadoop-yarn-resourcemanager
       - hadoop-hdfs-namenode
-      - hadoop-hdfs-secondarynamenode
       - hadoop-yarn-nodemanager
       - hadoop-hdfs-datanode
       - hadoop-mapreduce
       - hadoop-mapreduce-historyserver
       - hadoop-yarn-proxyserver
       - hadoop-client
+      - hadoop-lzo-cdh4
+      - hadoop-hdfs-zkfc
     when: ansible_os_family == "RedHat"
     tags:
       - hadoop
@@ -171,19 +197,30 @@
   - name: Create hadoop directories
     file: path={{hadoop.lv_mnt}}/{{item}}
           state=directory
+          owner=hdfs
+          group=hdfs
+          mode=0750
+          recurse=yes
     with_items:
       - 1/dfs/dn
       - 1/dfs/nn
+      - 1/dfs/mr
       - 2/dfs/dn
       - 2/dfs/nn
+      - 2/dfs/mr
       - 3/dfs/dn
       - 3/dfs/nn
+      - 3/dfs/mr
     tags:
       - directories
 
   - name: Create hadoop state
     file: path={{hadoop.state}}/{{item}}
           state=directory
+          owner=hdfs
+          group=hdfs
+          mode=0750
+          recurse=yes
     with_items:
       - dfs/nn
     only_if: '$is_master'
@@ -191,11 +228,103 @@
       - directories
       - common
 
-#### CONFIGURATION
+### HDFS CONFIGURATION
+  - name: Install core-site
+    template: src=templates/etc/hadoop/conf.{{type}}/core-site.xml.j2
+              dest=/etc/hadoop/conf/core-site.xml
+              backup=yes
+    tags:
+      - config
+      - site
 
+  - name: Install hdfs-site
+    template: src=templates/etc/hadoop/conf.{{type}}/hdfs-site.xml.j2
+              dest=/etc/hadoop/conf/hdfs-site.xml
+              backup=yes
+    tags:
+      - config
+      - site
 
+  - name: Install ganglia monitor
+    template: src=templates/etc/hadoop/conf.{{type}}/hadoop-metrics.properties.j2
+              dest=/etc/hadoop/conf/hadoop-metrics.properties
+              backup=yes
+    tags:
+      - config
+      - site
+      - ganglia
+
+### MAPRED CONFIGURATION
+  - name: Install mapred-site
+    template: src=templates/etc/hadoop/conf.{{type}}/mapred-site.xml.j2
+              dest=/etc/hadoop/conf/mapred-site.xml
+              backup=yes
+    tags:
+      - config
+      - mapred
+
+  - name: Install yarn-site
+    template: src=templates/etc/hadoop/conf.{{type}}/yarn-site.xml.j2
+              dest=/etc/hadoop/conf/yarn-site.xml
+              backup=yes
+    tags:
+      - config
+      - yarn
+      - mapred
+
+  - name: Create hadoop directories
+    file: path={{hadoop.lv_mnt}}/{{item}}
+          state=directory
+          owner=yarn
+          group=yarn
+          mode=0750
+          recurse=yes
+    with_items:
+      - 1/yarn/local
+      - 1/yarn/logs
+      - 2/yarn/local
+      - 2/yarn/logs
+      - 3/yarn/local
+      - 3/yarn/logs
+    tags:
+      - directories
+
+### SCRIPTS
+  - name: Install admin scripts
+    template: src=templates/root/bin/{{item}}.j2
+              dest=/root/bin/{{item}}
+              mode=0700
+    with_items:
+      - hdfs_admin
+
+### SERVICES
+  - name: Disable services
+    service: name={{item}}
+             state=stopped
+             enabled=no
+    with_items:
+      - hadoop-hdfs-datanode
+      - hadoop-hdfs-namenode
+      - hadoop-hdfs-zkfc
+      - hadoop-mapreduce-historyserver
+      - hadoop-yarn-nodemanager
+      - hadoop-yarn-proxyserver
+      - hadoop-yarn-resourcemanager
+
+#  - name: Initializing the HA state in ZooKeeper
+#    shell: hdfs zkfc -formatZK
+#    only_if: '$is_init'
+#    tags:
+#      - config
+#      - site
+
+# master
+# sudo -u hdfs hadoop namenode -format
+# backup
+# sudo -u hdfs hdfs namenode -bootstrapStandby 
 
   handlers:
     - name: Restart zookeeper
       service: name=zookeeper-server
                state=restarted
+

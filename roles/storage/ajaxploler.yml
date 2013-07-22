@@ -1,0 +1,27 @@
+#
+# http://ajaxplorer.info
+#
+---
+- hosts: all
+
+  tasks:
+### DEBIAN
+    - name: Install repository
+      apt_repository: repo='http://dl.ajaxplorer.info/repos/apt stable main'
+      tags:
+        - repo
+
+    - name: Install repository key
+      apt_key: url=http://dl.ajaxplorer.info/repos/charles@ajaxplorer.info.gpg.key
+               state=present
+      tags:
+        - repo
+        - key
+
+    - name: Install packages
+      apt: name={{item}}
+           state=installed
+      with_items:
+        - ajaxplorer
+      tags:
+        - packages
