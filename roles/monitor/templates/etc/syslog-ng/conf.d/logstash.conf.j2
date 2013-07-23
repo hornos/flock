@@ -1,0 +1,9 @@
+# Destination log file
+destination logstash_dst_udp {
+  udp( "127.0.0.1" port(5140) );
+};
+
+log {
+  source(loghost_src_udp);
+  destination(logstash_dst_udp);
+};

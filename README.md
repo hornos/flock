@@ -728,6 +728,15 @@ Enable Yarn:
 
     flock play @@core roles/hadoop/start_yarn
 
+### Flume syslog
+Login to the master node and initialize Yarn:
+
+    /root/bin/hdfs_admin flume
+
+Enable flume and syslog forwarder:
+
+    flock play @@core roles/hadoop/flume
+
 ### HA
 
 Login to the master node and initilaize Zookeeper HA:

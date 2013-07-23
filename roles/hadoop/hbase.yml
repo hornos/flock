@@ -1,0 +1,58 @@
+#
+# http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH4-Installation-Guide/cdh4ig_topic_12_4.html
+#
+# Testing:
+# hbase shell
+# status 'detailed'
+#
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    - vars/${inventory_hostname}.yml
+    - vars/cdh4.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_backup: "'$inventory_hostname' == '$backup'"
+
+  tasks:
+### REDHAT
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - hbase
+      - hbase-master
+      - hbase-rest
+      - hbase-regionserver
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - hbase
+
+  - name: Install configuration
+    template: src=templates/etc/hbase/conf/hbase-site.xml.j2
+              dest=/etc/hbase/conf/hbase-site.xml
+              backup=yes
+    tags:
+      - config
+      - hbase
+    notify:
+      - Restart hbase-master
+
+  - name: Start master
+    service: name=hbase-master
+             state=started
+             enabled=yes
+    only_if: '$is_master'
+
+  - name: Start regionserver
+    service: name=hbase-regionserver
+             state=started
+             enabled=yes
+
+  handlers:
+    - name: Restart hbase-master
+      service: name=hbase-master
+               state=restarted

@@ -1,0 +1,18 @@
+# Hadoop default ports
+# http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH4-Installation-Guide/cdh4ig_topic_9_1.html
+
+# access for system operators
+
+### Hadoop YARN
+## ResourceManager
+# yarn.resourcemanager.address
+ACCEPT sys:+sysop           $FW       tcp 8032
+# yarn.resourcemanager.scheduler.address
+ACCEPT sys:+sysop           $FW       tcp 8030
+# yarn.resourcemanager.resource-tracker.address
+ACCEPT sys:+sysop           $FW       tcp 8031
+# yarn.resourcemanager.admin.address
+ACCEPT sys:+sysop           $FW       tcp 8033
+# yarn.resourcemanager.webapp.address
+ACCEPT sys:+sysop           $FW       tcp 8088
+

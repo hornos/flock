@@ -11,9 +11,11 @@
     - vars/elasticsearch.yml
 
   tasks:
+### REDHAT
     - name: Install packages
       yum: name={{item}}
            state=installed
+      when: ansible_os_family == "RedHat"
       with_items:
         - java-1.7.0-openjdk
       tags:
@@ -21,13 +23,38 @@
 
     - name: Download elasticsearch
       get_url: url={{url}}/{{rpm}} dest=/root/{{rpm}}
+      when: ansible_os_family == "RedHat"
       tags:
         - packages
 
     - name: Install elasticsearch
       command: yum -y localinstall /root/{{rpm}}
+      when: ansible_os_family == "RedHat"
       tags:
         - packages
+
+### DEBIAN
+    - name: Install packages
+      apt: name={{item}}
+           state=installed
+      when: ansible_os_family == "Debian"
+      with_items:
+        - openjdk-7-jre-headless
+      tags:
+        - packages
+
+    - name: Download elasticsearch
+      get_url: url={{url}}/{{deb}} dest=/root/{{deb}}
+      when: ansible_os_family == "Debian"
+      tags:
+        - packages
+
+    - name: Install elasticsearch
+      command: dpkg -i /root/{{deb}}
+      when: ansible_os_family == "Debian"
+      tags:
+        - packages
+
 
     - name: Configure elasticsearch
       template: src=templates/etc/elasticsearch/elasticsearch.yml.j2
@@ -35,6 +62,7 @@
                 owner=root
                 group=root
                 mode=0644
+                backup=yes
       tags:
         - configs
       notify:

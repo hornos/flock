@@ -1,7 +1,7 @@
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 
 <!--
-Standalone
+Standalone so far
 -->
 <configuration>
 
@@ -10,13 +10,27 @@ Standalone
   <value>hdfs://{{master}}/</value>
 </property>
 
+<!-- COMPRESSION -->
 <property>
   <name>io.compression.codecs</name>
   <value>
-org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,
-org.apache.hadoop.io.compress.BZip2Codec,com.hadoop.compression.lzo.LzoCodec,com.hadoop.compression.lzo.LzopCodec,
-org.apache.hadoop.io.compress.SnappyCodec 
+org.apache.hadoop.io.compress.DefaultCodec,org.apache.hadoop.io.compress.GzipCodec,org.apache.hadoop.io.compress.BZip2Codec,com.hadoop.compression.lzo.LzoCodec,com.hadoop.compression.lzo.LzopCodec,org.apache.hadoop.io.compress.SnappyCodec 
   </value>
 </property>
+
+<!-- HUE SERVER -->
+<!-- Hue WebHDFS proxy user setting -->
+<property>
+  <name>hadoop.proxyuser.hue.hosts</name>
+  <value>*</value>
+</property>
+<property>
+  <name>hadoop.proxyuser.hue.groups</name>
+  <value>*</value>
+</property>
+
+<!--
+TODO: httpfs
+-->
 
 </configuration>

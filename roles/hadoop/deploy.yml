@@ -296,6 +296,21 @@
               mode=0700
     with_items:
       - hdfs_admin
+    tags:
+      - scripts
+
+### FIREWALL
+  - name: Configure firewall
+    template: src=templates/etc/shorewall/rules.d/{{item}}.j2
+              dest=/etc/shorewall/rules.d/{{item}}
+    with_items:
+      - hdfs
+      - yarn
+    tags:
+      - firewall
+      - shorewall
+    notify:
+      - Restart shorewall
 
 ### SERVICES
   - name: Disable services
@@ -328,3 +343,6 @@
       service: name=zookeeper-server
                state=restarted
 
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted

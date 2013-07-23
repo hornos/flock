@@ -1,0 +1,34 @@
+#
+# TODO: compression codec
+#
+agent.sources = syslog
+agent.channels = memory
+agent.sinks = hdfs
+
+agent.sources.syslog.type = syslogudp
+agent.sources.syslog.port = 5140
+agent.sources.syslog.host = localhost
+
+# The channel can be defined as follows.
+agent.sources.syslog.channels = memory
+
+# Each sink's type must be defined
+agent.sinks.hdfs.type = hdfs
+agent.sinks.hdfs.hdfs.path = hdfs://{{master}}/flume/loghost/{{ansible_hostname}}/%y-%m-%d
+agent.sinks.hdfs.hdfs.filePrefix = messages
+agent.sinks.hdfs.hdfs.fileType = DataStream
+# agent.sinks.hdfs.hdfs.codeC = lzo
+agent.sinks.hdfs.hdfs.rollSize = 0
+agent.sinks.hdfs.hdfs.rollInterval = 3600
+agent.sinks.hdfs.hdfs.rollCount = 0
+
+#Specify the channel the sink should use
+agent.sinks.hdfs.channel = memory
+
+# Each channel's type is defined.
+agent.channels.memory.type = memory
+
+# Other config values specific to each type of channel(sink or source)
+# can be defined as well
+# In this case, it specifies the capacity of the memory channel
+agent.channels.memory.capacity = 100

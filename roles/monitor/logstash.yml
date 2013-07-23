@@ -8,14 +8,27 @@
     - vars/logstash.yml
 
   tasks:
+### REDHAT
     - name: Install packages
       yum: name={{item}}
            state=installed
+      when: ansible_os_family == "RedHat"
       with_items:
         - java-1.7.0-openjdk
       tags:
         - packages
 
+### DEBIAN
+    - name: Install packages
+      apt: name={{item}}
+           state=installed
+      when: ansible_os_family == "Debian"
+      with_items:
+        - openjdk-7-jre-headless
+      tags:
+        - packages
+
+### DIRECTORIES
     - name: Create /opt/logstash
       file: path=/opt/logstash
             state=directory
@@ -46,7 +59,7 @@
 
 ### CONFIGURATION
     - name: Install configuration
-      template: src=templates/etc/logstash.conf
+      template: src=templates/etc/logstash.conf.j2
                 dest=/etc/logstash.conf
       tags:
         - config

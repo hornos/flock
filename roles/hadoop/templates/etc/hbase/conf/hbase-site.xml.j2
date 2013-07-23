@@ -1,0 +1,17 @@
+<configuration>
+<property>
+  <name>hbase.cluster.distributed</name>
+  <value>true</value>
+</property>
+
+<property>
+  <name>hbase.rootdir</name>
+  <value>hdfs://{{master}}:8020/hbase</value>
+</property>
+
+<property>
+  <name>hbase.zookeeper.quorum</name>
+  <value>{{master}}</value>
+</property>
+
+</configuration>

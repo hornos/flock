@@ -1,0 +1,12 @@
+# Hadoop default ports
+# http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH4-Installation-Guide/cdh4ig_topic_9_1.html
+
+# access for system operators
+
+### Hadoop HUE
+## HUE Server
+ACCEPT sys:+sysop           $FW       tcp 8888
+## Beeswax Server
+# ACCEPT sys:+sysop           $FW       tcp 8002
+## Beeswax Metastore
+# ACCEPT sys:+sysop           $FW       tcp 8003

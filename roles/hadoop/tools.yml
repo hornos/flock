@@ -1,0 +1,6 @@
+#
+# Hadoop tools
+#
+---
+- include: hbase.yml
+- include: pig.yml

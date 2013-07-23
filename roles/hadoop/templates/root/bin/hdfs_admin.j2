@@ -20,4 +20,12 @@ case "${cmd}" in
     sudo -u hdfs hadoop fs -mkdir /var/log/hadoop-yarn
     sudo -u hdfs hadoop fs -chown yarn:mapred /var/log/hadoop-yarn
     ;;
+  flume)
+    sudo -u hdfs hadoop fs -mkdir /flume
+    sudo -u hdfs hadoop fs -chown flume:flume /flume
+    ;;
+  hbase)
+    sudo -u hdfs hadoop fs -mkdir /hbase
+    sudo -u hdfs hadoop fs -chown hbase /hbase
+    ;;
 esac

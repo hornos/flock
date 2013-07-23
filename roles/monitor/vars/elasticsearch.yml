@@ -1,3 +1,4 @@
 ---
 url: https://download.elasticsearch.org/elasticsearch/elasticsearch
 rpm: elasticsearch-0.90.2.noarch.rpm
+deb: elasticsearch-0.90.2.deb
