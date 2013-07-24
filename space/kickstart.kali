@@ -122,8 +122,9 @@ d-i partman-lvm/confirm_nooverwrite boolean true
 d-i base-installer/install-recommends boolean true
 d-i apt-setup/non-free boolean true
 d-i apt-setup/contrib boolean true
-tasksel tasksel/first multiselect kali-linux-full
-d-i pkgsel/include string openssh-server
+tasksel tasksel/first multiselect standard
+d-i pkgsel/include string openssh-server build-essential oclhashcat-plus kali-linux-full
+# d-i pkgsel/upgrade select none
 d-i pkgsel/upgrade select full-upgrade
 
 d-i finish-install/reboot_in_progress note

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# http://docs.openstack.org/trunk/openstack-compute/install/apt/content/configure-glance-files.html
+
+echo ""
+read -p "Start Glance registry service"
+chkconfig openstack-glance-registry on
+service openstack-glance-registry restart
+
+echo ""
+read -p "Disable version control"
+glance-manage version_control 0
+
+echo ""
+read -p "DB Sync"
+glance-manage db_sync
+
+echo ""
+read -p "Start Glance"
+service openstack-glance-registry restart
+chkconfig openstack-glance-api on
+service openstack-glance-api restart

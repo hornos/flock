@@ -1,0 +1,113 @@
+#
+# http://docs.openstack.org/trunk/openstack-compute/install/apt/content/install-glance.html
+#
+# --extra-vars "master=xc"
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - vars/mariadb.yml
+    - vars/openstack.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_schema: "'$schema' == 'yes'"
+
+  tasks:
+### REDHAT
+  - name: Install packages
+    when: ansible_os_family == "RedHat"
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - openstack-glance
+    tags:
+      - packages
+
+  - name: Clear DB
+    file: path=/var/lib/glance/glance.sqlite
+          state=absent
+    tags:
+      - clear
+      - init
+
+  - name: Setup database
+    mysql_db: db=glance
+              login_user=root
+              login_password={{mariadb.password}}
+              login_unix_socket={{mariadb.socket}}
+    tags:
+      - sql
+    only_if: '$is_master'
+
+  - name: Setup database user
+    mysql_user: name=glance password={{glance.password}} priv=glance.*:ALL
+                login_user=root
+                login_password={{mariadb.password}}
+                login_unix_socket={{mariadb.socket}}
+    tags:
+      - sql
+    only_if: '$is_master'
+
+
+### Image store
+  - name: Create partition
+    lvol: vg={{openstack.vg_root}}
+          lv={{openstack.lv_data}}
+          size={{openstack.lv_size}}
+    tags:
+      - partition
+      - lvm
+
+  - name: Create filesystem
+    filesystem: fstype=ext4
+                dev=/dev/{{openstack.vg_root}}/{{openstack.lv_data}}
+    tags:
+      - partition
+      - fs
+
+  - name: Creat mount dir
+    file: path={{openstack.lv_mnt}}
+          state=directory
+    tags:
+      - partition
+
+  - name: Mount openstack
+    mount: name={{openstack.lv_mnt}}
+           src=/dev/{{openstack.vg_root}}/{{openstack.lv_data}}
+           fstype=ext4
+           state=mounted
+    tags:
+      - partition
+
+  - name: Create glance directory
+    file: path={{openstack.lv_mnt}}/glance
+          owner=glance
+          group=glance
+          state=directory
+    tags:
+      - directories
+
+### CONFIGURATION
+  - name: Install configuration
+    template: src=templates/etc/glance/glance-api.conf.j2
+              dest=/etc/glance/glance-api.conf
+              backup=yes
+    tags:
+      - config
+
+  - name: Install registry configuration
+    template: src=templates/etc/glance/glance-registry.conf.j2
+              dest=/etc/glance/glance-registry.conf
+              backup=yes
+    tags:
+      - config
+
+  - name: Install start script
+    template: src=templates/root/init_openstack_image.j2
+              dest=/root/init_openstack_image
+              mode=0700
+    tags:
+      - scripts

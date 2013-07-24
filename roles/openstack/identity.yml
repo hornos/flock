@@ -1,5 +1,7 @@
 #
-# http://docs.openstack.org/grizzly/openstack-compute/install/yum/content/install-keystone.html
+# http://docs.openstack.org/trunk/openstack-compute/install/apt/content/install-keystone.html
+#
+# --extra-vars "master=xc"
 #
 ---
 - hosts: all
@@ -25,6 +27,13 @@
       - python-keystoneclient
     tags:
       - packages
+
+  - name: Clear DB
+    file: path=/var/lib/keystone/keystone.db
+          state=absent
+    tags:
+      - clear
+      - init
 
   - name: Setup database
     mysql_db: db=keystone
@@ -62,3 +71,19 @@
     tags:
       - connection
       - config
+
+  - name: Install start script
+    template: src=templates/root/init_openstack_identity.j2
+              dest=/root/init_openstack_identity
+              mode=0700
+    tags:
+      - scripts
+
+  - name: Install demo identity
+    get_url: url=https://raw.github.com/openstack/keystone/master/tools/sample_data.sh
+             dest=/root/sample_data.sh
+             mode=0700
+    tags:
+      - demo
+
+

@@ -1,3 +1,12 @@
 ---
 keystone:
   password: 'keystone'
+
+glance:
+  password: 'glance'
+
+openstack:
+  vg_root: 'vg_root'
+  lv_data: 'lv_openstack'
+  lv_size: 256000
+  lv_mnt: '/data/openstack'

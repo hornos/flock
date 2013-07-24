@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# http://docs.openstack.org/trunk/openstack-compute/install/apt/content/install-keystone.html
+
+echo ""
+read -p "Setup PKI"
+keystone-manage pki_setup
+chown -R keystone:keystone /etc/keystone/*
+
+echo ""
+read -p "Start Keystone service"
+chkconfig openstack-keystone on
+service openstack-keystone restart
+
+echo ""
+read -p "DB Sync"
+keystone-manage db_sync

@@ -728,7 +728,7 @@ Enable Yarn:
 
     flock play @@core roles/hadoop/start_yarn
 
-### Flume syslog
+#### Flume syslog
 Login to the master node and initialize Yarn:
 
     /root/bin/hdfs_admin flume
@@ -737,7 +737,9 @@ Enable flume and syslog forwarder:
 
     flock play @@core roles/hadoop/flume
 
-### HA
+TODO: hue
+
+#### HA
 
 Login to the master node and initilaize Zookeeper HA:
 
@@ -791,10 +793,11 @@ Mount (link) the ISO under `boot/xs62/repo` into jockey's root directory.
     flock-vbox create xs62 RedHat_64 2 2048
     jockey kick xs62 @xs62 10.1.1.30 xs62
 
-Controller:
+### OpenStack
+Ground state controller:
 
     export ANSIBLE_HOSTS=xen
-    flock play root@xc bootstrap
+    flock play root@@xc bootstrap
     flock play @@xc secure
     flock reboot @@xc
     flock-vbox snap xc init
@@ -802,16 +805,52 @@ Controller:
     flock reboot @@xc
     flock-vbox snap xc ground
 
+SQL and MQ:
+
     flock play @@xc roles/database/mariadb --extra-vars "master=xc"
-    flock play @@xc roles/database/mariadb_master --extra-vars "master=xc"
-    > mysql_secure_installation
+    flock play @@xc roles/database/mariadb-nowsrep --extra-vars "master=xc"
+
+Login to `xc` and secure SQL:
+
+    mysql_secure_installation
+
     flock play @@xc roles/database/memcache.yml
     flock play @@xc roles/mq/rabbitmq.yml
     flock play @@xc roles/monitor/icinga.yml --extra-vars \"schema=yes master=xc\"
 
+    flock-vbox snap xc prestack
+
+#### Identity service
 Create admin token:
 
     openssl rand -hex 10 > keys/admin_token
+
+Install the keystone identity service:
+
+    flock play @@xc roles/openstack/identity --extra-vars "master=xc"
+
+Login to the machine and init/start the service:
+
+    /root/init_openstack_identity
+
+Install sample data:
+
+    /root/sample_data.sh
+
+Verify:
+
+    keystone --os-username=admin --os-password=secrete --os-auth-url=http://localhost:35357/v2.0 token-get
+
+#### Image service
+Install glance service:
+
+    flock play @@xc roles/openstack/image --extra-vars "master=xc"
+
+Login to the machine and init/start the service:
+
+    /root/init_openstack_image
+
+TODO Verify:
 
 ## Kali
 Download the installer package:
