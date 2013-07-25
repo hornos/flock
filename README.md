@@ -436,6 +436,7 @@ Now connect with Tunnelblick.
 -->
 ## Warewulf HPC Cluster
 ![warewulf](http://warewulf.lbl.gov/images/wwheader-4.png)
+
 Warewulf is a badass HPC cluster kit. Create a controller node or nodes and converge them into ground state. In this example I will use 1 controller (core) and 2 compute machines (cn-0[1-2]). Use two network card on the controller, eth0 is on the `system` network. In reality, this network should be on a separated internal LAN (VLAN is not secure by design) since its unsecure and vulnerable to DOS attacks.
 
 ### Create and install the controller
@@ -867,6 +868,7 @@ Create a machine and bootstrap:
 
 ## FhGFS
 ![FhGFS](http://www.fhgfs.com/wiki/images/FraunhoferFS.png)
+
 [FhGFS](http://www.fhgfs.com/wiki/wikka.php?wakka=FhGFS) is a kickass HPC fs you [should use](http://www.hpcwire.com/hpcwire/2013-07-24/fhgfs_designed_for_scalability_flexibility_in_hpc_clusters.html). Create a bunch of hosts by:
 
     flock out 3 fhgfs centos64
@@ -905,7 +907,8 @@ and ping by `sysop`:
     flock ping @@fhgfs
 
 TODO: net topology override
-TODO: ntpdate initila update
+
+TODO: ntpdate
 
 Check the network topology in `networks.yml` and secure the flock:
 
