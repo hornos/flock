@@ -434,9 +434,10 @@ Now connect with Tunnelblick.
 ##  ##  ## ##     ## ##    ##  ##       ##  ##  ## ##     ## ##       ##       
  ###  ###  ##     ## ##     ## ########  ###  ###   #######  ######## ##          
 -->
-## Warewulf HPC Cluster
+
 ![warewulf](http://warewulf.lbl.gov/images/wwheader-4.png)
 
+## Warewulf HPC Cluster
 Warewulf is a badass HPC cluster kit. Create a controller node or nodes and converge them into ground state. In this example I will use 1 controller (core) and 2 compute machines (cn-0[1-2]). Use two network card on the controller, eth0 is on the `system` network. In reality, this network should be on a separated internal LAN (VLAN is not secure by design) since its unsecure and vulnerable to DOS attacks.
 
 ### Create and install the controller
@@ -866,8 +867,9 @@ Create a machine and bootstrap:
     flock-vbox create kali Debian_64 1 2048
     jockey kick kali @kali 10.1.1.42 kali
 
-## FhGFS
 ![FhGFS](http://www.fhgfs.com/wiki/images/FraunhoferFS.png)
+
+## FhGFS
 
 [FhGFS](http://www.fhgfs.com/wiki/wikka.php?wakka=FhGFS) is a kickass HPC fs you [should use](http://www.hpcwire.com/hpcwire/2013-07-24/fhgfs_designed_for_scalability_flexibility_in_hpc_clusters.html). Create a bunch of hosts by:
 
