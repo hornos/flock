@@ -109,25 +109,120 @@ case ${cmd} in
   start)
     host="${1}"
     opts=""
+    group=false
+
+    # group
+    if [ "${host:0:1}" = "/" ] ; then
+      group=true
+      host="${host:1}"
+    fi
+
+    # host
     if [ "${host:0:1}" = "@" ] ; then
       opts="--type headless"
       host="${host:1}"
     fi
-    ${vbox} startvm "${host}" ${opts}
+
+    if ${group} ; then
+      _hosts=$(${vbox} list -l vms | \
+               grep /${host} | \
+               grep Config | \
+               sed s/.*\\/// | \
+               sed s/\\..*//)
+      for i in ${_hosts} ; do
+        ${vbox} startvm "${i}" ${opts}
+      done
+    else
+      ${vbox} startvm "${host}" ${opts}
+    fi
   ;;
   off)
-    ${vbox} controlvm "${1}" poweroff
+    host="${1}"
+    opts=""
+    group=false
+    # group
+    if [ "${host:0:1}" = "/" ] ; then
+      group=true
+      host="${host:1}"
+    fi
+    # host
+    if [ "${host:0:1}" = "@" ] ; then
+      opts="--type headless"
+      host="${host:1}"
+    fi
+    if ${group} ; then
+      _hosts=$(${vbox} list -l vms | \
+               grep /${host} | \
+               grep Config | \
+               sed s/.*\\/// | \
+               sed s/\\..*//)
+      for i in ${_hosts} ; do
+        ${vbox} controlvm "${i}" poweroff
+      done
+    else
+      ${vbox} controlvm "${host}" poweroff
+    fi
   ;;
   reset)
     ${vbox} controlvm "${1}" reset
   ;;
   snap)
-    ${vbox} snapshot "${1}" take "${2:-init}"
+    host=${1:-test}
+    snap=${2:-init}
+    group=false
+    # group
+    if [ "${host:0:1}" = "/" ] ; then
+      group=true
+      host="${host:1}"
+    fi
+    if ${group} ; then
+      _hosts=$(${vbox} list -l vms | \
+               grep /${host} | \
+               grep Config | \
+               sed s/.*\\/// | \
+               sed s/\\..*//)
+      for i in ${_hosts} ; do
+        ${vbox} snapshot "${i}" take "${snap}"
+      done
+    else
+      ${vbox} snapshot "${host}" take "${snap}"
+    fi
   ;;
   boot)
-    name=${1:-test}
+    host=${1:-test}
     boot=${2:-net}
-    echo "Set boot device: $boot on ${name}"
-    ${vbox} modifyvm "${name}" --boot1 "${boot}"
+    group=false
+    # group
+    if [ "${host:0:1}" = "/" ] ; then
+      group=true
+      host="${host:1}"
+    fi
+
+    echo "Set boot device: $boot on ${host}"
+    if ${group} ; then
+      _hosts=$(${vbox} list -l vms | \
+               grep /${host} | \
+               grep Config | \
+               sed s/.*\\/// | \
+               sed s/\\..*//)
+      for i in ${_hosts} ; do
+        ${vbox} modifyvm "${i}" --boot1 "${boot}"
+      done
+    else
+      ${vbox} modifyvm "${host}" --boot1 "${boot}"
+    fi
+  ;;
+  group)
+    host=${1:-test}
+    group=${2:-test}
+    ${vbox} modifyvm "${host}" --groups "/${group}"
+  ;;
+  group?)
+    group=${1:-/test}
+    ${vbox} list -l vms | \
+    grep ${group} | \
+    grep Config | \
+    sed s/.*\\/// | \
+    sed s/\\..*//
   ;;
 esac

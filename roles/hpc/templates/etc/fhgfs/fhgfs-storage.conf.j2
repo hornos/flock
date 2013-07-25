@@ -1,0 +1,259 @@
+# This is a config file for Fraunhofer parallel file system storage nodes.
+# http://www.fhgfs.com
+
+
+# --- [Table of Contents] ---
+#
+# 1) Settings
+# 2) Command Line Arguments
+# 3) Settings Documentation
+
+
+#
+# --- Section 1: [Settings] --- 
+#
+
+logLevel                     = 3
+logNoDate                    = false
+logStdFile                   = /var/log/fhgfs-storage.log
+logNumLines                  = 50000
+logNumRotatedFiles           = 5
+
+connPortShift                = 0
+connMgmtdPortUDP             = 8008
+connMgmtdPortTCP             = 8008
+connStoragePortUDP           = 8003
+connStoragePortTCP           = 8003
+connUseSDP                   = false
+connUseRDMA                  = false
+connRDMATypeOfService        = 0
+connBacklogTCP               = 128
+connInterfacesFile           = /etc/fhgfs/connInterfacesFile
+connNetFilterFile            = /etc/fhgfs/connNetFilterFile
+
+storeStorageDirectory        = {{fhgfs.lv_data_mnt}}
+storeAllowFirstRunInit       = true
+
+tuneNumWorkers               = 12
+tuneBindToNumaZone           =
+tuneWorkerBufSize            = 4m
+tuneFileReadSize             = 32k
+tuneFileReadAheadTriggerSize = 4m
+tuneFileReadAheadSize        = 0m
+tuneFileWriteSize            = 64k
+tuneFileWriteSyncSize        = 0m
+tuneUsePerUserMsgQueues      = false
+
+sysMgmtdHost                 = {{master}}
+
+runDaemonized                = true
+
+
+#
+# --- Section 2: [Command Line Arguments] ---
+#
+
+# Use the command line argument "cfgFile=/etc/anotherconfig.conf" to
+# specify a different config file for fhgfs_storage.
+#
+# All other options in this file can also be used as command line
+# arguments, overriding the corresponding config file values.
+
+
+#
+# --- Section 3.1: [Logging] ---
+#
+
+# [logLevel]
+# Defines the amount of output messages. The higher this level, the more
+# detailed the log messages will be.
+# Note: Levels above 3 might decrease performance.
+# Default: 3 (Max: 5)
+
+# [logNoDate]
+# Defines whether "date & time" (=false) or the current "time only" (=true)
+# should be logged.
+# Default: false 
+
+# [logStdFile]
+# The path and filename of the log file for standard log messages. If no name
+# is specified, the messages will be written to the console.
+# Default: /var/log/fhgfs_storage.log
+
+# [logNumLines]
+# The maximum number of lines per log file.
+# Default: 50000
+
+# [logNumRotatedFiles]
+# The number of old files to keep when "logNumLines" is reached and the log file
+# is rewritten (log rotation).
+# Default: 5
+
+
+#
+# --- Section 3.2: [Connections & Communication] ---
+#
+
+# [connPortShift]
+# Shifts all following UDP and TCP ports according to the specified value.
+# Intended to make port configuration easier in case you do not want to
+# configure each port individually.  
+# Default: 0
+
+# [connMgmtdPortUDP], [connMgmtdPortTCP]
+# The UDP and TCP ports of the management node.
+# Default: 8008
+
+# [connStoragePortUDP], [connStoragePortTCP]
+# The UDP and TCP ports of the storage node.
+# Default: 8003
+
+# [connUseSDP]
+# Enables the Sockets Direct Protocol (SDP) for RDMA-ready interconnects.
+# SDP performance is somewhere between TCP over IB and native RDMA, so there
+# is no need to enable SDP when you have native RDMA enabled.
+# Default: false
+
+# [connUseRDMA]
+# Enables the use of Remote Direct Memory Access (RDMA) for Infiniband.
+# For this setting to be effective, OFED ibverbs support has to be enabled at
+# compile time of the fhgfs_opentk library.
+# Default: true
+
+# [connRDMATypeOfService]
+# Infiniband provides the option to set a type of service for an application. 
+# This type of service can be used by your subnet manager to provide Quality of
+# Service functionality (e.g. setting different service levels).
+# In openSM the service type will be mapped to the parameter qos-class, which can 
+# be handled in your QoS configuration. 
+# See 
+# www.openfabrics.org/downloads/OFED/ofed-1.4/OFED-1.4-docs/QoS_management_in_OpenSM.txt
+# for more information on how to configure openSM for QoS.
+# This parameter sets the type of service for all outgoing connections of this 
+# daemon.
+# Default: 0 (Max: 255)
+
+# [connBacklogTCP]
+# The TCP listen backlog.
+# Default: 64
+
+# [connInterfacesFile]
+# The path to a text file that specifies the names of the interfaces, which
+# may be used for communication. One interface per line. The line number also
+# defines the priority of the interface.
+# Example: "ib0" in the first line, "eth0" in the second line.
+# Values: This setting is optional. If unspecified, all available interfaces 
+#    will be used and priorities will be assigned automatically.
+# Note: This has no influence on outgoing connections. The information is sent
+#    to other hosts to inform them about possible communication paths.
+# Default: <none>
+
+# [connNetFilterFile]
+# The path to a text file that specifies allowed IP subnets, which may be used
+# for outgoing communication. One subnet per line in classless notation (IP
+# address and number of significant bits).
+# Example: "192.168.10.0/24" in the first line, "192.168.20.0/24" in the second
+#    line.
+# Values: This setting is optional. If unspecified, all addresses are allowed 
+#    for outgoing communication.
+# Default: <none>
+
+#
+# --- Section 3.3: [Storage] ---
+#
+
+# [storeStorageDirectory]
+# The absoute path to a storage target. A storage target is a directory where 
+# the file system can store raw user file contents. Multiple targets can be 
+# specified as a comma-separated list.
+# Example: /mnt/fhgfs_storage1,/mnt/fhgfs_storage2
+# Default: <none>
+
+# [storeAllowFirstRunInit]
+# Enables or disables daemon startup with an uninitialized storage directory.
+# This can be used to make sure that the daemon does not run when the storage
+# partition is not mounted (e.g. because it needs repair after a power outage).
+# Note: This setting must be enabled during first startup of the daemon, but
+#    may be disabled afterwards.
+# Default: true
+
+
+#
+# --- Section 3.4: [Tuning] ---
+#
+
+# [tuneNumWorkers]
+# The number of worker threads. Higher number of workers allows the server to
+# handle more client requests in parallel, which also results in more
+# concurrent access to the underlying storage device.
+# Default: 12
+
+# [tuneBindToNumaZone]
+# Defines the zero-based NUMA zone number to which all threads of this process
+# should be bound. If unset, all available CPU cores may be used.
+# Zone binding is especially useful if the corresponding devices (e.g. storage
+# controller and network card) are also attached to the same zone.
+# Note: The Linux kernel shows NUMA zones at /sys/devices/system/node/nodeXY
+# Default: <unset>
+
+# [tuneWorkerBufSize]
+# The buffer size, which is allocated twice by each worker thread for IO and
+# network data buffering.
+# Note: For optimal performance, this value must be at least 1MB higher than
+#    tuneFileReadSize and tuneFileWriteSize.
+# Default: 4m
+
+# [tuneFileReadSize], [tuneFileWriteSize]
+# The maximum amount of data that the server should write to (or read from)
+# the underlying local file system in a single operation.
+# Note: Setting these values higher than the file chunk size or 
+#    tuneWorkerBufSize has no effect.
+# Default: tuneFileReadSize=32k, tuneFileWriteSize=64k
+
+# [tuneFileReadAheadSize], [tuneFileReadAheadTriggerSize]
+# tuneFileReadAheadSize is the byte range submitted to the kernel for read-head
+# after at least tuneFileReadAheadTriggerSize file bytes were read sequentially
+# from a target.
+# Values: A typical setting is tuneFileReadAheadSize=2m. The optimal setting
+#    depends on your storage system configuration (e.g. your RAID layout).
+# Default: tuneFileReadAheadSize=0, tuneFileReadAheadTriggerSize=4m
+
+# [tuneFileWriteSyncSize]
+# The number of sequentially written bytes (per file) after which the kernel
+# will be advised to commit the written data to the underlying storage device.
+# This is intended to avoid delays until the kernel notices that it is time to
+# commit written data, which would reduce streaming write throughput.
+# Note: When this setting is enabled, it is important to use the deadline
+#    scheduler (/sys/block/<...>/scheduler) to avoid reader starvation. It is
+#    also important to use a large request queue (/sys/block/<...>/nr_requests),
+#    as writes can only be asynchronous while there are free slots in the queue.
+# Values: "0" disables this mechanism. Use "32m" (or a close even multiple of
+#    your RAID stripe set size) to test the effects of this.
+# Default: 0
+
+# [tuneUsePerUserMsgQueues]
+# If set to true (experimental), per-user queues will be used to decide which
+# of the pending messages is handled by the next available worker thread. If
+# set to false, a single queue will be used and messages will be processed in
+# first-come, first-served order.
+# Per-user queues are intended to improve fairness in multi-user environments.
+# Default: false
+
+
+#
+# --- Section 3.5: [System Settings] ---
+#
+
+# [sysMgmtdHost]
+# Hostname (or IP) of the host running the management service.
+# (See also "connMgmtdPortUDP" and "connMgmtdPortTCP")
+# Default: <none>
+
+
+#
+# --- Section 3.6: [Startup] ---
+#
+
+# [runDaemonized]
+# Detach the process from its parent (and from stdin/-out/-err).
+# Default: true

@@ -1,0 +1,264 @@
+# This is a config file for Fraunhofer parallel file system metadata nodes.
+# http://www.fhgfs.com
+
+
+# --- [Table of Contents] ---
+#
+# 1) Settings
+# 2) Command Line Arguments
+# 3) Settings Documentation
+
+
+#
+# --- Section 1: [Settings] --- 
+#
+
+logLevel                  = 3
+logNoDate                 = false
+logStdFile                = /var/log/fhgfs-meta.log
+logNumLines               = 50000
+logNumRotatedFiles        = 5
+
+connPortShift             = 0
+connMgmtdPortUDP          = 8008
+connMgmtdPortTCP          = 8008
+connMetaPortUDP           = 8005
+connMetaPortTCP           = 8005
+connUseSDP                = false
+connUseRDMA               = false
+connRDMATypeOfService     = 0
+connBacklogTCP            = 128
+connMaxInternodeNum       = 32
+connInterfacesFile        = /etc/fhgfs/connInterfacesFile
+connNetFilterFile         = /etc/fhgfs/connNetFilterFile
+connNonPrimaryExpiration  = 10000
+
+storeMetaDirectory        = {{fhgfs.lv_meta_mnt}}
+storeAllowFirstRunInit    = true
+storeUseExtendedAttribs   = true
+
+tuneNumWorkers            = 0
+tuneBindToNumaZone        =
+tuneTargetChooser         = randomized
+tuneRotateMirrorTargets   = false
+tuneUsePerUserMsgQueues   = false
+
+sysMgmtdHost              = {{master}}
+
+runDaemonized             = true
+
+
+#
+# --- Section 2: [Command Line Arguments] ---
+#
+
+# Use the command line argument "cfgFile=/etc/anotherconfig.conf" to
+# specify a different config file for fhgfs-meta.
+# All other options in this file can also be used as command line
+# arguments, overriding the corresponding config file values.
+
+
+#
+# --- Section 3.1: [Logging] ---
+#
+
+# [logLevel]
+# Defines the amount of output messages. The higher this level, the more
+# detailed the log messages will be.
+# Note: Levels above 3 might decrease performance.
+# Default: 3 (Max: 5)
+
+# [logNoDate]
+# Defines whether "date & time" (=false) or the current "time only" (=true)
+# should be logged.
+# Default: false 
+
+# [logStdFile]
+# The path and filename of the log file for standard log messages. If no name
+# is specified, the messages will be written to the console.
+# Default: /var/log/fhgfs-meta.log
+
+# [logNumLines]
+# The maximum number of lines per log file.
+# Default: 50000
+
+# [logNumRotatedFiles]
+# The number of old files to keep when "logNumLines" is reached and the log file
+# is rewritten (log rotation).
+# Default: 5
+
+
+#
+# --- Section 3.2: [Connections & Communication] ---
+#
+
+# [connPortShift]
+# Shifts all following UDP and TCP ports according to the specified value.
+# Intended to make port configuration easier in case you do not want to
+# configure each port individually.  
+# Default: 0
+
+# [connMgmtdPortUDP], [connMgmtdPortTCP]
+# The UDP and TCP ports of the management node.
+# Default: 8008
+
+# [connMetaPortUDP], [connMetaPortTCP]
+# The UDP and TCP ports of the metadata node.
+# Default: 8005
+
+# [connUseSDP]
+# Enables the Sockets Direct Protocol (SDP) for RDMA-ready interconnects.
+# SDP performance is somewhere between TCP over IB and native RDMA, so there
+# is no need to enable SDP when you have native RDMA enabled.
+# Default: false
+
+# [connUseRDMA]
+# Enables the use of Remote Direct Memory Access (RDMA) for Infiniband.
+# For this setting to be effective, OFED ibverbs support has to be enabled at
+# compile time of the fhgfs-opentk library.
+# Default: true
+
+# [connRDMATypeOfService]
+# Infiniband provides the option to set a type of service for an application. 
+# This type of service can be used by your subnet manager to provide Quality of
+# Service functionality (e.g. setting different service levels).
+# In openSM the service type will be mapped to the parameter qos-class, which can 
+# be handled in your QoS configuration. 
+# See 
+# www.openfabrics.org/downloads/OFED/ofed-1.4/OFED-1.4-docs/QoS_management_in_OpenSM.txt
+# for more information on how to configure openSM for QoS.
+# This parameter sets the type of service for all outgoing connections of this 
+# daemon.
+# Default: 0 (Max: 255)
+
+# [connBacklogTCP]
+# The TCP listen backlog.
+# Default: 64
+
+# [connMaxInternodeNum]
+# The maximum number of simultaneous connections to the same node.
+# Default: 10
+
+# [connInterfacesFile]
+# The path to a text file that specifies the names of the interfaces, which
+# may be used for communication by other nodes. One interface per line. The
+# line number also defines the priority of an interface.
+# Example: "ib0" in the first line, "eth0" in the second line.
+# Values: This setting is optional. If unspecified, all available interfaces
+#    will be published and priorities will be assigned automatically.
+# Note: This has no influence on outgoing connections. The information is sent
+#    to other hosts to inform them about possible communication paths.
+# Default: <none>
+
+# [connNetFilterFile]
+# The path to a text file that specifies allowed IP subnets, which may be used
+# for outgoing communication. One subnet per line in classless notation (IP
+# address and number of significant bits).
+# Example: "192.168.10.0/24" in the first line, "192.168.20.0/24" in the second
+#    line.
+# Values: This setting is optional. If unspecified, all addresses are allowed for
+#    outgoing communication.
+# Default: <none>
+
+# [connNonPrimaryExpiration]
+# The number of requests after which a connection over a non-primary network
+# inferface expires. When a non-primary connection expires, the system will try
+# to establish a connection over the primary interface (falling back to another
+# interface again if necessary).
+# Values: Set to 0 to disable expiration.
+# Note: The priority of node interfaces can be configured with the
+#    "connInterfacesFile" parameter. 
+# Default: 10000
+
+#
+# --- Section 3.3: [Storage] ---
+#
+
+# [storeMetaDirectory]
+# The absolute path and name of a directory where the file system can store its
+# metadata.
+# Default: <none>
+
+# [storeAllowFirstRunInit]
+# Enables or disables daemon startup with an uninitialized storage directory.
+# This can be used to make sure that the daemon does not run when the storage
+# partition is not mounted (e.g. because it needs repair after a power outage).
+# Note: This setting must be enabled during first startup of the daemon, but
+#    may be disabled afterwards.
+# Default: true
+
+# [storeUseExtendedAttribs]
+# Controles whether metadata is stored as normal file contents (=false) or as
+# extended attributes (=true). Depending on the type and version of your 
+# underlying local file system, extended attributes typically are significantly
+# faster, but they are also more difficult to backup.
+# Note: This setting can only be configured at first startup and cannot be
+#    changed afterwards.
+# Default: false
+
+
+#
+# --- Section 3.4: [Tuning] ---
+#
+
+# [tuneNumWorkers]
+# The number of worker threads. Higher number of workers allows the server to
+# handle more client requests in parallel. On dedicated metadata servers, this
+# is typically set to a value between four and eight times the number of CPU
+# cores.
+# Note: 0 means use twice the number of CPU cores (but at least 4).
+# Default: 0
+
+# [tuneBindToNumaZone]
+# Defines the zero-based NUMA zone number to which all threads of this process
+# should be bound. If unset, all available CPU cores may be used.
+# Zone binding is especially useful if the corresponding devices (e.g. storage
+# controller and network card) are also attached to the same zone.
+# Note: The Linux kernel shows NUMA zones at /sys/devices/system/node/nodeXY
+# Default: <unset>
+
+# [tuneTargetChooser]
+# The algorithm to choose storage targets for file creation.
+# Values:
+#    randomized: choose targets in a random fashion
+#    roundrobin: choose targets in a deterministic round-robin fashion
+#    randomrobin: randomized round-robin; choose targets in a deterministic
+#       round-robin fashion, but random shuffle the result targets list
+# Note: The round-robin choosers do not honor client's preferred nodes/targets
+#    settings.
+# Default: randomized
+
+# [tuneRotateMirrorTargets]
+# If set to true, mirrored chunks will be stored on the same (rotated) list of
+# targets as the original chunks. If set to false, the original chunks targets
+# and mirror targets will be disjoint lists.
+# Example: targets list for a file is "1,2,3,4"
+#    tuneRotateMirrorTargets=true:  original stripe targets = 1,2,3,4; mirror targets = 3,4,1,2; 
+#    tuneRotateMirrorTargets=false: original stripe targets = 1,2;     mirror targets = 3,4;
+
+# [tuneUsePerUserMsgQueues]
+# If set to true (experimental), per-user queues will be used to decide which
+# of the pending messages is handled by the next available worker thread. If
+# set to false, a single queue will be used and messages will be processed in
+# first-come, first-served order.
+# Per-user queues are intended to improve fairness in multi-user environments.
+# Default: false
+
+
+#
+# --- Section 3.5: [System Settings] ---
+#
+
+# [sysMgmtdHost]
+# Hostname (or IP) of the host running the management service.
+# (See also "connMgmtdPortUDP" and "connMgmtdPortTCP")
+# Default: <none>
+
+
+#
+# --- Section 3.6: [Startup] ---
+#
+
+# [runDaemonized]
+# Detach the process from its parent (and from stdin/-out/-err).
+# Default: true

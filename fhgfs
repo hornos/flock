@@ -1,0 +1,4 @@
+[fhgfs]
+fhgfs-01 ansible_ssh_host=10.1.1.1 ansible_connection=paramiko
+fhgfs-02 ansible_ssh_host=10.1.1.2 ansible_connection=paramiko
+fhgfs-03 ansible_ssh_host=10.1.1.3 ansible_connection=paramiko

@@ -435,6 +435,7 @@ Now connect with Tunnelblick.
  ###  ###  ##     ## ##     ## ########  ###  ###   #######  ######## ##          
 -->
 ## Warewulf HPC Cluster
+![warewulf](http://warewulf.lbl.gov/images/wwheader-4.png)
 Warewulf is a badass HPC cluster kit. Create a controller node or nodes and converge them into ground state. In this example I will use 1 controller (core) and 2 compute machines (cn-0[1-2]). Use two network card on the controller, eth0 is on the `system` network. In reality, this network should be on a separated internal LAN (VLAN is not secure by design) since its unsecure and vulnerable to DOS attacks.
 
 ### Create and install the controller
@@ -863,3 +864,75 @@ Create a machine and bootstrap:
 
     flock-vbox create kali Debian_64 1 2048
     jockey kick kali @kali 10.1.1.42 kali
+
+## FhGFS
+![FhGFS](http://www.fhgfs.com/wiki/images/FraunhoferFS.png)
+[FhGFS](http://www.fhgfs.com/wiki/wikka.php?wakka=FhGFS) is a kickass HPC fs you [should use](http://www.hpcwire.com/hpcwire/2013-07-24/fhgfs_designed_for_scalability_flexibility_in_hpc_clusters.html). Create a bunch of hosts by:
+
+    flock out 3 fhgfs centos64
+
+TODO: groupping in the GUI.
+
+Start the kickstart servers:
+
+    flock http
+    flock boot
+
+and start the group in the background:
+
+    flock-vbox start /@fhgfs
+
+wait for the reboot signal and turn off the group:
+
+    flock-vbox off /fhgfs
+
+switch to disk boot make a snapshot and start:
+
+    flock-vbox boot /fhgfs disk
+    flock-vbox start /@fhgfs
+    flock-vbox snap /fhgfs init
+
+Change the inventory:
+
+    export ANSIBLE_HOSTS=fhgfs
+
+Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
+
+    flock bootstrap /fhgfs
+
+and ping by `sysop`:
+
+    flock ping @@fhgfs
+
+TODO: net topology override
+TODO: ntpdate initila update
+
+Check the network topology in `networks.yml` and secure the flock:
+
+    flock play @@fhgfs secure
+    flock reboot @@fhgfs
+    flock-vbox snap /fhgfs secure
+
+Now, reach the ground state:
+
+    flock play @@fhgfs ground
+    flock reboot @@fhgfs
+    flock-vbox snap /fhgfs ground
+
+CentOS `kernel-devel` build link is broken, fix:
+
+     ln -v -f -s /usr/src/kernels/2.6.32-358.14.1.el6.x86_64 /lib/modules/2.6.32-358.el6.x86_64/build
+
+Install FhGFS (mind that InfiniBand is not configured):
+
+    flock play @@fhgfs roles/hpc/fhgfs --extra-vars="master=fhgfs-01"
+
+Verify (TODO cli):
+
+    fhgfs-ctl --listnodes --nodetype=meta --details
+    fhgfs-ctl --listnodes --nodetype=storage --details
+    fhgfs-net
+
+Save it for good:
+
+    flock-vbox snap /fhgfs fhgfs

@@ -1,0 +1,26 @@
+url: http://www.fhgfs.com/release/latest-stable/dists
+repo: fhgfs-rhel6.repo
+key_url: http://www.fhgfs.com/release/latest-stable/gpg
+key: RPM-GPG-KEY-fhgfs
+
+#
+# http://www.fhgfs.com/wiki/wikka.php?wakka=MetaServerTuning
+#
+
+#
+# http://www.fhgfs.com/wiki/wikka.php?wakka=StorageServerTuning
+#
+fhgfs:
+  vg_root: 'vg_root'
+  lv_data: 'lv_fhgfs_data'
+  lv_data_size: 256000
+  lv_data_opts: '-d su=64k,sw=9 -l version=2,su=64k'
+  lv_data_mnt: '/data/fhgfs/data'
+  lv_meta: 'lv_fhgfs_meta'
+  lv_meta_size: 64000
+  lv_meta_opts: '-i 2048 -I 512 -J size=400 -Odir_index,filetype,^extents'
+  lv_meta_mnt: '/data/fhgfs/meta'
+  data_opts: 'largeio,inode64,swalloc,noatime,nodiratime,allocsize=131072k,nobarrier'
+  meta_opts: 'noatime,nodiratime,nobarrier,user_xattr'
+  state: '/common/fhgfs/state'
+  mount: '/mnt/fhgfs'

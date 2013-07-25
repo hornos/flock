@@ -1,0 +1,274 @@
+#
+# http://www.fhgfs.com/
+#
+# --extra-vars="master=fhgfs-01"
+#
+---
+- hosts: all
+  vars_files:
+    - ["custom.yml", "networks.yml"]
+    - vars/fhgfs.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+
+  tasks:
+  - name: Download FhGFS release key
+    get_url: url={{key_url}}/{{key}} dest=/root/fhgfs-release.asc
+    tags:
+      - packages
+      - key
+
+  - name: Install FhGFS release key
+    shell: /bin/rpm --import /root/fhgfs-release.asc
+    tags:
+      - packages
+      - key
+
+  - name: Download FhGFS repo
+    get_url: url={{url}}/{{repo}} dest=/etc/yum.repos.d/{{repo}}
+    tags:
+      - packages
+      - repo
+
+### ALL SERVERS
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - fhgfs-common
+      - fhgfs-meta
+      - fhgfs-storage
+      - fhgfs-utils
+      - fhgfs-opentk-lib
+      - fhgfs-client
+      - fhgfs-helperd
+      - xfsprogs
+      - kernel-devel
+    tags:
+      - packages
+
+### MASTER SERVER
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - fhgfs-mgmtd
+      - fhgfs-admon
+    when: $is_master
+    tags:
+      - packages
+
+### DATA
+  - name: Create FhGFS data partition
+    lvol: vg={{fhgfs.vg_root}}
+          lv={{fhgfs.lv_data}}
+          size={{fhgfs.lv_data_size}}
+    tags:
+      - partition
+      - data
+      - lvm
+
+  - name: Create filesystem for data
+    filesystem: fstype=xfs
+                dev=/dev/${fhgfs.vg_root}/${fhgfs.lv_data}
+                opts="${fhgfs.lv_data_opts}"
+    tags:
+      - partition
+      - data
+      - fs
+
+  - name: Creat mount dir for data
+    file: path=${fhgfs.lv_data_mnt}
+          state=directory
+    tags:
+      - partition
+      - data
+
+  - name: Mount data partition
+    mount: name=${fhgfs.lv_data_mnt}
+           src=/dev/${fhgfs.vg_root}/${fhgfs.lv_data}
+           fstype=xfs
+           opts="${fhgfs.data_opts}"
+           state=mounted
+    tags:
+      - partition
+      - data
+
+
+### META
+  - name: Create meta partition
+    lvol: vg=${fhgfs.vg_root}
+          lv=${fhgfs.lv_meta}
+          size=${fhgfs.lv_meta_size}
+    tags:
+      - partition
+      - meta
+      - lvm
+
+  - name: Create filesystem for meta
+    filesystem: fstype=ext4
+                dev=/dev/${fhgfs.vg_root}/${fhgfs.lv_meta}
+                opts="${fhgfs.lv_meta_opts}"
+    tags:
+      - partition
+      - meta
+      - fs
+
+  - name: Creat mount dir for meta
+    file: path=${gluster.lv_meta_mnt}
+          state=directory
+    tags:
+      - partition
+      - meta
+
+  - name: Mount meta partition
+    mount: name=${fhgfs.lv_meta_mnt}
+           src=/dev/${fhgfs.vg_root}/${fhgfs.lv_meta}
+           fstype=ext4
+           opts="${fhgfs.meta_opts}"
+           state=mounted
+    tags:
+      - partition
+      - meta
+
+### SECURITY
+# in production use separate storage network 10/100Ge or IB
+  - name: Create connInterfacesFile
+    copy: content=eth0
+          dest=/etc/fhgfs/connInterfacesFile
+    tags:
+      - config
+      - security
+
+  - name: Create connNetFilterFile
+    copy: content={{networks.system}}/{{masks.system}}
+          dest=/etc/fhgfs/connNetFilterFile
+    tags:
+      - config
+      - security
+
+### MANAGEMENT SERVER
+  - name: Create state directory
+    file: path={{fhgfs.state}}
+          owner=root
+          group=root
+          state=directory
+    when: '$is_master'
+    tags:
+      - directories
+      - state
+      - config
+      - mgmt
+
+  - name: Create client mount directory
+    file: path={{fhgfs.mount}}
+          owner=root
+          group=root
+          state=directory
+    tags:
+      - directories
+      - config
+
+  - name: Install mgmtd config
+    template: src=templates/etc/fhgfs/fhgfs-mgmtd.conf.j2
+              dest=/etc/fhgfs/fhgfs-mgmtd.conf
+              backup=yes
+    tags:
+      - config
+      - mgmt
+    when: '$is_master'
+    notify:
+      - Restart fhgfs-mgmtd
+
+### METADATA SERVER
+  - name: Install meta config
+    template: src=templates/etc/fhgfs/fhgfs-meta.conf.j2
+              dest=/etc/fhgfs/fhgfs-meta.conf
+              backup=yes
+    tags:
+      - config
+      - meta
+    notify:
+      - Restart fhgfs-meta
+
+#### STORAGE SERVER
+  - name: Install storage config
+    template: src=templates/etc/fhgfs/fhgfs-storage.conf.j2
+              dest=/etc/fhgfs/fhgfs-storage.conf
+              backup=yes
+    tags:
+      - config
+      - storage
+    notify:
+      - Restart fhgfs-storage
+
+#### MONITOR SERVER
+  - name: Install admon config
+    template: src=templates/etc/fhgfs/fhgfs-admon.conf.j2
+              dest=/etc/fhgfs/fhgfs-admon.conf
+              backup=yes
+    tags:
+      - config
+      - admon
+    when: '$is_master'
+    notify:
+      - Restart fhgfs-admon
+
+#### CLIENT
+  - name: Install client config
+    template: src=templates/etc/fhgfs/fhgfs-client.conf.j2
+              dest=/etc/fhgfs/fhgfs-client.conf
+              backup=yes
+    tags:
+      - config
+      - client
+    notify:
+      - Restart fhgfs-client
+
+### SERVICES
+  - name: Start master services
+    service: name={{item}}
+             state=started
+             enabled=yes
+    when: '$is_master'
+    with_items:
+      - fhgfs-mgmtd
+      - fhgfs-admon
+    tags:
+      - services
+      - master
+
+  - name: Start common services
+    service: name={{item}}
+             state=started
+             enabled=yes
+    with_items:
+      - fhgfs-meta
+      - fhgfs-storage
+      - fhgfs-helperd
+      - fhgfs-client
+    tags:
+      - services
+      - common
+
+  handlers:
+    - name: Restart fhgfs-mgmtd
+      service: name=fhgfs-mgmtd
+               state=restarted
+
+    - name: Restart fhgfs-meta
+      service: name=fhgfs-meta
+               state=restarted
+
+    - name: Restart fhgfs-storage
+      service: name=fhgfs-storage
+               state=restarted
+
+    - name: Restart fhgfs-admon
+      service: name=fhgfs-admon
+               state=restarted
+
+    - name: Restart fhgfs-client
+      service: name=fhgfs-client
+               state=restarted

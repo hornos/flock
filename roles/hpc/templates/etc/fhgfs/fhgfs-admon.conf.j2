@@ -1,0 +1,217 @@
+# This is a config file for the Fraunhofer parallel file system Admon daemon.
+# http://www.fhgfs.com
+
+
+# --- [Table of Contents] ---
+#
+# 1) Settings
+# 2) Command Line Arguments
+# 3) Settings Documentation
+
+
+#
+# --- Section 1: [Settings] --- 
+#
+
+logLevel                 = 2
+logNoDate                = false
+logStdFile               = /var/log/fhgfs-admon.log
+logNumLines              = 50000
+logNumRotatedFiles       = 2
+
+connPortShift            = 0
+connMgmtdPortUDP         = 8008
+connMgmtdPortTCP         = 8008
+connAdmonPortUDP         = 8007
+connMaxInternodeNum      = 3
+# connInterfacesFile     = /etc/fhgfs/connInterfacesFile
+connNetFilterFile        = /etc/fhgfs/connNetFilterFile
+connNonPrimaryExpiration = 10000
+
+tuneNumWorkers           = 4
+
+sysMgmtdHost             = {{master}}
+
+runDaemonized            = true
+
+httpPort                 = 8000
+queryInterval            = 5
+databaseFile             = /var/lib/fhgfs/fhgfs-admon.db
+clearDatabase            = false
+
+mailEnabled              = false
+mailSmtpServer           =
+mailSender               =
+mailRecipient            =
+mailMinDownTimeSec       = 10
+mailResendMailTimeMin    = 60
+mailCheckIntervalTimeSec = 30
+
+#
+# --- Section 2: [Command Line Arguments] ---
+#
+
+# Use the command line argument "cfgFile=/etc/anotherconfig.conf" to
+# specify a different config file for fhgfs_admon.
+# All other options in this file can also be used as command line 
+# arguments, overriding the corresponding config file values.
+
+
+#
+# --- Section 3.1: [Logging] ---
+#
+
+# [logLevel]
+# Defines the amount of output messages. The higher this level, the more
+# detailed the log messages will be.
+# Note: Levels above 2 might decrease performance.
+# Default: 2 (Max: 5)
+
+# [logNoDate]
+# Defines whether "date & time" (=false) or the current "time only" (=true)
+# should be logged.
+# Default: false
+
+# [logStdFile]
+# The path and filename of the log file for standard log messages. If no name
+# is specified, the messages will be written to the console.
+# Default: /var/log/fhgfs-admon.log
+
+# [logNumLines]
+# The maximum number of lines per log file.
+# Default: 50000
+
+# [logNumRotatedFiles]
+# The number of old files to keep when "logNumLines" is reached and the log file
+# is rewritten. (Log rotation)
+# Default: 2
+
+
+#
+# --- Section 3.2: [Connections & Communication] ---
+#
+
+# [connPortShift]
+# Shifts all following UDP and TCP ports according to the specified value.
+# Intended to make port configuration easier in case you do not want to
+# configure each port individually.  
+# Default: 0
+
+# [connMgmtdPortUDP], [connMgmtdPortTCP]
+# The UDP and TCP ports of the management node.
+# Default: 8008
+
+# [connAdmonPortUDP]
+# The UDP port of the admon.
+# Default: 8007
+
+# [connMaxInternodeNum]
+# The maximum number of simultaneous connections to the same node.
+# Default: 3
+
+# [connNetFilterFile]
+# The path to a text file that specifies allowed IP subnets, which may be used
+# for outgoing communication. One subnet per line in classless notation (IP
+# address and number of significant bits).
+# Example: "192.168.10.0/24" in the first line, "192.168.20.0/24" in the second
+#    line.
+# Values: This setting is optional. If unspecified, all addresses are allowed 
+#    for outgoing communication.
+# Default: <none>
+
+# [connNonPrimaryExpiration]
+# The number of requests after which a connection over a non-primary network
+# inferface expires. When a non-primary connection expires, the system will try
+# to establish a connection over the primary interface (falling back to another
+# interface again if necessary).
+# Values: Set this to 0 to disable expiration.
+# Note: The priority of node interfaces can be configured with the
+#    "connInterfacesFile" parameter.
+# Default: 10000
+
+
+#
+# --- Section 3.3: [Tuning] ---
+#
+
+# [tuneNumWorkers]
+# The number of worker threads. Should be at least 3. A value of up to twice the
+# number of CPU cores of your machine is the recommended choice.
+# Default: 4
+
+
+#
+# --- Section 3.4: [System Settings] ---
+#
+
+# [sysMgmtdHost]
+# Hostname (or IP) of the host running the management service.
+# (See also "connMgmtdPortUDP" and "connMgmtdPortTCP")
+# Default: <none>
+
+
+#
+# --- Section 3.5: [Startup] ---
+#
+
+# [runDaemonized]
+# Detach the process from its parent (and from stdin/-out/-err).
+# Default: true
+
+
+#
+# --- Section 3.6: [Admon] ---
+#
+
+# [httpPort]
+# The TCP port on which the built-in webserver will listen for incoming HTTP
+# connections.
+# Default: 8000
+
+# [queryInterval]
+# The interval (number of seconds) after which the servers will be queried for
+# new statistics data.
+# Default: 5
+
+# [databaseFile]
+# The path to the database file.
+# Default: /var/lib/fhgfs/fhgfs-admon.db
+
+# [clearDatabase]
+# Defines whether the database file should be deleted on startup.
+# Default: false
+
+
+#
+#--- Section 3.6: [eMail notification] ---
+#
+
+# [mailEnabled]
+# Enables the eMail notification. The configurations from this file will override the configurations
+# from the admon GUI.
+# Default: false
+
+# [mailSmtpServer]
+# SMTP server to use for sending eMails.
+# Default: <none>
+
+# [mailSender]
+# The sender eMail address to use for sending eMails 
+# Default: <none>
+
+# [mailRecipient]
+# The recipient addresses to which notifications are sent.
+# Default: <none>
+
+# [mailMinDownTimeSec]
+# Minimum amount of time between a event and the eMail notification in seconds. The minimal downtime
+# of a node before it must be notified.
+# Default: 10
+
+# [mailResendMailTimeMin]
+# Amount of time after which an already sent eMail is resent as reminder in minutes.
+# Default: 60
+
+# [mailCheckIntervalTimeSec]
+# Amount of time to check for new events which must be notified in seconds.
+# Default: 30

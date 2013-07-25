@@ -18,10 +18,14 @@ inventory=${ANSIBLE_HOSTS:-./hosts}
 ### args
 cmd=${1:-help}
 shift
+_args=$*
+
 hosts=${1:-root}
 _arg1=${hosts}
 shift
+
 module=${1:-ping}
+_arg2=${module}
 shift
 opts=$*
 
@@ -64,6 +68,7 @@ if [ -r "${module}.yml" ] ; then
 fi
 
 function help/flock() {
+  # TODO: selfdoc
   cat <<EOF
 
   Command  Inventory         Playbook    Options
@@ -197,6 +202,42 @@ case ${cmd} in
     ;;
   http|boot|masq)
     jockey $cmd
+    exit $?
+    ;;
+  kick)
+    jockey $cmd ${_args}
+    exit $?
+    ;;
+  out)
+    # args
+    no=${_arg1:-3}
+    name=${_arg2:-core}
+    shift
+    type=${1:-centos64}
+
+    echo ""
+    read -p "Create machines?"
+
+    echo "[${name}]" > ${name}
+    for i in $(seq 1 ${no}) ; do
+      echo ""
+      _no=$(printf %0.2d ${i})
+      _id=${name}-${_no}
+      _ip=10.1.1.${i}
+      flock-vbox create ${_id}
+      flock-vbox boot ${_id} net
+      flock-vbox group ${_id} ${name}
+      jockey kick ${type} @${_id} ${_ip} ${_id}
+      echo "${_id} ansible_ssh_host=${_ip} ansible_connection=paramiko" >> ${name}
+    done
+    exit $?
+    ;;
+  bootstrap)
+    group=${_arg1:-/test}
+    for i in $(flock-vbox group? ${group}) ; do
+      jockey password @${i}
+      flock play root@@${i} bootstrap
+    done
     exit $?
     ;;
   help|*)
