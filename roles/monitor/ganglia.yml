@@ -222,6 +222,25 @@
       - topcoat
 
 # TODO: web interface configuration
+  - name: Create dwoo directories
+    file: path=/var/lib/ganglia/{{item}}
+          state=directory
+          owner=apache
+    with_items:
+      - dwoo/cache
+      - dwoo/compiled
+      - conf
+    tags:
+      - config
+      - gweb
+
+  - name: Install gweb config
+    template: src=templates/var/www/html/ganglia/conf_default.php.j2
+              dest=/var/www/html/ganglia/conf_default.php
+              backup=yes
+    tags:
+      - config
+      - gweb
 
   - name: Enable gmond service
     lineinfile: dest=/etc/services
@@ -277,8 +296,8 @@
 ### rearrange service order
   - name: Stop gmetad
     service: name=gmetad
-             state=started
-             enabled=yes
+             state=stopped
+             enabled=no
     tags:
       - gmetad
 
@@ -291,8 +310,8 @@
 
   - name: Start gmetad
     service: name=gmetad
-             state=stopped
-             enabled=no
+             state=started
+             enabled=yes
     tags:
       - gmetad
 

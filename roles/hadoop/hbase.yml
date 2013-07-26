@@ -45,7 +45,7 @@
     service: name=hbase-master
              state=started
              enabled=yes
-    only_if: '$is_master'
+    when: '$is_master'
 
   - name: Start regionserver
     service: name=hbase-regionserver

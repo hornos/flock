@@ -22,7 +22,7 @@
     with_items:
       - kernel-headers
       - kernel-devel
-    only_if: '$is_clean'
+    when: '$is_clean'
     tags:
       - packages
 

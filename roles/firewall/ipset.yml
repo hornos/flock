@@ -89,7 +89,7 @@
       with_items:
         - vh.sh
         - tmobile.sh
-      only_if: '$is_hungary'
+      when: '$is_hungary'
       tags:
         - config
         - hungary
@@ -103,7 +103,7 @@
         - root.save
         - sysop.save
         - private.save
-      only_if: '$is_reset'
+      when: '$is_reset'
       tags:
         - fix
 

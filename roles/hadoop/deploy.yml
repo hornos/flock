@@ -114,7 +114,7 @@
 
   - name: Init zookeeper
     shell: service zookeeper-server init
-    only_if: '$is_init'
+    when: '$is_init'
     tags:
       - init
 
@@ -145,6 +145,7 @@
     yum: name={{item}}
          state=installed
     with_items:
+      - xfsprogs
       - hadoop-yarn-resourcemanager
       - hadoop-hdfs-namenode
       - hadoop-yarn-nodemanager
@@ -223,7 +224,7 @@
           recurse=yes
     with_items:
       - dfs/nn
-    only_if: '$is_master'
+    when: '$is_master'
     tags:
       - directories
       - common
@@ -328,7 +329,7 @@
 
 #  - name: Initializing the HA state in ZooKeeper
 #    shell: hdfs zkfc -formatZK
-#    only_if: '$is_init'
+#    when: '$is_init'
 #    tags:
 #      - config
 #      - site

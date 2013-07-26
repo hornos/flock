@@ -42,7 +42,7 @@
               login_unix_socket={{mariadb.socket}}
     tags:
       - sql
-    only_if: '$is_master'
+    when: '$is_master'
 
   - name: Setup database user
     mysql_user: name=keystone password={{keystone.password}} priv=keystone.*:ALL
@@ -51,7 +51,7 @@
                 login_unix_socket={{mariadb.socket}}
     tags:
       - sql
-    only_if: '$is_master'
+    when: '$is_master'
 
   - name: Set admin token
     lineinfile: dest=/etc/keystone/keystone.conf

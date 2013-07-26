@@ -53,7 +53,7 @@
               login_user={{mariadb.user}}
               login_password={{mariadb.password}}
               login_unix_socket={{mariadb.socket}}
-    only_if: '$is_master'
+    when: '$is_master'
     tags:
       - slurm
 
@@ -62,7 +62,7 @@
                 login_user={{mariadb.user}}
                 login_password={{mariadb.password}}
                 login_unix_socket={{mariadb.socket}}
-    only_if: '$is_master'
+    when: '$is_master'
     tags:
       - slurm
 
@@ -103,7 +103,7 @@
               mode=0600
     notify:
       - Restart slurmdbd
-    only_if: '$is_master or $is_backup'
+    when: '$is_master or $is_backup'
     tags:
       - slurm
       - database
@@ -137,28 +137,28 @@
     service: name=slurmdbd
              state=started
              enabled=yes
-    only_if: '$is_master or $is_backup'
+    when: '$is_master or $is_backup'
     tags:
       - slurm
       - database
 
   - name: Create cluster
     shell: /usr/bin/sacctmgr -i create cluster name={{slurm.cluster}}
-    only_if: '$is_master'
+    when: '$is_master'
     ignore_errors: yes
     tags:
       - slurm
 
   - name: Create test account
     shell: /usr/bin/sacctmgr -i add account sysop
-    only_if: '$is_master'
+    when: '$is_master'
     ignore_errors: yes
     tags:
       - slurm
 
   - name: Enable test account
     shell: /usr/bin/sacctmgr -i add user sysop defaultaccount=sysop
-    only_if: '$is_master'
+    when: '$is_master'
     ignore_errors: yes
     tags:
       - slurm
@@ -171,7 +171,7 @@
           state=directory
     tags:
       - state
-    only_if: '$is_master'
+    when: '$is_master'
     tags:
       - slurm
 
@@ -182,7 +182,7 @@
           state=directory
     tags:
       - state
-    only_if: '$is_master'
+    when: '$is_master'
     tags:
       - slurm
 

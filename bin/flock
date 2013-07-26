@@ -224,6 +224,7 @@ case ${cmd} in
       _no=$(printf %0.2d ${i})
       _id=${name}-${_no}
       _ip=10.1.1.${i}
+      echo "Creating ${_id}..."
       flock-vbox create ${_id}
       flock-vbox boot ${_id} net
       flock-vbox group ${_id} ${name}

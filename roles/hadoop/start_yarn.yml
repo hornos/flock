@@ -22,7 +22,7 @@
     with_items:
       - hadoop-yarn-resourcemanager
       - hadoop-mapreduce-historyserver
-    only_if: '$is_master'
+    when: '$is_master'
     tags:
       - namenode
 

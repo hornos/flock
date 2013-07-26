@@ -82,7 +82,7 @@
                 group=wheel
                 mode=0644
                 backup=yes
-      when_string: "'$usehosts' == 'yes'"
+      when: "'$usehosts' == 'yes'"
       notify:
         - Restart dnsmasq
       tags:
@@ -120,7 +120,7 @@
                 owner=root
                 group=root
                 backup=yes
-      when_string: "'{{interfaces.dhcp}}' != ''"
+      when: "'{{interfaces.dhcp}}' != ''"
       tags:
         - dhcp
 

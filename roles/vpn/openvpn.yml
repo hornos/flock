@@ -110,7 +110,7 @@
             state=absent
       with_items:
         - openvpn.save
-      only_if: '$is_reset'
+      when: '$is_reset'
       notify:
         - Restart ipset
       tags:
@@ -136,7 +136,7 @@
       tags:
         - firewall
         - hungary
-      only_if: '$is_hungary'
+      when: '$is_hungary'
       notify:
       - Restart shorewall
 

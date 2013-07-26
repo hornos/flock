@@ -187,4 +187,4 @@
 
   - name: Reinit
     command: /root/bin/reinit
-    only_if: '$is_reinit'
+    when: '$is_reinit'

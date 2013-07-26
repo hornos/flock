@@ -33,7 +33,7 @@
     service: name=hue
              state=started
              enabled=yes
-    only_if: '$is_master'
+    when: '$is_master'
 
 ### FIREWALL
   - name: Configure firewall

@@ -43,6 +43,7 @@
       - xz
       - pxz
       - unzip
+      - xfsprogs
     when: ansible_os_family == "RedHat"
     tags:
       - packages

@@ -15,13 +15,15 @@
   tasks:
 
 ### SERVICES
+#  - debug: msg={{master}}
+
   - name: Enable name services
     service: name={{item}}
              state=started
              enabled=yes
     with_items:
       - hadoop-hdfs-namenode
-    only_if: '$is_master'
+    when: '$is_master'
     tags:
       - namenode
 

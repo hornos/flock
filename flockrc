@@ -7,3 +7,9 @@ ansiblerc="${HOME}/ansible/hacking/env-setup"
 if test -r ${ansiblerc} ; then
   source ${ansiblerc} &> /dev/null
 fi
+
+function flenv() {
+  if test -r $1 ; then
+    export ANSIBLE_HOSTS=$1
+  fi
+}

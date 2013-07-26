@@ -59,7 +59,7 @@
               login_unix_socket={{mariadb.socket}}
     tags:
       - sql
-    only_if: '$is_master'
+    when: '$is_master'
 
   - name: Setup icinga mysql user
     mysql_user: name=icinga password={{icinga.password}} priv=icinga.*:ALL
@@ -68,7 +68,7 @@
                 login_unix_socket={{mariadb.socket}}
     tags:
       - sql
-    only_if: '$is_master'
+    when: '$is_master'
 
   - name: Setup icingaweb mysql db
     mysql_db: db=icingaweb
@@ -77,7 +77,7 @@
               login_unix_socket={{mariadb.socket}}
     tags:
       - sql
-    only_if: '$is_master'
+    when: '$is_master'
 
   - name: Setup icingaweb mysql user
     mysql_user: name=icingaweb password={{icinga.password}} priv=icingaweb.*:ALL
@@ -86,11 +86,11 @@
                 login_unix_socket={{mariadb.socket}}
     tags:
       - sql
-    only_if: '$is_master'
+    when: '$is_master'
 
   - name: Import icinga schema
     shell: cat /usr/share/doc/icinga-idoutils-libdbi-mysql-*/db/mysql/mysql.sql | mysql -u icinga --password={{icinga.password}} icinga
-    only_if: '$is_master and $is_schema'
+    when: '$is_master and $is_schema'
     notify:
       - Restart ido2db
       - Restart icinga
@@ -99,7 +99,7 @@
 
   - name: Import icingaweb schema
     shell: cat /usr/share/icinga-web/etc/schema/mysql.sql | mysql -u icingaweb --password={{icinga.password}} icingaweb
-    only_if: '$is_master and $is_schema'
+    when: '$is_master and $is_schema'
     notify:
       - Restart ido2db
       - Restart icinga

@@ -29,7 +29,7 @@
     file: 'path={{warewulf.common}}/datastore/sl-6/etc owner=root group=root state=directory'
     tags:
       - directories
-    only_if: '$is_master'
+    when: '$is_master'
 
    # mind that datastore is not absolute
   - name: Install rsyslog compute config
@@ -37,7 +37,7 @@
               dest={{warewulf.common}}/datastore/sl-6/etc/rsyslog.conf
     tags:
       - syslog
-    only_if: '$is_master'
+    when: '$is_master'
 
   - name: Install scripts
     template: src=templates/root/{{item}}.j2

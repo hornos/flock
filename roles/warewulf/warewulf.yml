@@ -55,7 +55,7 @@
               login_user={{mariadb.user}}
               login_password={{mariadb.password}}
               login_unix_socket={{mariadb.socket}}
-    only_if: '$is_master'
+    when: '$is_master'
     tags:
       - database
 
@@ -64,7 +64,7 @@
                 login_user={{mariadb.user}}
                 login_password={{mariadb.password}}
                 login_unix_socket={{mariadb.socket}}
-    only_if: '$is_master'
+    when: '$is_master'
     tags:
       - database
 
@@ -94,7 +94,7 @@
           state=directory
     tags:
       - directories
-    only_if: '$is_master'
+    when: '$is_master'
 
   - name: Create common tftpboot directory
     file: path={{warewulf.common}}/tftpboot
@@ -104,7 +104,7 @@
     tags:
       - directories
       - ftp
-    only_if: '$is_master'
+    when: '$is_master'
 
   - name: Create directories
     file: path={{warewulf.common}}/{{item}}
@@ -117,7 +117,7 @@
     tags:
       - directories
       - ftp
-    only_if: '$is_master'
+    when: '$is_master'
 
 ### TFTP
   - name: Create common tftpboot/warewulf directory
@@ -128,14 +128,14 @@
     tags:
       - directories
       - ftp
-    only_if: '$is_master'
+    when: '$is_master'
 
   - name: Copy tfptboot files
     shell: /bin/cp /usr/share/warewulf/* {{warewulf.common}}/tftpboot/warewulf
     tags:
       - config
       - ftp
-    only_if: '$is_master'
+    when: '$is_master'
 
   - name: Install /etc/xinetd.d/tftp
     template: src=templates/etc/xinetd.d/tftp.j2
@@ -173,7 +173,7 @@
       - dhcp
     notify:
       - Update dhcp
-    only_if: '$is_master'
+    when: '$is_master'
 
   - name: Install backup /etc/warewulf/dhcpd-template.conf
     template: src=templates/etc/warewulf/dhcpd-template-backup.conf.j2
@@ -186,7 +186,7 @@
       - dhcp
     notify:
       - Update dhcp
-    only_if: '$is_backup'
+    when: '$is_backup'
 
   - name: Set DHCP listen interface
     lineinfile: dest=/etc/sysconfig/dhcpd

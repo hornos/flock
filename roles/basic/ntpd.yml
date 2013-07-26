@@ -38,27 +38,33 @@
       tags:
         - configs
 
-### CYCLE BEGIN
-    - name: Disable NTP
-      service: name=ntpd
-               state=stopped
-               enabled=no
-      tags:
-        - cycle
+# TEST: ntpdate
+#### CYCLE BEGIN
+#    - name: Disable NTP
+#      service: name=ntpd
+#               state=stopped
+#               enabled=no
+#      tags:
+#        - cycle
+#
+#    - name: Start NTP early
+#      lineinfile: "dest=/etc/init.d/ntpd regexp='^#\ chkconfig' line='# chkconfig: - 25 74' backup=yes"
+#      tags:
+#        - service
+#        - cycle
+#
+#    - name: Enable NTP
+#      service: name=ntpd
+#               state=started
+#               enabled=yes
+#      tags:
+#        - cycle
+#### CYCLE END
 
-    - name: Start NTP early
-      lineinfile: "dest=/etc/init.d/ntpd regexp='^#\ chkconfig' line='# chkconfig: - 25 74' backup=yes"
-      tags:
-        - service
-        - cycle
-
-    - name: Enable NTP
-      service: name=ntpd
-               state=started
-               enabled=yes
-      tags:
-        - cycle
-### CYCLE END
+    - name: Set NTP server for ntpdate
+      template: src=templates/etc/sysconfig/ntpdate.j2
+                dest=/etc/sysconfig/ntpdate
+                backup=yes
 
     - name: Set start options
       lineinfile: dest=/etc/sysconfig/ntpd regexp="^OPTIONS=" line='OPTIONS="-u ntp:ntp -p /var/run/ntpd.pid -g -m"' backup=yes
@@ -67,6 +73,15 @@
       tags:
         - configs
         - options
+
+    - name: Stop ntpd
+      service: name={{service.ntpd}}
+               state=stopped
+
+    - name: Start ntpdate
+      service: name=ntpdate
+               state=started
+               enabled=yes
 
     - name: Start ntpd
       service: name={{service.ntpd}}

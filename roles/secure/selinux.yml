@@ -11,7 +11,8 @@
 - hosts: RedHat
   tasks:
     - name: Install selinux packages
-      yum: name=$item state=installed
+      yum: name={{item}}
+           state=installed
       with_items:
         - libsemanage
         - setools-libs-python

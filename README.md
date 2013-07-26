@@ -86,118 +86,54 @@ The following network topology is used:
     system    vboxnet0 10.1.1.254 16   off
     external  NAT/Bridged
 
-If you use VirtualBox for modelling you can create the servers by:
+Create 3 VMs:
 
-    for i in 1 2 3 ; do flock-vbox create core-0$i; done
+    flock out 3 core centos64
 
-Set the boot device to the 1st network interface:
+Start the boot/kickstart servers on your OS X host each in a separate Terminal tab:
 
-    for i in 1 2 3 ; do flock-vbox boot core-0$i net; done
+    flock http
+    flock boot
 
-Kickstart the cores with CentOS:
+Start the background flock:
 
-    for i in 1 2 3 ; do jockey kick centos64 @core-0$i 10.1.1.$i core-0$i; done
+    flock-vbox start /@core
 
-Start the kickstart servers:
+wait for the reboot signal and turn off the group:
 
-    jockey http
-    jockey masq
+    flock-vbox off /core
 
-and the machines:
+Switch to disk boot make a snapshot and start again:
 
-    for i in 1 2 3 ; do flock-vbox start core-0$i; done
+    flock-vbox boot /core disk
+    flock-vbox start /@core
+    flock-vbox snap /core init
 
-restart after installation is ready:
+Change the inventory:
 
-    for i in 1 2 3 ; do flock-vbox off core-0$i; done
-    for i in 1 2 3 ; do flock-vbox boot core-0$i disk; done
-    for i in 1 2 3 ; do flock-vbox start core-0$i; done
+    flenv core
 
-In case of real servers you have to play with ipmi. Make a snapshot for sure:
+Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
 
-    for i in 1 2 3 ; do flock-vbox snap core-0$i init; done
+    flock bootstrap /core
 
-## Provision with Ansible
-You need an inventory file with your hosts, edit `hosts`
-
-    [core]
-    core-01 ansible_ssh_host=10.1.1.1
-    core-02 ansible_ssh_host=10.1.1.2
-    core-03 ansible_ssh_host=10.1.1.3
-
-Test the 1st server:
-
-    jockey password @core-01
-    flock ping root@core-01
-
-### Boostrap
-Bootstrap the System Operator:
-
-    for i in 1 2 3 ; do jockey password @core-0$i; flock play root@core-0$i bootstrap; done
-
-and ping the by `sysop`:
+and ping by `sysop`:
 
     flock ping @@core
 
-<!--
- ######   ########   #######  ##     ## ##    ## ########  
-##    ##  ##     ## ##     ## ##     ## ###   ## ##     ## 
-##        ##     ## ##     ## ##     ## ####  ## ##     ## 
-##   #### ########  ##     ## ##     ## ## ## ## ##     ## 
-##    ##  ##   ##   ##     ## ##     ## ##  #### ##     ## 
-##    ##  ##    ##  ##     ## ##     ## ##   ### ##     ## 
- ######   ##     ##  #######   #######  ##    ## ######## 
--->
-### Ground State
-You need a simple network topology (`networks.yml`):
-
-    interfaces:
-      bmc: eth0
-      system: eth0
-      external: eth1
-      dhcp: eth1
-    networks:
-      bmc: 10.0.0.0
-      system: 10.1.0.0
-      compute: 10.1.1.0
-      vpn: 10.9.0.0
-    masks:
-      system: 16
-      compute: 24
-      home: 24
-      vpn: 24
-    dhcp_masks:
-      system: 255.255.0.0
-      compute: 255.255.255.0
-    broadcasts:
-      system: 10.1.255.255
-    sysops:
-      - 10.1.1.254
-      - 10.1.1.253
-    master: core-01
-
-Currently, we have role-like playbooks. First, secure the installation:
+Check the network topology in `networks.yml` and secure the flock:
 
     flock play @@core secure
-
-Make a snapshot if you want:
-
-    for i in 1 2 3 ; do flock-vbox snap core-0$i secure; done
-
-Due to selinux you have to reboot now:
-
     flock reboot @@core
+    flock-vbox snap /core secure
 
 Now, reach the ground state:
 
     flock play @@core ground
     flock reboot @@core
+    flock-vbox snap /core ground
 
-Make a snaphsot as well:
-
-    for i in 1 2 3 ; do flock-vbox snap core-0$i ground; done
-
-Mind that the system network is not protected, due to performance reasons core servers can reach each other wihtout any serious authentication. Ground monitoring is done by Ganglia in multicast mode.
+Mind that the system network is not protected, due to performance reasons core servers can reach each other wihtout restriction or authentication. Monitoring is done by Ganglia in multicast mode.
 
 Check the cluster state by or on `http://10.1.1.1/ganglia`:
 
@@ -680,13 +616,57 @@ Enable elasticsearch:
 -->
 
 ## Hadoop
+
+    flock out 3 hadoop centos64
+
+Start the kickstart servers:
+
+    flock http
+    flock boot
+
+and start the group in the background:
+
+    flock-vbox start /@hadoop
+
+wait for the reboot signal and turn off the group:
+
+    flock-vbox off /hadoop
+
+switch to disk boot make a snapshot and start:
+
+    flock-vbox boot /hadoop disk
+    flock-vbox start /@hadoop
+    flock-vbox snap /hadoop init
+
+Swith to the `hadoop` nevironment:
+
+    flenv hadoop
+
+Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
+
+    flock bootstrap /hadoop
+
+Verify by `sysop`:
+
+    flock ping @@hadoop
+
+Check the network topology in `networks.yml` and secure the flock:
+
+    flock play @@hadoop secure
+    flock reboot @@hadoop
+    flock-vbox snap /hadoop secure
+
+Now, reach the ground state:
+
+    flock play @@hadoop ground
+    flock reboot @@hadoop
+    flock-vbox snap /hadoop ground
+
 ### Prepare
-Change to the latest mainline kernel:
+Install Gluster and setup a 3-node FS cluster if you want a storage based HA:
 
     flock play @@core roles/system/kernel --extra-vars "clean=yes"
     flock reboot @@core
-
-Install Gluster and setup a 3-node FS cluster:
 
     flock play @@core roles/cluster/gluster
 
@@ -706,30 +686,37 @@ Monitor the cluster:
 ### CDH4
 Deploy standalone HDFS cluster:
 
-    flock play @@core roles/hadoop/deploy --extra-vars "init=yes"
+    flock play @@hadoop roles/hadoop/deploy --extra-vars \"init=yes master=hadoop-01\"
 
 Login to the master node and format the namenode:
 
     /root/bin/hdfs_admin format
 
-To remove old data:
+To remove old data if you have:
 
     rm -Rf /data/hadoop/{1,2,3}/dfs/dn/*
-    ssh core-02 rm -Rf /data/hadoop/{1,2,3}/dfs/dn/*
-    ssh core-03 rm -Rf /data/hadoop/{1,2,3}/dfs/dn/*
+    ssh hadoop-02 rm -Rf /data/hadoop/{1,2,3}/dfs/dn/*
+    ssh hadoop-03 rm -Rf /data/hadoop/{1,2,3}/dfs/dn/*
 
 Start the master name node and the data nodes:
 
-    flock play @@core roles/hadoop/start_hdfs
+    flock play @@hadoop roles/hadoop/start_hdfs --extra-vars \"master=hadoop-01\"
 
 Login to the master node and initialize Yarn:
 
     /root/bin/hdfs_admin init
+
+Verify:
+
     sudo -u hdfs hadoop fs -ls -R /
 
 Enable Yarn:
 
-    flock play @@core roles/hadoop/start_yarn
+    flock play @@hadoop roles/hadoop/start_yarn --extra-vars \"master=hadoop-01\"
+
+    flock-vbox snap /hadoop hdfs
+
+#### HUE
 
 #### Flume syslog
 Login to the master node and initialize Yarn:
@@ -739,8 +726,6 @@ Login to the master node and initialize Yarn:
 Enable flume and syslog forwarder:
 
     flock play @@core roles/hadoop/flume
-
-TODO: hue
 
 #### HA
 
@@ -898,7 +883,7 @@ switch to disk boot make a snapshot and start:
 
 Change the inventory:
 
-    export ANSIBLE_HOSTS=fhgfs
+    flenv fhgfs
 
 Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
 
@@ -907,10 +892,6 @@ Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
 and ping by `sysop`:
 
     flock ping @@fhgfs
-
-TODO: net topology override
-
-TODO: ntpdate
 
 Check the network topology in `networks.yml` and secure the flock:
 
@@ -937,6 +918,10 @@ Verify (TODO cli):
     fhgfs-ctl --listnodes --nodetype=meta --details
     fhgfs-ctl --listnodes --nodetype=storage --details
     fhgfs-net
+
+or check the GUI (use Java 6):
+
+    java -jar /opt/fhgfs/fhgfs-admon-gui/fhgfs-admon-gui.jar
 
 Save it for good:
 

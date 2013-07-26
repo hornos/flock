@@ -27,7 +27,7 @@ connInterfacesFile             = /etc/fhgfs/connInterfacesFile
 connNetFilterFile              = /etc/fhgfs/connNetFilterFile
 
 storeMgmtdDirectory            = {{fhgfs.state}}
-storeAllowFirstRunInit         = true
+storeAllowFirstRunInit         = false
 
 tuneNumWorkers                 = 4
 tuneClientAutoRemoveMins       = 30
@@ -37,6 +37,7 @@ tuneStorageSpaceLowLimit       = 256G
 tuneStorageSpaceEmergencyLimit = 10G
 
 sysAllowNewServers             = true
+# sysAllowNewServers             = false
 sysForcedRoot                  = 0
 sysOverrideStoredRoot          = false
 

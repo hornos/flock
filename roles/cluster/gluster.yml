@@ -82,7 +82,7 @@
               group=root
               mode=0700
     ignore_errors: yes
-    only_if: '$is_master'
+    when: '$is_master'
     tags:
       - bootstrap
 

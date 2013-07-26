@@ -20,6 +20,7 @@
            state=installed
       with_items:
         - sudo
+        - libselinux-python
       when: ansible_os_family == "RedHat"
       tags:
         - packages

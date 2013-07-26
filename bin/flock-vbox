@@ -182,9 +182,11 @@ case ${cmd} in
                sed s/.*\\/// | \
                sed s/\\..*//)
       for i in ${_hosts} ; do
+        echo "Snapshot ${i}"
         ${vbox} snapshot "${i}" take "${snap}"
       done
     else
+      echo "Snapshot ${host}"
       ${vbox} snapshot "${host}" take "${snap}"
     fi
   ;;
@@ -198,7 +200,6 @@ case ${cmd} in
       host="${host:1}"
     fi
 
-    echo "Set boot device: $boot on ${host}"
     if ${group} ; then
       _hosts=$(${vbox} list -l vms | \
                grep /${host} | \
@@ -206,9 +207,11 @@ case ${cmd} in
                sed s/.*\\/// | \
                sed s/\\..*//)
       for i in ${_hosts} ; do
+        echo "Set boot device: $boot on ${i}"
         ${vbox} modifyvm "${i}" --boot1 "${boot}"
       done
     else
+      echo "Set boot device: $boot on ${host}"
       ${vbox} modifyvm "${host}" --boot1 "${boot}"
     fi
   ;;

@@ -55,6 +55,7 @@
     with_items:
       - fhgfs-mgmtd
       - fhgfs-admon
+      - java-1.6.0-openjdk
     when: $is_master
     tags:
       - packages
