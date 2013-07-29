@@ -3,19 +3,6 @@
 ---
 - hosts: all
 
-  tasks:
-    - group_by: key=${ansible_os_family}
-
-
-########  ######## ########  ####    ###    ##    ## 
-##     ## ##       ##     ##  ##    ## ##   ###   ## 
-##     ## ##       ##     ##  ##   ##   ##  ####  ## 
-##     ## ######   ########   ##  ##     ## ## ## ## 
-##     ## ##       ##     ##  ##  ######### ##  #### 
-##     ## ##       ##     ##  ##  ##     ## ##   ### 
-########  ######## ########  #### ##     ## ##    ##
-
-- hosts: Debian
   vars_files:
     - vars/inittab.yml
 
@@ -23,66 +10,66 @@
     is_reinit: "'$reinit' == 'yes'"
 
   tasks:
-  - name: Install packages
-    apt: name={{item}}
-         state=installed
-    with_items:
-      - htop
-      - sysstat
-    tags:
-      - packages
 
-  - name: Ubuntu Warning
-    debug: msg="Ubuntu's init is a fuckin mess!"
+### DEBIAN
+#
+# http://askubuntu.com/questions/27967/how-can-i-reduce-the-number-of-ttys
+#
 
-
-
-########  ######## ########  ##     ##    ###    ######## 
-##     ## ##       ##     ## ##     ##   ## ##      ##    
-##     ## ##       ##     ## ##     ##  ##   ##     ##    
-########  ######   ##     ## ######### ##     ##    ##    
-##   ##   ##       ##     ## ##     ## #########    ##    
-##    ##  ##       ##     ## ##     ## ##     ##    ##    
-##     ## ######## ########  ##     ## ##     ##    ## 
-
-- hosts: RedHat
-  vars_files:
-    - vars/inittab.yml
-
-  vars:
-    is_reinit: "'$reinit' == 'yes'"
-  tasks:
   - name: Install packages
     yum: name={{item}}
          state=installed
     with_items:
       - htop
       - sysstat
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+  - name: Install packages
+    apt: name={{item}}
+         state=installed
+    with_items:
+      - htop
+      - sysstat
+    when: ansible_os_family == "Debian"
     tags:
       - packages
 
 ### CONFIGURATION
-  - name: Set ttys
+  - name: Set active ttys
     lineinfile: dest=/etc/sysconfig/init
                 regexp='^ACTIVE_CONSOLES'
                 line="ACTIVE_CONSOLES={{ttys.consoles}}"
+    when: ansible_os_family == "RedHat"
     tags:
       - tty
+
+  - name: Set active ttys
+    lineinfile: dest=/etc/default/console-setup
+                regexp='^ACTIVE_CONSOLES'
+                line="ACTIVE_CONSOLES={{ttys.consoles}}"
+    when: ansible_os_family == "Debian"
+    tags:
+      - tty
+
 
   - name: Set X tty
     lineinfile: dest=/etc/init/start-ttys.conf
                 regexp='^env X_TTY'
                 line="env X_TTY={{ttys.x}}"
+    when: ansible_os_family == "RedHat"
     tags:
       - tty
 
-### MESSAGES
+### MESSAGES -- tty1
   - name: Install Init start-messages
     template: src=templates/etc/init/start-messages.conf.j2
               dest=/etc/init/start-messages.conf
               owner=root
               group=root
               mode=0640
+    when: ansible_os_family == "RedHat"
     tags:
       - messages
 
@@ -92,16 +79,29 @@
               owner=root
               group=root
               mode=0640
+    when: ansible_os_family == "RedHat"
     tags:
       - messages
 
-### GLANCES
+  - name: Install Init messages
+    template: src=templates/etc/init/tty1.conf.j2
+              dest=/etc/init/tty1.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "Debian"
+    tags:
+      - messages
+
+
+### GLANCES -- tty2
   - name: Install Init start-glances
     template: src=templates/etc/init/start-glances.conf.j2
               dest=/etc/init/start-glances.conf
               owner=root
               group=root
               mode=0640
+    when: ansible_os_family == "RedHat"
     tags:
       - glances
 
@@ -111,16 +111,28 @@
               owner=root
               group=root
               mode=0640
+    when: ansible_os_family == "RedHat"
     tags:
       - glances
 
-### IOSTAT
+  - name: Install Init glances
+    template: src=templates/etc/init/tty2.conf.j2
+              dest=/etc/init/tty2.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "Debian"
+    tags:
+      - glances
+
+### IOSTAT -- tty3
   - name: Install Init start-iostat
     template: src=templates/etc/init/start-iostat.conf.j2
               dest=/etc/init/start-iostat.conf
               owner=root
               group=root
               mode=0640
+    when: ansible_os_family == "RedHat"
     tags:
       - iostat
 
@@ -130,16 +142,28 @@
               owner=root
               group=root
               mode=0640
+    when: ansible_os_family == "RedHat"
     tags:
       - iostat
 
-### MPSTAT
+  - name: Install Init iostat
+    template: src=templates/etc/init/tty3.conf.j2
+              dest=/etc/init/tty3.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "Debian"
+    tags:
+      - iostat
+
+### MPSTAT -- tty4
   - name: Install Init start-mpstat
     template: src=templates/etc/init/start-mpstat.conf.j2
               dest=/etc/init/start-mpstat.conf
               owner=root
               group=root
               mode=0640
+    when: ansible_os_family == "RedHat"
     tags:
       - mpstat
 
@@ -149,6 +173,17 @@
               owner=root
               group=root
               mode=0640
+    when: ansible_os_family == "RedHat"
+    tags:
+      - mpstat
+
+  - name: Install Init mpstat
+    template: src=templates/etc/init/tty4.conf.j2
+              dest=/etc/init/tty4.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "Debian"
     tags:
       - mpstat
 
@@ -159,6 +194,7 @@
               owner=root
               group=root
               mode=0640
+    when: ansible_os_family == "RedHat"
     tags:
       - gstat
 
@@ -168,15 +204,38 @@
               owner=root
               group=root
               mode=0640
+    when: ansible_os_family == "RedHat"
     tags:
       - gstat
 
+  - name: Install Init gstat
+    template: src=templates/etc/init/tty5.conf.j2
+              dest=/etc/init/tty5.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "Debian"
+    tags:
+      - gstat
+
+  - name: Install tty7
+    template: src=templates/etc/init/tty7.conf.j2
+              dest=/etc/init/tty7.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "Debian"
+    tags:
+      - tty7
+
+### FIX
   # https://www.redhat.com/archives/rhl-list/2007-October/msg02313.html
   - name: Mingetty noclear
     lineinfile: dest=/etc/init/tty.conf
                 regexp='^exec'
                 line='^exec /sbin/mingetty \$TTY --noclear'
                 backup=yes
+    when: ansible_os_family == "RedHat"
     tags:
       - fix
       - mingetty
@@ -184,6 +243,7 @@
   ### TODO
   - name: Restart init
     shell: /sbin/telinit q
+    when: ansible_os_family == "RedHat"
 
   - name: Reinit
     command: /root/bin/reinit

@@ -1,20 +1,20 @@
+#####   ####   ####  #####  ####  ##### #####    ##   #####  
+#    # #    # #    #   #   #        #   #    #  #  #  #    # 
+#####  #    # #    #   #    ####    #   #    # #    # #    # 
+#    # #    # #    #   #        #   #   #####  ###### #####  
+#    # #    # #    #   #   #    #   #   #   #  #    # #      
+#####   ####   ####    #    ####    #   #    # #    # #
+
 #
-# Top level bootstrap file
+# installs System Operator (sysop) user
 #
+
 ---
 - hosts: all
-
   tasks:
 
-### REDHAT
-# obsolete
-#    - name: Install python-simplejson
-#      raw: yum -y install python-simplejson
-#      when: ansible_os_family == "RedHat"
-#      tags:
-#        - packages
-#        - json
-
+  tasks:
+### PACKAGES 
     - name: Install packages
       yum: name={{item}}
            state=installed
@@ -27,12 +27,11 @@
         - sudo
 
 
-### DEBIAN
-    - name: Install python-simplejson
-      raw: apt-get -y install python-simplejson
-      when: ansible_os_family == "Debian"
-      tags:
-        - packages
+#    - name: Install python-simplejson
+#      raw: apt-get -y install python-simplejson
+#      when: ansible_os_family == "Debian"
+#      tags:
+#        - packages
 
     - name: Install packages
       apt: name={{item}}
@@ -45,24 +44,29 @@
         - sudo
 
 
-### ADMIN USER
-# centos debian gid mismatch: uucp vs wheel
-    - name: Create wheel group
-      group: name=wheel
-             gid=14
-             system=yes
-      when: ansible_os_family == "Debian"
-      tags:
-        - wheel
-
+### SYSTEM OPERATOR
     - name: Create System Operator
       user: name=sysop
             comment='System Operator'
             groups=wheel
             password=*
             shell=/bin/bash
+            append=yes
+      when: ansible_os_family == "RedHat"
       tags:
         - wheel
+
+    - name: Create System Operator
+      user: name=sysop
+            comment='System Operator'
+            groups=sudo
+            password=*
+            shell=/bin/bash
+            append=yes
+      when: ansible_os_family == "Debian"
+      tags:
+        - wheel
+
 
 ### SUDO
     - name: Sudo for the wheel group
@@ -71,6 +75,7 @@
                   state=present
                   regexp='^%wheel'
                   backup=yes
+      when: ansible_os_family == "RedHat"
       tags:
         - sudo
         - wheel
@@ -80,10 +85,23 @@
             owner=root
             group=root
             mode=0440
+      when: ansible_os_family == "RedHat"
       tags:
         - sudo
         - wheel
 
+    - name: Sudo for the wheel group
+      copy: content="%sudo ALL=(ALL) NOPASSWD:ALL"
+            dest=/etc/sudoers.d/wheel
+            owner=root
+            group=root
+            mode=0440
+      when: ansible_os_family == "Debian"
+      tags:
+        - sudo
+        - wheel
+
+### SSH KEY
     - name: 
       authorized_key: user=sysop
                       key="{{ lookup('file', 'keys/sysop.pub') }}"
@@ -93,11 +111,10 @@
         - keys
 
 
+### DONE
     - name: Bootstrap done
       lineinfile: dest=/etc/ANSIBLE_STATE
                   regexp="^bootstrap"
                   line=bootstrap
                   state=present
                   create=yes
-      tags:
-        - state

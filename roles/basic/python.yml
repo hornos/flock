@@ -5,7 +5,7 @@
   tasks:
 
   - name: Install basic python packages
-    pip: name=$item
+    pip: name={{item}}
          state=present
          use_mirrors=no
     with_items:
@@ -13,13 +13,12 @@
       - configparser
       - Glances
       - monner
-      #- httpie
     tags:
       - packages
 
   - name: Install rainbow configs
-    template: src=templates/usr/share/rainbow/configs/${item}.cfg.j2
-              dest=/usr/share/rainbow/configs/${item}.cfg
+    template: src=templates/usr/share/rainbow/configs/{{item}}.cfg.j2
+              dest=/usr/share/rainbow/configs/{{item}}.cfg
               owner=root
               group=root
               mode=0644

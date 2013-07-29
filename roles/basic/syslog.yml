@@ -49,7 +49,7 @@
 
 ### DEBIAN
   - name: Install packages
-    apt: name=$item
+    apt: name={{item}}
          state=installed
     with_items:
       - syslog-ng

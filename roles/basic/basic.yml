@@ -1,8 +1,5 @@
 ---
 ### packages
-# done in prebasic
-# - include: repos.yml
-# - include: packages.yml
 - include: python.yml
 - include: ruby.yml
 - include: crypto.yml

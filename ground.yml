@@ -1,8 +1,9 @@
 # TODO: better roles in ansible
 ---
-- include: roles/basic/prebasic.yml
+- include: roles/basic/prepare.yml
 - include: roles/firewall/firewall.yml
 - include: roles/basic/basic.yml
+# TODO: here
 - include: roles/system/ipv6off.yml
 - include: roles/monitor/monitor.yml
 

@@ -4,7 +4,7 @@
   tasks:
 
   - name: Install top packages
-    yum: name=$item
+    yum: name={{item}}
          state=installed
     with_items:
       - htop
@@ -24,7 +24,7 @@
       - packages
 
   - name: Install top packages
-    apt: name=$item
+    apt: name={{item}}
          state=installed
     with_items:
       - htop

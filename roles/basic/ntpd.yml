@@ -15,20 +15,28 @@
     is_bcast: "'$bcast' == 'yes'"
 
   tasks:
+### PACKAGES
     - name: Install NTP Server
-      yum: name=ntp
+      yum: name={{item}}
            state=installed
+      with_items:
+        - ntp
+        - ntpdate
       when: ansible_os_family == "RedHat"
       tags:
         - packages
 
     - name: Install NTP Server
-      apt: name=ntp
+      apt: name={{item}}
            state=installed
+      with_items:
+        - ntp
+        - ntpdate
       when: ansible_os_family == "Debian"
       tags:
         - packages
 
+### CONFIGURATION
     - name: Configure NTP Server
       template: src=templates/etc/ntp.conf.j2
                 dest=/etc/ntp.conf
@@ -36,44 +44,29 @@
       notify:
         - Restart ntpd
       tags:
-        - configs
+        - config
 
-# TEST: ntpdate
-#### CYCLE BEGIN
-#    - name: Disable NTP
-#      service: name=ntpd
-#               state=stopped
-#               enabled=no
-#      tags:
-#        - cycle
-#
-#    - name: Start NTP early
-#      lineinfile: "dest=/etc/init.d/ntpd regexp='^#\ chkconfig' line='# chkconfig: - 25 74' backup=yes"
-#      tags:
-#        - service
-#        - cycle
-#
-#    - name: Enable NTP
-#      service: name=ntpd
-#               state=started
-#               enabled=yes
-#      tags:
-#        - cycle
-#### CYCLE END
 
+### NTPDATE
     - name: Set NTP server for ntpdate
       template: src=templates/etc/sysconfig/ntpdate.j2
                 dest=/etc/sysconfig/ntpdate
                 backup=yes
+      when: ansible_os_family == "RedHat"
+      tags:
+        - config
+        - ntpdate
 
     - name: Set start options
       lineinfile: dest=/etc/sysconfig/ntpd regexp="^OPTIONS=" line='OPTIONS="-u ntp:ntp -p /var/run/ntpd.pid -g -m"' backup=yes
       notify:
         - Restart ntpd
+      when: ansible_os_family == "RedHat"
       tags:
-        - configs
-        - options
+        - config
 
+
+### SERVICES
     - name: Stop ntpd
       service: name={{service.ntpd}}
                state=stopped
@@ -82,6 +75,7 @@
       service: name=ntpdate
                state=started
                enabled=yes
+      when: ansible_os_family == "RedHat"
 
     - name: Start ntpd
       service: name={{service.ntpd}}

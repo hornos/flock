@@ -7,7 +7,7 @@
   tasks:
 ### PACKAGES
   - name: Install ruby packages
-    yum: name=$item
+    yum: name={{item}}
     with_items:
       - make
       - gcc
@@ -21,7 +21,7 @@
 
 ### DEBIAN
   - name: Install ruby packages
-    apt: name=$item
+    apt: name={{item}}
     with_items:
       - make
       - gcc
@@ -60,13 +60,12 @@
       - rvm
 
   - name: Fix global ruby path
-    file: src=/usr/local/rvm/bin/$item
-          dest=/usr/bin/$item
+    file: src=/usr/local/rvm/bin/{{item}}
+          dest=/usr/bin/{{item}}
           state=link
     with_items:
       - ruby
       - gem
-      # - bundle
     tags:
       - fix
       - rvm

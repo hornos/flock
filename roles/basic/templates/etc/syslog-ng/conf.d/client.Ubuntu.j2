@@ -4,4 +4,5 @@ udp("{{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}" port(514));
 {% endfor %}
 };
 
-log { source(s_src); destination(loghost); };
+# log { source(s_src); destination(loghost); };
+log { source(s_sys); destination(loghost); };

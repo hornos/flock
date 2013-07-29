@@ -10,5 +10,3 @@
                   line=secure
                   state=present
                   create=yes
-      tags:
-        - state

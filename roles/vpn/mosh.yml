@@ -10,12 +10,6 @@
 ---
 - hosts: all
 
-  vars_files:
-    - vars/openvpn.yml
-
-  vars:
-    is_hungary: "'$hungary' == 'yes'"
-
   tasks:
 ### DEBIAN
     - name: Install repository

@@ -8,7 +8,7 @@
   tasks:
 
   - name: Install packages
-    yum: name=$item
+    yum: name={{item}}
          state=installed
     with_items:
       - cronie
@@ -50,7 +50,7 @@
 
 # TODO: nodejs and repos
   - name: Install packages
-    apt: name=$item
+    apt: name={{item}}
          state=installed
     with_items:
       - mc
@@ -84,7 +84,7 @@
       - packages
 
   - name: Install basic packages
-    apt: name=$item
+    apt: name={{item}}
          state=installed
     with_items:
       - sysv-rc-conf

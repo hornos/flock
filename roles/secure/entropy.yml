@@ -16,7 +16,6 @@
       tags:
         - packages
 
-
     - name: Configure rng-tools
       lineinfile: dest=/etc/sysconfig/rngd
                   state=present
@@ -32,7 +31,7 @@
 
 ### DEBIAN
     - name: Install packages
-      yum: name={{item}}
+      apt: name={{item}}
            state=installed
       with_items:
         - rng-tools

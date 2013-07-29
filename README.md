@@ -926,3 +926,32 @@ or check the GUI (use Java 6):
 Save it for good:
 
     flock-vbox snap /fhgfs fhgfs
+
+## Ground state cross-check
+Create and `ostest` group with two machines:
+
+    flock-vbox create raring Ubuntu_64 1 2048
+    flock-vbox create centos64 RedHat_64 1 2048
+
+    jockey kick centos64 @centos64 10.1.1.1 centos64
+    jockey kick raring @raring 10.1.1.2 raring
+
+Start the boot servers and install the systems and reboot. Use the following inventory (`ostest`):
+
+    [ostest]
+    centos64 ansible_ssh_host=10.1.1.1 ansible_connection=paramiko
+    raring ansible_ssh_host=10.1.1.2 ansible_connection=paramiko
+
+Bootstrap and verify:
+
+    flock bootstrap /ostest
+    flock ping @@ostest
+
+Secure and reboot:
+
+    flock play @@ostest secure
+    flock reboot @@ostest
+
+Save and start to reach the ground state:
+
+    flock-vbox snap /ostest secure
