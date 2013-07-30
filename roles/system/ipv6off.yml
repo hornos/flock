@@ -1,8 +1,11 @@
 #
-# Install Mainline Kernel
+# IPv6 off
 #
 ---
 - hosts: all
+
+  vars_files:
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
 
   tasks:
 
@@ -27,6 +30,7 @@
     tags:
       - fix
       - postfix
+    when: ansible_os_family == "RedHat"
     notify:
       - Restart postfix
 
@@ -51,5 +55,5 @@
                state=restarted
 
     - name: Restart sshd
-      service: name=sshd
+      service: name={{service.sshd}}
                state=restarted

@@ -3,8 +3,8 @@
 - include: roles/basic/prepare.yml
 - include: roles/firewall/firewall.yml
 - include: roles/basic/basic.yml
-# TODO: here
 - include: roles/system/ipv6off.yml
+# TODO: ubuntu + ganglia
 - include: roles/monitor/monitor.yml
 
 - hosts: all

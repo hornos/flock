@@ -1,0 +1,53 @@
+#
+# http://docs.docker.io/en/latest/installation/ubuntulinux/
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+
+  tasks:
+### DEBIAN
+  - name: Install repository
+    apt_repository: repo=ppa:dotcloud/lxc-docker
+    when: ansible_os_family == "Debian"
+    tags:
+      - repo
+
+  - name: Install packages
+    apt: name={{item}}
+         state=installed
+    with_items:
+      - lxc-docker
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+### FIREWALL
+#  - name: Install firewall rules
+#    template: src=templates/etc/shorewall/rules.d/docker.j2
+#              dest=/etc/shorewall/rules.d/docker
+#              owner=root
+#              group=root
+#              mode=0640
+#    tags:
+#      - firewall
+#    notify:
+#      - Restart shorewall
+
+# TODO: docker chain action
+# http://shorewall.net/Actions.html
+
+  - name: Enable masq
+    copy: content={{interfaces.masq}}
+          dest=/etc/shorewall/masq
+    tags:
+      - firewall
+    notify:
+      - Restart shorewall
+
+  handlers:
+  - name: Restart shorewall
+    service: name=shorewall
+             state=restarted

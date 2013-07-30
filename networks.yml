@@ -8,6 +8,7 @@ interfaces:
   external: eth1
   dhcp: eth1
   nosys: eth0
+  masq: eth1
 
 networks:
   bmc: 10.0.0.0

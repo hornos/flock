@@ -37,20 +37,6 @@
     tags:
       - repo
 
-# TODO
-#  - name: Install packages
-#    yum: name={{item}}
-#         state=installed
-#         enablerepo=vuksan
-#    with_items:
-#      - ganglia-gmond
-#      - ganglia-gmond-modules-python
-#      - ganglia-gmetad
-#      - libganglia
-#    when: ansible_os_family == "RedHat"
-#    tags:
-#      - packages
-
   - name: Install repo fix script
     template: src=templates/root/install_ganglia.j2
               dest=/root/install_ganglia
@@ -230,6 +216,7 @@
       - dwoo/cache
       - dwoo/compiled
       - conf
+    when: ansible_os_family == "RedHat"
     tags:
       - config
       - gweb
@@ -238,6 +225,7 @@
     template: src=templates/var/www/html/ganglia/conf_default.php.j2
               dest=/var/www/html/ganglia/conf_default.php
               backup=yes
+    when: ansible_os_family == "RedHat"
     tags:
       - config
       - gweb
@@ -292,12 +280,23 @@
     service: name={{service.gmond}}
              state=started
              enabled=yes
+    when: ansible_os_family == "RedHat"
+
+  - name: Stop gmond
+    service: name={{service.gmond}}
+             state=stopped
+             enabled=no
+    ignore_errors: yes
+    when: ansible_os_family == "Debian"
+
+
 
 ### rearrange service order
   - name: Stop gmetad
     service: name=gmetad
              state=stopped
              enabled=no
+    when: ansible_os_family == "RedHat"
     tags:
       - gmetad
 
@@ -312,6 +311,17 @@
     service: name=gmetad
              state=started
              enabled=yes
+    when: ansible_os_family == "RedHat"
+    tags:
+      - gmetad
+
+# TODO
+  - name: Stop gmetad
+    service: name=gmetad
+             state=stopped
+             enabled=no
+    when: ansible_os_family == "Debian"
+    ignore_errors: yes
     tags:
       - gmetad
 
@@ -323,12 +333,15 @@
 
   handlers:
     - name: Restart gmond
+      when: ansible_os_family == "RedHat"
       service: name={{service.gmond}}
                state=restarted
 
     - name: Restart gmetad
+      when: ansible_os_family == "RedHat"
       service: name=gmetad
                state=restarted
+
 
     - name: Restart shorewall
       service: name=shorewall

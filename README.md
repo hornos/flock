@@ -955,3 +955,6 @@ Secure and reboot:
 Save and start to reach the ground state:
 
     flock-vbox snap /ostest secure
+    flock play @@ostest ground
+    flock reboot @@ostest
+    flock-vbox snap /ostest ground
