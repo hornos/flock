@@ -228,6 +228,29 @@ Login to the master node and secure the installation:
 
     mysql_secure_installation
 
+#### Percona
+
+    flock play @@core roles/database/percona
+
+Login to the master node and bootstrap the cluster:
+
+    /etc/init.d/mysql start --wsrep-cluster-address="gcomm://"
+    mysql_secure_installation
+
+Now start the whole cluster:
+
+    flock play @@core roles/adatabase/percona_start
+
+Add eg. `--extra-vars "master=percona-01"` if you have a different master.
+
+Verify:
+
+    echo "show status like 'wsrep%'" | mysql -u root -p
+
+Enable php admin interface:
+
+    flock play @@core roles/database/admin
+
 ### Storage
 #### Gluster
 Change to the latest mainline kernel:

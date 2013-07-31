@@ -1,0 +1,31 @@
+#
+# http://www.percona.com/doc/percona-xtradb-cluster/howtos/cenots_howto.html
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - vars/percona.yml
+    - vars/mariadb.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+
+  tasks:
+### REDHAT
+    - debug: msg=$is_master
+    - name: Create sstuser
+      mysql_user: name=sstuser password={{wsrep.password}} priv=*.*:ALL login_user={{mariadb.user}} login_password={{mariadb.password}} state=present
+      when: '$is_master'
+      tags:
+        - users
+# CREATE USER 'sstuser'@'localhost' IDENTIFIED BY 's3cret';
+# GRANT RELOAD, LOCK TABLES, REPLICATION CLIENT ON *.* TO 'sstuser'@'localhost';
+# FLUSH PRIVILEGES;
+
+    - name: Start mysqld
+      service: name=mysql
+               state=started
+               enabled=yes
+

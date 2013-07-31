@@ -1,10 +1,10 @@
 #
 # https://github.com/kandanapp/kandan/blob/master/DEPLOY.md#standalone-server
 #
-# Import schemas:
-# --extra-vars "schema=yes"
 # Master host
 # --extra-vars "master=com"
+#
+# flock play @@percona roles/com/kandan.yml --extra-vars=\"master=percona-01 mysql_devel=Percona-SQL-devel-50\"
 #
 ---
 - hosts: all
@@ -17,6 +17,7 @@
     is_master: "'$inventory_hostname' == '$master'"
     is_backup: "'$inventory_hostname' == '$backup'"
     is_schema: "'$schema' == 'yes'"
+    mysql_devel: "MariaDB-devel"
 
   tasks:
   - name: Download repository
@@ -34,10 +35,18 @@
       - libxml2-devel
       - postgresql-devel
       - sqlite-devel
-      - MariaDB-devel
     tags:
       - packages
       - devel
+
+  - name: Install mysql devel
+    yum: name={{mysql_devel}}
+         state=installed
+    tags:
+      - packages
+      - devel
+      - mysql
+
 # TODO: mysql adapter
   - name: Install gem packages
     gem: name={{item}}
@@ -103,6 +112,7 @@
       - config
       - thin
 
+# TODO: broken
   - name: Bootstrap
     shell: cd /opt/kandan; ./bootstrap
     tags:

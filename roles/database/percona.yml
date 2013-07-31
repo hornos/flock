@@ -1,0 +1,64 @@
+#
+# http://www.percona.com/doc/percona-xtradb-cluster/howtos/cenots_howto.html
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - vars/percona.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+
+  tasks:
+### REDHAT
+    - name: Download repository
+      get_url: url={{url}}/{{rpm}} dest=/root
+      when: ansible_os_family == "RedHat"
+      tags:
+        - packages
+        - repo
+
+    - name: Install repository
+      command: yum -y localinstall /root/{{rpm}}
+      when: ansible_os_family == "RedHat"
+      tags:
+        - packages
+        - repo
+
+    - name: Uninstall mysql shit
+      yum: name={{item}}
+           state=absent
+      with_items:
+        - mysql-libs
+      when: ansible_os_family == "RedHat"
+      tags:
+        - packages
+
+    - name: Install packages
+      yum: name={{item}}
+           state=installed
+      with_items:
+        - Percona-XtraDB-Cluster-server
+        - Percona-XtraDB-Cluster-client
+        - xtrabackup
+        - MySQL-python
+        - percona-toolkit
+      when: ansible_os_family == "RedHat"
+      tags:
+        - packages
+
+### CONFIGURATION
+    - name: Install configuration
+      template: src=templates/etc/my-percona.cnf.j2
+                dest=/etc/my.cnf
+                backup=yes
+      tags:
+        - config
+
+    - name: Set master
+      lineinfile: dest=/etc/my.cnf regexp='^wsrep_cluster_address' line='wsrep_cluster_address=gcomm://'
+      when: '$is_master'
+      tags:
+        - config

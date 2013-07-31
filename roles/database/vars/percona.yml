@@ -1,0 +1,5 @@
+url: http://www.percona.com/downloads/percona-release
+rpm: percona-release-0.0-1.x86_64.rpm
+
+wsrep:
+  password: wsrep

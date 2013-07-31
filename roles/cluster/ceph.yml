@@ -1,0 +1,82 @@
+#
+# http://ceph.com/docs/master/start/
+#
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    - vars/ceph.yml
+#    - vars/${inventory_hostname}.yml
+
+  tasks:
+  # http://ceph.com/docs/master/install/rpm/
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - snappy
+      - leveldb
+      - gdisk
+      - python-argparse
+      - gperftools-libs
+    tags:
+      - packages
+
+  - name: Download Ceph release key
+    get_url: url={{key_url}}/{{key}} dest=/root/ceph-release.asc
+    tags:
+      - packages
+      - key
+
+  - name: Install Ceph release key
+    shell: /bin/rpm --import /root/ceph-release.asc
+    tags:
+      - packages
+      - key
+
+  - name: Download Ceph repo
+    get_url: url={{url}}/{{rpm}} dest=/root
+    tags:
+      - packages
+      - repo
+
+  - name: Install Ceph repo
+    command: yum -y localinstall /root/{{rpm}}
+    tags:
+      - packages
+      - repo
+
+  - name: Fix repo url
+    lineinfile: dest=/etc/yum.repos.d/ceph.repo regexp='^baseurl' line='baseurl=http://ceph.com/rpm-cuttlefish/el6/$basearch'
+    tags:
+      - packages
+      - repo
+      - fix
+
+  - name: Install Ceph packages
+    yum: name=$item
+         state=latest
+    with_items:
+      - ceph
+      - python-virtualenv
+    tags:
+      - packages
+
+  - name: Fix sudo require tty
+    lineinfile: dest=/etc/sudoers
+                backrefs=true
+                backup=yes
+                state=present
+                regexp='^(Defaults.*requiretty)$'
+                line="#\\1"
+    tags:
+      - config
+      - sudo
+
+### PARTITIONS
+  - name: Create partition
+    lvol: vg=$vg_root
+          lv=$lv_data
+          size=$lv_size
+    tags:
+      - partition
