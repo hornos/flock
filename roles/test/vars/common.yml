@@ -1,0 +1,9 @@
+---
+array:
+  - Apple
+  - Orange
+  - Strawberry
+  - Mango
+test:
+  apple: Apple
+  orange: Orange

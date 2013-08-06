@@ -18,6 +18,7 @@
         - setools-libs-python
         - policycoreutils-python
         - libselinux-python
+        - setools
       tags:
         - packages
 
