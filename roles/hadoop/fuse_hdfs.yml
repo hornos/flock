@@ -1,0 +1,40 @@
+#
+# http://www.cloudera.com/content/cloudera-content/cloudera-docs/CDH4/latest/CDH4-Installation-Guide/cdh4ig_topic_28.html
+#
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    - vars/${inventory_hostname}.yml
+    - vars/cdh4.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_backup: "'$inventory_hostname' == '$backup'"
+
+  tasks:
+
+  - name: Install hadoop packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - hadoop-hdfs-fuse
+    when: ansible_os_family == "RedHat"
+    tags:
+      - hadoop
+      - packages
+
+  - name: Create mount dir
+    file: path=/mnt/dfs
+          state=directory
+    tags:
+      - directories
+
+  - name: Enable dfs mount
+    mount: name=/mnt/dfs src='hadoop-fuse-dfs#dfs://{{master}}:8020'
+           fstype=fuse
+           opts='allow_other,usetrash,rw,noauto'
+           state=present
+    tags:
+      - mount
+      - fuse

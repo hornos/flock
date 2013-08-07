@@ -13,6 +13,7 @@
 
   tasks:
 ### REDHAT
+    - debug: msg=$is_master
     - name: Download repository
       get_url: url={{url}}/{{rpm}} dest=/root
       when: ansible_os_family == "RedHat"

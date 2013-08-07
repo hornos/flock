@@ -205,15 +205,55 @@
     with_items:
       - 1/dfs/dn
       - 1/dfs/nn
-      - 1/dfs/mr
       - 2/dfs/dn
       - 2/dfs/nn
-      - 2/dfs/mr
       - 3/dfs/dn
       - 3/dfs/nn
+    tags:
+      - directories
+
+  - name: Create hadoop mr directories
+    file: path={{hadoop.lv_mnt}}/{{item}}
+          state=directory
+          owner=hdfs
+          group=hdfs
+          mode=0755
+          recurse=yes
+    with_items:
+      - 1/dfs/mr
+      - 2/dfs/mr
       - 3/dfs/mr
     tags:
       - directories
+
+  - name: Create hadoop mr tmp directories
+    file: path={{hadoop.lv_mnt}}/{{item}}
+          state=directory
+          owner=hdfs
+          group=hadoop
+          mode=0775
+          recurse=yes
+    with_items:
+      - 1/dfs/mr/localRunner
+      - 2/dfs/mr/localRunner
+      - 3/dfs/mr/localRunner
+      - 1/dfs/mr/taskTracker
+      - 2/dfs/mr/taskTracker
+      - 3/dfs/mr/taskTracker
+      - 1/dfs/mr/localRunner/tmp
+      - 2/dfs/mr/localRunner/tmp
+      - 3/dfs/mr/localRunner/tmp
+    tags:
+      - directories
+      - mapred
+
+  - name: Add sysop to hadoop group
+    user: name=sysop
+          append=yes
+          groups=hadoop
+    tags:
+      - users
+      - mapred
 
   - name: Create hadoop state
     file: path={{hadoop.state}}/{{item}}

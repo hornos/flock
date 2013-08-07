@@ -15,7 +15,7 @@
   tasks:
 
 ### SERVICES
-#  - debug: msg={{master}}
+  - debug: msg={{master}}
 
   - name: Enable name services
     service: name={{item}}

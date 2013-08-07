@@ -144,6 +144,8 @@ For the awesome PCP download `ftp://oss.sgi.com/projects/pcp/download/mac/` and 
     pmstat -h 10.1.1.1 -h 10.1.1.2 -h 10.1.1.3
     /Applications/pmchart.app/Contents/MacOS/pmchart -h 10.1.1.1 -c Overview 
 
+### FreeIPA
+
 ### Globus CA
 Install the certificate utilities and Globus on your mac:
 
@@ -399,74 +401,152 @@ Now connect with Tunnelblick.
 ## Warewulf HPC Cluster
 Warewulf is a badass HPC cluster kit. Create a controller node or nodes and converge them into ground state. In this example I will use 1 controller (core) and 2 compute machines (cn-0[1-2]). Use two network card on the controller, eth0 is on the `system` network. In reality, this network should be on a separated internal LAN (VLAN is not secure by design) since its unsecure and vulnerable to DOS attacks.
 
-### Create and install the controller
+### Create the controller triangle
 
-    flock-vbox create core
-    for i in 1 2 ; do flock-vbox create cn-0$i RedHat_64 2; done
+    flock out 3 ww
 
-Compute nodes are diskless stateless nodes, you have to kickstart onyl the `core` machine:
+Start the kickstart servers:
 
-    jockey kick centos64 @core 10.1.1.1 core
+    flock http
+    flock boot
 
-Create a `hpc` inventory file with the following content:
+and start the group in the background:
 
-    core ansible_ssh_host=10.1.1.1
+    flock-vbox start /@ww
 
-Export this inventory:
+wait for the reboot signal and turn off the group:
 
-    export ANSIBLE_HOSTS=hpc
+    flock-vbox off /ww
 
-In another two terminals start the boot servers:
+switch to disk boot make a snapshot and start:
 
-    jockey http
-    jockey masq
+    flock-vbox boot /ww disk
+    flock-vbox start /@ww
 
-Start the `core` machine:
+Swith to the `ww` nevironment:
 
-    flock-vbox start core
+    flenv ww
 
-If the initial seup is ready stop the boot servers (Ctrl-C) and reset the machines:
+Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
 
-    flock-vbox reset core
+    flock bootstrap /ww
 
-### Configure the controller
-You have to go through the regular procedure to reach the common server ground state. I assume that `flock init` is done and the `networks.yml` file is correct. You have to reboot the machine twice like in the good old windows days. Start with bootstrap and secure:
+Verify by `sysop`:
 
-    flock password @core
-    flock play root@core bootstrap
-    flock play @@core secure
-    flock reboot @@core
+    flock ping @@ww
 
-reach the ground state:
+Check the network topology in `networks.yml` and secure the flock:
 
-    flock play @@core ground
+    flock play @@ww secure
+    flock reboot @@ww
+    flock-vbox snap /ww secure
 
-finally, change the kernel for good, mind that this disables `kdump` service:
+#### Ground state
 
-    flock play @@core roles/system/kernel
-    flock reboot @@core
+    flock play @@ww ground
+    flock reboot @@ww
+    flock-vbox snap /ww ground
 
-Check the `boot.log` for sure:
+finally, change the old kernel for good:
 
-    flock bootlog @@core
+    flock play @@ww roles/system/kernel --extra-vars "clean=yes"
+    flock reboot @@ww
+    flock-vbox snap /ww kernel
 
-By default, sysop machines can access the system information page at `http://10.1.1.1/phpsysinfo` and reach Ganglia cluster monitor at `http://10.1.1.1/ganglia`. You can also get live monitoring with PCP:
+Check the boot log for sure:
+
+    flock bootlog @@ww
+
+By default, sysop machines can access the system information page and Ganglia at
+
+    http://10.1.1.1/phpsysinfo
+    http://10.1.1.1/ganglia
+
+You can also get live monitoring with PCP console or GUI:
 
     pmstat -h 10.1.1.1
-
-or with the pmchart GUI:
-
     pmchart -h 10.1.1.1 -c Overview
 
-For the HPC cluster we need MariaDB, Slurm and Warewulf. For the standalone controller install the MariaDB as mysql:
+#### Globus (optional)
+Install globus and openssl as written in the Globus CA section. Edit grid scripts as well as templates in `share/globus_simple_ca` if you want to change key parameters. Create a Warewulf CA (365 days):
 
-    flock play @core mysql --extra-vars='master=core'
+    flock-ca create wwca
 
-Login to the machine and secure mysql by hand:
+The new CA is created under the `ca/wwca` directory. The CA certificate is installed under `ca/grid-security` to make requests easy. If you compile Globus with the old OpenSSL (system default) you have to use old-style subject hash. Create old CA hash by:
 
-    [core] ~ (0)# mysql_secure_installation
+    flock-ca oldhash
 
-The mysql admin page is at `http://10.1.1.1/phpmyadmin` .If you want `https` check the Globus section above.
+Edit `wwca/grid-ca-ssl.conf` and add the following line under `policy` in `[CA_default]` section, this enables extension copy on sign and let alt names go.
+
+    copy_extensions = copy
+
+Request & sign host certificates of the controller triangle:
+
+    flock cert wwca /ww
+
+Certs, private keys and requests are in `ca/coreca/grid-security`. There is also a `ca/<CAHASH>` directory link for each CA. You have to use the `<CAHASH>` in the playbooks. Get the `<CAHASH>`:
+
+    flock-ca cahash wwca
+
+Edit `roles/globus/vars/globus.yml` and set the default CA hash.
+
+Create and sign the sysop certificate:
+
+    flock-ca user wwca sysop "System Operator"
+    flock-ca sign wwca sysop
+
+In order to use `sysop` as a default grid user you have to copy cert and key into the `keys` directory:
+
+    flock-ca keys wwca sysop
+
+Test your user certificate (you might have to create the old hash):
+
+    flock-ca verify wwca sysop
+
+Enable the Grid state:
+
+    flock play @@ww grid
+
+Check `ssl.conf` for a strong [PFS](http://vincent.bernat.im/en/blog/2011-ssl-perfect-forward-secrecy.html) cipher setting.
+
+Verify https in your browser:
+
+    https://10.1.1.1/phpsysinfo
+    https://10.1.1.1/ganglia
+
+TODO: PFS SSL
+
+#### Monitoring
+
+TODO: OMD http://omdistro.org/
+
+#### Database
+SQL database is used for the scheduler backend. Install the SQL cluster:
+
+    flock play @@ww roles/database/percona --extra-vars "master=ww-01"
+
+Login to the master node and bootstrap the cluster:
+
+    /etc/init.d/mysql start --wsrep-cluster-address="gcomm://"
+    mysql_secure_installation
+
+Now start the whole cluster:
+
+    flock play @@ww roles/database/percona_start --extra-vars "master=ww-01"
+
+Verify on the master node:
+
+    echo "show status like 'wsrep%'" | mysql -u root -p
+
+Enable php admin interface:
+
+    flock play @@ww roles/database/admin
+
+The mysql admin page is at `http://10.1.1.1/phpmyadmin`.
+
+    flock-vbox snap /ww sql
+
+#### Scheduler
 
 In the second step install the Slurm scheduler. Generate a munge key for the compute cluster and setup the scheduler services. For the standalone version you have to use the `-master` playbook:
 
@@ -478,6 +558,8 @@ The basic Slurm setup contains only one compute machine, the controller itself.
 Next, you have to setup the Warewulf cluster subsystem. Generate a cluster key. The cluster key is used to SSH to the compute nodes:
 
     ssh-keygen -b2048 -N "" -f keys/cluster
+
+#### Warewulf
 
 Warewulf it:
 
@@ -739,6 +821,11 @@ Enable Yarn:
 
     flock-vbox snap /hadoop hdfs
 
+Verify mapreduce. Create a [test file](https://github.com/ansible/ansible-examples/tree/master/hadoop) in `/tmp` (hdfs) and run:
+
+    hadoop jar /usr/lib/hadoop-0.20-mapreduce/hadoop-examples.jar grep /tmp/inputfile /tmp/outputfile 'hello'
+    hadoop fs -cat /tmp/hadoop.out/part-00000
+
 #### HUE
 
 #### Flume syslog
@@ -981,3 +1068,52 @@ Save and start to reach the ground state:
     flock play @@ostest ground
     flock reboot @@ostest
     flock-vbox snap /ostest ground
+
+## Docker
+
+    flock out 3 docker raring Ubuntu_64
+
+Start the kickstart servers:
+
+    flock http
+    flock boot
+
+and start the group in the background:
+
+    flock-vbox start /@docker
+
+wait for the reboot signal and turn off the group:
+
+    flock-vbox off /docker
+
+switch to disk boot make a snapshot and start:
+
+    flock-vbox boot /docker disk
+    flock-vbox start /@docker
+    flock-vbox snap /docker init
+
+Swith to the `docker` nevironment:
+
+    flenv docker
+
+Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
+
+    flock bootstrap /docker
+
+Verify by `sysop`:
+
+    flock ping @@docker
+
+Check the network topology in `networks.yml` and secure the flock:
+
+    flock play @@docker secure
+    flock reboot @@docker
+    flock-vbox snap /docker secure
+
+Now, reach the ground state:
+
+    flock play @@docker ground
+    flock reboot @@docker
+    flock-vbox snap /docker ground
+
+Install docker:

@@ -212,8 +212,9 @@ case ${cmd} in
     # args
     no=${_arg1:-3}
     name=${_arg2:-core}
-    shift
     type=${1:-centos64}
+    shift
+    os=${1:-RedHat_64}
 
     echo ""
     read -p "Create machines?"
@@ -225,7 +226,7 @@ case ${cmd} in
       _id=${name}-${_no}
       _ip=10.1.1.${i}
       echo "Creating ${_id}..."
-      flock-vbox create ${_id}
+      flock-vbox create ${_id} ${os}
       flock-vbox boot ${_id} net
       flock-vbox group ${_id} ${name}
       jockey kick ${type} @${_id} ${_ip} ${_id}
@@ -238,6 +239,17 @@ case ${cmd} in
     for i in $(flock-vbox group? ${group}) ; do
       jockey password @${i}
       flock play root@@${i} bootstrap
+    done
+    exit $?
+    ;;
+  cert)
+    ca=${_arg1:-coreca}
+    group=${_arg2:-/test}
+    for i in $(flock-vbox group? ${group}) ; do
+      echo ""
+      echo "Creating certificate for $i"
+      flock-ca host $ca $i
+      flock-ca sign $ca $i
     done
     exit $?
     ;;

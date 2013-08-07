@@ -78,6 +78,35 @@
     tags:
       - config
 
+### SELINUX
+# http://ramblings.narrabilis.com/making-an-selinux-module-quickly
+# cat /var/log/audit/audit.log | grep syslog-ng | audit2allow -m syslogng > syslogng.te
+
+  - name: Install policy
+    template: src=templates/selinux/syslogng.te.j2
+              dest=/root/syslogng.te
+    when: ansible_os_family == "RedHat"
+    tags:
+      - selinux
+
+  - name: Check module
+    shell: /usr/bin/checkmodule -M -m -o /root/syslogng.mod /root/syslogng.te
+    when: ansible_os_family == "RedHat"
+    tags:
+      - selinux
+
+  - name: Package module
+    shell: /usr/bin/semodule_package -m /root/syslogng.mod -o /root/syslogng.pp
+    when: ansible_os_family == "RedHat"
+    tags:
+      - selinux
+
+  - name: Enable module
+    shell: /usr/sbin/semodule -i /root/syslogng.pp
+    when: ansible_os_family == "RedHat"
+    tags:
+      - selinux
+
 ### SERVICE
   - name: Start syslog-ng
     service: name=syslog-ng

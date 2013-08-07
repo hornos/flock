@@ -1,0 +1,22 @@
+#
+# https://docs.fedoraproject.org/en-US/Fedora/18/html/FreeIPA_Guide/installing-ipa.html#Preparing_for_an_IPA_Installation
+#
+---
+- hosts: all
+
+  tasks:
+### REDHAT
+    - name: Install packages
+      yum: name={{item}}
+           state=installed
+      with_items:
+        - sssd
+        - ipa-server
+        - ipa-client
+        - ipa-admintools
+        - bind
+        - bind-dyndb-ldap
+      when: ansible_os_family == "RedHat"
+      tags:
+        - packages
+

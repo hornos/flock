@@ -23,8 +23,15 @@ SSLEngine on
 
 SSLProtocol -SSLv2 -SSLv3 +TLSv1
 # +TLSv1.1 +TLSv1.2
-# SSLHonorCipherOrder on
+SSLHonorCipherOrder on
 SSLCipherSuite ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDH-RSA-AES256-GCM-SHA384:ECDH-ECDSA-AES256-GCM-SHA384:ECDH-RSA-RC4-SHA:RC4-SHA:TLSv1:!AES128:!3DES:!CAMELLIA:!SSLv2:HIGH:MEDIUM:!MD5:!LOW:!EXP:!NULL:!aNULL
+
+# http://hynek.me/articles/hardening-your-web-servers-ssl-ciphers/
+# SSLProtocol ALL -SSLv2
+# SSLHonorCipherOrder On
+# SSLCipherSuite ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-RC4-SHA:ECDHE-RSA-AES256-SHA:RC4-SHA
+# SSLCompression Off
+
 
 SSLCertificateFile /etc/grid-security/hostcert.pem
 SSLCertificateKeyFile /etc/grid-security/hostkey.pem

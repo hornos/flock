@@ -1,0 +1,45 @@
+#
+# https://directory.apache.org/apacheds/basic-ug/1.3-installing-and-starting.html
+#
+---
+- hosts: all
+
+  vars_files:
+    - vars/apacheds.yml
+
+  tasks:
+
+### REDHAT
+  - name: Install packages
+    yum: name={{item}}
+    with_items:
+      - java-1.7.0-openjdk
+    tags:
+      - packages
+
+  - name: Download packages
+    get_url: url={{url}}/{{rpm}} dest=/root/{{rpm}}
+    tags:
+      - packages
+
+  - name: Install packages
+    command: yum -y localinstall /root/{{rpm}}
+    tags:
+      - packages
+
+### FIREWALL
+  - name: Install firewall rules
+    template: src=templates/etc/shorewall/rules.d/apacheds.j2
+              dest=/etc/shorewall/rules.d/apacheds
+              owner=root
+              group=root
+              mode=0640
+    tags:
+      - firewall
+    notify:
+      - Restart shorewall
+
+  handlers:
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted

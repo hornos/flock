@@ -17,4 +17,19 @@
     <value>{{master}}:19888</value>
   </property>
 
+  <!-- COMPRESS -->
+  <property>
+    <name>mapreduce.output.fileoutputformat.compress</name> 
+    <value>true</value>
+  </property> 
+ 
+  <property> 
+    <name>mapreduce.output.fileoutputformat.compression.type</name> 
+    <value>RECORD</value> 
+  </property> 
+                               
+  <property> 
+    <name>mapreduce.output.fileoutputformat.compression.codec</name> 
+    <value>org.apache.hadoop.io.compress.DefaultCodec</value> 
+  </property>
 </configuration>

@@ -1,0 +1,21 @@
+# HTTP/HTTPS	
+ACCEPT     sys:+sysop          $FW       tcp 80
+ACCEPT     sys:+sysop          $FW       tcp 443
+# LDAP/LDAPS	
+ACCEPT     sys:+sysop          $FW       tcp 389
+ACCEPT     sys:+sysop          $FW       tcp 636
+ACCEPT     sys:+compute        $FW       tcp 389
+ACCEPT     sys:+compute        $FW       tcp 636
+# Kerberos	
+ACCEPT     sys:+sysop          $FW       tcp 88
+ACCEPT     sys:+sysop          $FW       tcp 464
+ACCEPT     sys:+sysop          $FW       udp 88
+ACCEPT     sys:+sysop          $FW       udp 464
+# DNS
+ACCEPT     sys:+sysop          $FW       tcp 53
+ACCEPT     sys:+sysop          $FW       udp 53
+# NTP
+ACCEPT     sys:+sysop          $FW       tcp 123
+ACCEPT     sys:+sysop          $FW       udp 123
+# Dogtag Certificate System - LDAP
+ACCEPT     sys:+sysop          $FW       tcp 7389

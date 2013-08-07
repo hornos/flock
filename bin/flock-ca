@@ -94,7 +94,7 @@ EOF
     shift
     days=${1:-365}
     shift
-    email=${1}
+    email=${1:sysop@localhost}
 
     ca/init
  
@@ -257,6 +257,7 @@ EOF
   ;;
 
   p12)
+    # TODO
     user_id=${1:-test}
     shift
     opts=${*}

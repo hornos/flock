@@ -145,3 +145,12 @@
       service: name=ipset
                state=reloaded
                enabled=yes
+
+# TODO: check ubuntu start
+    - name: Start ipset
+      service: name=ipset
+               state=started
+               enabled=yes
+      when: ansible_os_family == "Debian"
+      tags:
+        - fix

@@ -1,4 +1,10 @@
 # Secure SSH server
+#
+# http://www.technologyreview.com/news/517781/math-advances-raise-the-prospect-of-an-internet-security-crisis/
+# https://wiki.archlinux.org/index.php/SSH_Keys
+#
+# TODO: ECDSA
+#
 ---
 - hosts: all
 

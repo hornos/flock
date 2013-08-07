@@ -1,0 +1,13 @@
+#
+# http://ramblings.narrabilis.com/making-an-selinux-module-quickly
+#
+module syslogng 1.0;
+
+require {
+	type anon_inodefs_t;
+	type syslogd_t;
+	class file { write read };
+}
+
+#============= syslogd_t ==============
+allow syslogd_t anon_inodefs_t:file { write read };

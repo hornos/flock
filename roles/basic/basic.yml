@@ -1,7 +1,8 @@
 ---
 ### packages
 - include: python.yml
-- include: ruby.yml
+# http problem
+# - include: ruby.yml
 - include: crypto.yml
 - include: top.yml
 ### services
