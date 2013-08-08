@@ -13,6 +13,9 @@
     is_backup: "'$inventory_hostname' == '$backup'"
 
   tasks:
+  - debug: msg={{master}}
+  - debug: msg={{backup}}
+
   - name: Install packages
     yum: name={{item}}
          state=installed
@@ -23,7 +26,7 @@
 
   - name: Install slurm packages
     yum: name={{item}}
-         state=installed
+         state=latest
          enablerepo={{slurm.repo}}
     with_items:
       - slurm
@@ -101,6 +104,7 @@
               owner=slurm
               group=slurm
               mode=0600
+              backup=yes
     notify:
       - Restart slurmdbd
     when: '$is_master or $is_backup'
@@ -114,6 +118,7 @@
               owner=slurm
               group=slurm
               mode=0644
+              backup=yes
     notify:
       - Restart slurm
     tags:
@@ -123,7 +128,7 @@
 
 ### keep the original for slurmconf
   - name: Install /etc/slurm/slurm.conf
-    template: src=templates/etc/slurm/slurm-master.conf.j2
+    template: src=templates/etc/slurm/slurm.conf.j2
               dest=/etc/slurm/slurm.slurmconf
               owner=slurm
               group=slurm

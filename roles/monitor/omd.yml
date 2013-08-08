@@ -1,0 +1,16 @@
+#
+# http://omdistro.org/
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - vars/omd.yml
+
+  tasks:
+### REDHAT
+  - name: Download repository
+    get_url: url={{url}}/{{repo}} dest=/etc/yum.repos.d/{{repo}}
+    tags:
+      - repo

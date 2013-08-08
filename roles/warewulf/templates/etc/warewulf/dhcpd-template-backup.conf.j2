@@ -20,7 +20,7 @@ failover peer "warewulf" {             # Failover configuration
 subnet {{networks.system}} netmask {{dhcp_masks.system}} {
   pool {
     failover peer "warewulf";
-    range {{warewulf.range}};
+    range {{warewulf.compute.ip_range}};
   }
   not authoritative;
   option subnet-mask {{dhcp_masks.system}};

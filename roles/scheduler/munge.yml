@@ -69,7 +69,7 @@
     notify:
       - Restart munge
 
-  ### cycle
+  ### NTP workaround
   - name: Stop munge
     service: name=munge
              state=stopped

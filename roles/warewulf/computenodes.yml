@@ -8,7 +8,7 @@
     - name: Enable Compute nodes
       lineinfile: dest=/etc/slurm/slurm.conf
                   regexp='^NodeName'
-                  line='NodeName={{warewulf.compute}}'
+                  line='NodeName={{warewulf.compute.nodes}}'
                   backup=yes
       notify:
         - Restart slurm
@@ -18,7 +18,7 @@
     - name: Enable Compute nodes
       lineinfile: dest=/etc/slurm/slurm.conf
                   regexp='^PartitionName=DEFAULT'
-                  line='PartitionName=DEFAULT Nodes={{warewulf.compute}} MaxTime=INFINITE State=UP'
+                  line='PartitionName=DEFAULT Nodes={{warewulf.compute.nodes}} MaxTime=INFINITE State=UP'
                   backup=yes
       notify:
         - Restart slurm

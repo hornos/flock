@@ -3,4 +3,5 @@ ACCEPT     sys:+compute        $FW       tcp      6817
 # NTP
 ACCEPT     sys:+compute        $FW       udp      123
 # ephemeral ports for srun
+# cat /proc/sys/net/ipv4/ip_local_port_range
 ACCEPT     sys:+compute        $FW       tcp      32768:61000

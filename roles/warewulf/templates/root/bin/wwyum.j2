@@ -1,5 +1,5 @@
 #!/bin/bash
-_target=${1:{{warewulf.common}}/chroots/sl-6}
+_target=${1:{{warewulf.common}}/chroots/centos-6}
 shift
 /usr/bin/yum --config ${_target}/root/yum-ww.conf \
              --installroot ${_target} $*

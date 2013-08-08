@@ -9,8 +9,10 @@
 
   tasks:
     - name: Install packages
-      yum: name=ptpd
+      yum: name={{item}}
            state=installed
+      with_items:
+        - ptpd
       tags:
         - packages
 

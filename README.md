@@ -546,30 +546,67 @@ The mysql admin page is at `http://10.1.1.1/phpmyadmin`.
 
     flock-vbox snap /ww sql
 
-#### Scheduler
+#### Gluster
+Install a common state directory with Gluster:
 
-In the second step install the Slurm scheduler. Generate a munge key for the compute cluster and setup the scheduler services. For the standalone version you have to use the `-master` playbook:
+    flock play @@ww roles/hpc/gluster --extra-vars="master=ww-01"
 
-    dd if=/dev/random bs=1 count=1024 > keys/munge.key
-    flock play @core scheduler-master --extra-vars='master=core'
+Login to the master node and bootstrap the cluster:
 
-The basic Slurm setup contains only one compute machine, the controller itself.
+    /root/gluster_bootstrap
 
-Next, you have to setup the Warewulf cluster subsystem. Generate a cluster key. The cluster key is used to SSH to the compute nodes:
+Finally, mount the common directory (check tune parameters):
 
-    ssh-keygen -b2048 -N "" -f keys/cluster
+    flock play @@ww roles/hpc/glusterfs
+    flock play @@ww roles/hpc/gtop
+
+Monitor the cluster:
+
+    /root/bin/gtop
+
+Save:
+
+    flock-vbox snap /ww gluster
+
+#### HA Scheduler
+Generate a munge key for the compute cluster and setup the scheduler services:
+
+TODO: slurmdb start order
+
+    dd if=/dev/random bs=1 count=4096 > keys/munge.key
+    flock play @@ww scheduler --extra-vars=\"master=ww-01 backup=ww-02\"
+
+Scheduler authentication relies on NTP and the Munge key, keep it in secret. The basic Slurm setup contains only the controller machines.
+
+Login to the master node and check the queue:
+
+    sinfo -a
+
+Verify the queue:
+
+    srun -N 3 hostname
+
+Save:
+
+    flock-vbox snap /ww slurm
 
 #### Warewulf
+Next, you have to setup the Warewulf cluster subsystem. Generate a cluster key. The cluster key is used to SSH to the compute nodes:
 
-Warewulf it:
+    ssh-keygen -b4096 -N "" -f keys/cluster
 
-    flock play @@core warewulf --extra-vars='master=core'
+TODO: change common chroot directory
 
-Create compute VMs:
+Install Warewulf:
 
-     for i in 1 2 ; do flock-vbox create cn-0$i;done
+    flock play @@ww warewulf --extra-vars=\"master=ww-01 backup=ww-02\"
 
-Login to the master node and make a child:
+Save:
+
+    flock-vbox snap /ww ww
+
+#### Compute nodes
+Login to the master node and make a clone:
 
     pushd /common/warewulf/chroots
     ./cloneos centos-6
@@ -612,6 +649,10 @@ Edit `/etc/warewulf/bootstrap.conf` to load kernel modules/drivers/firmwares and
 Provision:
 
     ./clonescan centos-6/3.10.0-1.el6.elrepo.x86_64 compute/cn-0[1-2]
+
+Create compute VMs:
+
+     for i in 1 2 ; do flock-vbox create cn-0$i;done
 
 Start the VMs.
 
@@ -773,7 +814,7 @@ Install Gluster and setup a 3-node FS cluster if you want a storage based HA:
     flock play @@core roles/system/kernel --extra-vars "clean=yes"
     flock reboot @@core
 
-    flock play @@core roles/cluster/gluster
+    flock play @@core roles/hpc/gluster
 
 Login to the master node and bootstrap the cluster:
 
@@ -781,8 +822,8 @@ Login to the master node and bootstrap the cluster:
 
 Finally, mount the common directory:
 
-    flock play @@core roles/cluster/glusterfs
-    flock play @@core roles/cluster/gtop
+    flock play @@core roles/hpc/glusterfs
+    flock play @@core roles/hpc/gtop
 
 Monitor the cluster:
 

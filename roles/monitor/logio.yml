@@ -1,0 +1,182 @@
+#
+# 
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
+    - vars/ganglia.yml
+
+  vars:
+    is_rollback: "'$rollback' == 'yes'"
+
+  tasks:
+### REDHAT
+  - name: Install repository
+    template: src=templates/etc/yum.repos.d/vuksan.repo.j2
+              dest=/etc/yum.repos.d/vuksan.repo
+    tags:
+      - repo
+
+  - name: Install packages
+    yum: name={{item}}
+         state=latest
+         enablerepo=vuksan
+    with_items:
+      - ganglia-gmond
+      - ganglia-gmond-modules-python
+      - ganglia-gmetad
+      - libganglia
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+### CONFIGURATION
+  - name: Ganglia monitor
+    template: src=templates/etc/ganglia/{{ganglia.version}}/gmond.conf.j2
+              dest=/etc/ganglia/gmond.conf
+              owner=root
+              group=root
+              mode=0644
+              backup=yes
+    notify:
+      - Restart gmond
+    tags:
+      - config
+
+  - name: Ganglia metadata
+    template: src=templates/etc/ganglia/{{ganglia.version}}/gmetad.conf.j2
+              dest=/etc/ganglia/gmetad.conf
+              owner=root
+              group=root
+              mode=0644
+              backup=yes
+    notify:
+      - Restart gmetad
+    tags:
+      - config
+
+  - name: Set rrds mode
+    file: path=/var/lib/ganglia/rrds/
+          state=directory
+          recurse=yes
+          owner=nobody
+          group=nobody
+    tags:
+      - perm
+
+  - name: Enable Ganglia web interface
+    template: src=templates/etc/httpd/conf.d/ganglia.conf.j2
+              dest=/etc/{{service.httpd}}/conf.d/ganglia.conf
+              owner=root
+              group=root
+              mode=0644
+    notify:
+      - Restart httpd
+    tags:
+      - config
+
+  - name: Enable topcoat style
+    lineinfile: dest=/var/www/html/ganglia/styles.css
+                regexp='^@import'
+                line='@import url("/topcoat/css/topcoat-desktop-light.min.css");'
+              backup=yes
+    tags:
+      - frontend
+      - topcoat
+
+  - name: Enable gmond service
+    lineinfile: dest=/etc/services
+                regexp="^gmond 8649/{{item}}"
+                line="gmond 8649/{{item}}"
+    with_items:
+     - tcp
+     - udp
+    tags:
+      - config
+      - services
+
+  - name: Enable gmetad-xml service
+    lineinfile: dest=/etc/services
+                regexp="^gmetad-xml 8651/{{item}}"
+                line="gmetad-xml 8651/{{item}}"
+    with_items:
+     - tcp
+     - udp
+    tags:
+      - config
+      - services
+
+  - name: Enable gmetad-int service
+    lineinfile: dest=/etc/services
+                regexp="^gmetad-int 8652/{{item}}"
+                line="gmetad-int 8652/{{item}}"
+    with_items:
+     - tcp
+     - udp
+    tags:
+      - config
+      - services
+
+### FIREWALL
+  - name: Install firewall rules
+    template: src=templates/etc/shorewall/rules.d/ganglia.j2
+              dest=/etc/shorewall/rules.d/ganglia
+              owner=root
+              group=root
+              mode=0640
+    tags:
+      - firewall
+    notify:
+      - Restart shorewall
+
+  - name: Start gmond
+    service: name={{service.gmond}}
+             state=started
+             enabled=yes
+
+### rearrange service order
+  - name: Stop gmetad
+    service: name=gmetad
+             state=started
+             enabled=yes
+    tags:
+      - gmetad
+
+  - name: Gmetad should start after ntpd
+    lineinfile: "dest=/etc/init.d/gmetad regexp='^#\ chkconfig' line='# chkconfig: 2345 65 80' backup=yes"
+    tags:
+      - service
+      - gmetad
+
+  - name: Start gmetad
+    service: name=gmetad
+             state=started
+             enabled=yes
+    tags:
+      - gmetad
+
+
+  - name: Start httpd
+    service: name={{service.httpd}}
+             state=started
+             enabled=yes
+
+  handlers:
+    - name: Restart gmond
+      service: name={{service.gmond}}
+               state=restarted
+
+    - name: Restart gmetad
+      service: name=gmetad
+               state=restarted
+
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted
+
+    - name: Restart httpd
+      service: name={{service.httpd}}
+               state=restarted

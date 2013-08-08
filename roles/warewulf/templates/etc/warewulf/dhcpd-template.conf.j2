@@ -8,22 +8,8 @@
 # DHCP Failover, Primary #
 ##########################
 
-failover peer "warewulf" {             # Failover configuration
-  primary;                            # I am the secondary
-  address {{hostvars[master]['ansible_eth0']['ipv4']['address']}};        # My IP address
-  port 647;
-  peer address {{hostvars[backup]['ansible_eth0']['ipv4']['address']}};   # Peer's IP address
-  peer port 647;
-  max-response-delay 60;
-  max-unacked-updates 10;
-  mclt 3600;
-  split 128;                           # Leave this at 128, only defined on Primary
-  load balance max seconds 3;
-}
-
 subnet {{networks.system}} netmask {{dhcp_masks.system}} {
   pool {
-    failover peer "warewulf";
     range {{warewulf.compute.ip_range}};
   }
   not authoritative;

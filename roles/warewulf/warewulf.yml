@@ -27,7 +27,7 @@
 
   - name: Install packages
     yum: name={{item}}
-         state=installed
+         state=latest
     with_items:
       - upx
       - pssh
@@ -46,6 +46,8 @@
       - warewulf-provision-server
       - warewulf-vnfs
       - warewulf-nhc
+      - warewulf-icr
+      - warewulf-ipmi
     tags:
       - packages
 
@@ -74,6 +76,7 @@
               owner=root
               group=root
               mode=0644
+              backup=yes
     tags:
       - config
       - database
@@ -168,6 +171,7 @@
               owner=root
               group=root
               mode=0644
+              backup=yes
     tags:
       - config
       - dhcp
@@ -181,6 +185,7 @@
               owner=root
               group=root
               mode=0644
+              backup=yes
     tags:
       - config
       - dhcp
