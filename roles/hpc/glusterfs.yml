@@ -64,3 +64,32 @@
            state=mounted
     tags:
       - mount
+
+### SELINUX
+# http://ramblings.narrabilis.com/making-an-selinux-module-quickly
+# cat /var/log/audit/audit.log | grep glusterfs | audit2allow -m glusterfs > glusterfs.te
+
+  - name: SELINUX: Install policy
+    template: src=templates/selinux/glusterfs.te.j2
+              dest=/root/glusterfs.te
+    when: ansible_os_family == "RedHat"
+    tags:
+      - selinux
+
+  - name: SELINUX: Check module
+    shell: /usr/bin/checkmodule -M -m -o /root/glusterfs.mod /root/glusterfs.te
+    when: ansible_os_family == "RedHat"
+    tags:
+      - selinux
+
+  - name: SELINUX: Package module
+    shell: /usr/bin/semodule_package -m /root/glusterfs.mod -o /root/glusterfs.pp
+    when: ansible_os_family == "RedHat"
+    tags:
+      - selinux
+
+  - name: SELINUX: Enable module
+    shell: /usr/sbin/semodule -i /root/glusterfs.pp
+    when: ansible_os_family == "RedHat"
+    tags:
+      - selinux

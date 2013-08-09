@@ -1,6 +1,10 @@
 #!/bin/bash
-_hosts=${1:-{{warewulf.os}}}
+_os=${1:-{{warewulf.os}}}
 shift
 _opts=${*}
+_dir="${PWD}/${_os}"
 
-wwmkchroot ${_hosts} ${PWD}/${_hosts}
+echo ""
+read -p "Do you want to install ${_os} into ${_dir}?"
+
+wwmkchroot ${_os} ${_dir}

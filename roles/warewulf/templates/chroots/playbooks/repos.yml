@@ -18,7 +18,7 @@
         - elrepo.repo
         - epel.repo
         - home:hornos:centos.repo
-        - opennebula-testing.repo
+        - vuksan.repo
         - rpmforge.repo
         - warewulf-rhel6.repo
       tags:

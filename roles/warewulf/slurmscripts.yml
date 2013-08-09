@@ -14,11 +14,14 @@
     is_backup: "'$inventory_hostname' == '$backup'"
 
   tasks:
+    # BUG
+    - debug: msg={{master}}
     - name: Create slurm home
       file: path={{warewulf.home}}/slurm
             state=directory
       tags:
         - directories
+      when: '$is_master'
 
 ### Slurm support scripts
     - name: Install scripts
@@ -38,3 +41,4 @@
       tags:
         - scripts
         - slurm
+      when: '$is_master'

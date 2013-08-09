@@ -28,6 +28,7 @@
       tags:
         - clone
         - inventory
+      when: '$is_master'
 
 ### DIRECTORIES
     - name: Create directories
@@ -40,6 +41,7 @@
       tags:
         - clone
         - directories
+      when: '$is_master'
 
 ### KEYS
     - name: Install cluster keys
@@ -53,6 +55,7 @@
         - cluster.pub
       tags:
         - keys
+      when: '$is_master'
 
 ### PLAYBOOKS
     # lightweight clone playbooks
@@ -74,6 +77,7 @@
       tags:
         - clone
         - playbooks
+      when: '$is_master'
 
 ### SCRIPTS
     - name: Install clone scripts
@@ -98,6 +102,7 @@
       tags:
         - clone
         - scripts
+      when: '$is_master'
 
 ### TEMPLATES
     - name: Install clone templates
@@ -116,3 +121,4 @@
       tags:
         - clone
         - templates
+      when: '$is_master'

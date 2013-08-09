@@ -29,3 +29,11 @@
                 backup=yes
       tags:
         - policy
+
+    - name: Disable selinux
+      lineinfile: dest=/etc/selinux/config
+                regexp='^SELINUX='
+                line='SELINUX=disabled'
+                backup=yes
+      tags:
+        - policy

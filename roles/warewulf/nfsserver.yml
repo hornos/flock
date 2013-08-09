@@ -28,6 +28,7 @@
       tags:
         - scratch
         - directories
+      when: '$is_master'
 
     - name: Create home directory
       file: path={{warewulf.home}}
@@ -35,6 +36,7 @@
       tags:
         - home
         - directories
+      when: '$is_master'
 
     - name: Create software directory
       file: path={{warewulf.software}}
@@ -42,9 +44,9 @@
       tags:
         - home
         - directories
+      when: '$is_master'
 
 ### CONFIGURATION
-
     - name: Install /etc/syconfig/nfs
       template: src=templates/etc/sysconfig/nfs.j2
                 dest=/etc/sysconfig/nfs

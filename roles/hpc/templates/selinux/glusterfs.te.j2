@@ -1,0 +1,16 @@
+module glusterfs 1.0;
+
+require {
+	type sysctl_net_t;
+	type mount_t;
+	type initrc_t;
+	class capability net_admin;
+	class dir search;
+	class file { read getattr open };
+}
+
+#============= mount_t ==============
+allow mount_t initrc_t:file { read getattr open };
+allow mount_t self:capability net_admin;
+allow mount_t sysctl_net_t:dir search;
+allow mount_t sysctl_net_t:file { read open };

@@ -1,5 +1,5 @@
 #!/bin/bash
-_hosts=${1:-{{warewulf.os}}}
+_os=${1:-{{warewulf.os}}}
 shift
 _args=${*:-makecache}
-yum --config ${PWD}/${_hosts}/etc/yum.conf --installroot ${PWD}/${_hosts}/ ${_args}
+yum --config ${PWD}/${_os}/etc/yum.conf --installroot ${PWD}/${_os}/ ${_args}

@@ -591,15 +591,23 @@ Save:
     flock-vbox snap /ww slurm
 
 #### Warewulf
-Next, you have to setup the Warewulf cluster subsystem. Generate a cluster key. The cluster key is used to SSH to the compute nodes:
+Generate a cluster key. The cluster key is used to SSH to the compute nodes:
 
     ssh-keygen -b4096 -N "" -f keys/cluster
 
-TODO: change common chroot directory
+TODO: provision node only on the master
 
-Install Warewulf:
+Check `networks.yml` and `vars/warewulf.yml` for ip ranges of compute nodes. Install Warewulf:
 
     flock play @@ww warewulf --extra-vars=\"master=ww-01 backup=ww-02\"
+
+Verify HA so far. Shutdown the master node
+
+    flock shutdown @@ww-01
+
+and check Slurm failover on the backup node:
+
+    multitail /var/log/slurm/slurmdbd.log /var/log/slurm/slurmctld.log
 
 Save:
 

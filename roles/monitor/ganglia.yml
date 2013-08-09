@@ -164,6 +164,17 @@
     tags:
       - config
 
+### FIX
+  - name: Disable netstats
+    file: path=/etc/ganglia/conf.d/netstats.pyconf
+          state=absent
+          backup=yes
+    tags:
+      - fix
+      - netstats
+    notify:
+      - Restart gmond
+
 
   - name: Set rrds mode
     file: path=/var/lib/ganglia/rrds/
@@ -288,8 +299,6 @@
              enabled=no
     ignore_errors: yes
     when: ansible_os_family == "Debian"
-
-
 
 ### rearrange service order
   - name: Stop gmetad

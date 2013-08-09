@@ -1,9 +1,9 @@
 #!/bin/bash
-_hosts=${1:-{{warewulf.os}}}
+_os=${1:-{{warewulf.os}}}
 shift
 _playbook=${1:-playbooks/repos.yml}
 shift
 if test -r ${_playbook}.yml ; then
   _playbook=${_playbook}.yml
 fi
-ANSIBLE_HOSTS=hosts ansible-playbook -l ${_hosts} ${_playbook} $*
+ANSIBLE_HOSTS=hosts ansible-playbook -l ${_os} ${_playbook} $*

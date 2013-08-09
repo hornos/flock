@@ -1,27 +1,30 @@
 #!/bin/bash
-_hosts=${1:-{{warewulf.os}}}
+_os=${1:-{{warewulf.os}}}
+
+echo ""
+read -p "Install packages into ${_os}?"
 
 ### random stuff
-chroot ${_hosts} mknod /dev/random c 1 8
-chroot ${_hosts} mknod /dev/urandom c 1 9
+chroot ${_os} mknod /dev/random c 1 8
+chroot ${_os} mknod /dev/urandom c 1 9
 
 ### install repos
-./clonebook ${_hosts} playbooks/repos.yml
+./clonebook ${_os} playbooks/repos.yml
 
 ### update package cache
-./cloneyum ${_hosts} makecache
+./cloneyum ${_os} makecache
 
 ### install kernel and utils
-./cloneyum ${_hosts} install htop sysstat ntp ptpd rsync autofs x86info tuna
+./cloneyum ${_os} install htop sysstat ntp ptpd rsync autofs x86info tuna
 
 ### install mainline kernel
-./cloneyum ${_hosts} install kernel-ml kernel-ml-firmware --enablerepo=elrepo-kernel
+./cloneyum ${_os} install kernel-ml kernel-ml-firmware --enablerepo=elrepo-kernel
 
 ### install slurm packages
-./cloneyum ${_hosts} install munge slurm slurm-munge slurm-pam_slurm slurm-perlapi slurm-plugins slurm-sjobexit slurm-sjstat
+./cloneyum ${_os} install munge slurm slurm-munge slurm-pam_slurm slurm-perlapi slurm-plugins slurm-sjobexit slurm-sjstat
 
 ### install ganglia packages
-./cloneyum ${_hosts} install ganglia-gmond ganglia-gmond-modules-python
+./cloneyum ${_os} install ganglia-gmond ganglia-gmond-modules-python
 
 ### install warewulf packages
-./cloneyum ${_hosts} install warewulf-nhc
+./cloneyum ${_os} install warewulf-nhc
