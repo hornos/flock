@@ -18,8 +18,16 @@
         - elrepo.repo
         - epel.repo
         - home:hornos:centos.repo
-        - vuksan.repo
+        - ganglia.repo
         - rpmforge.repo
         - warewulf-rhel6.repo
       tags:
         - repo
+
+#    - name: Enable vuksan
+#      lineinfile: dest=/etc/yum.repos.d/vuksan.repo
+#                  regexp='^enabled'
+#                  line='enabled=1'
+#      tags:
+#        - repo
+#        - fix

@@ -16,6 +16,8 @@
 # TODO: gmetad rrd ntpd update problem
 # TODO: ganglia-web
 #
+# local repo: http://www.unix.com/unix-advanced-expert-users/187517-how-install-rpm-file-directory-using-yum.html
+#
 ---
 - hosts: all
 
@@ -29,13 +31,13 @@
 
   tasks:
 ### REDHAT
-  # vuksan repo is broken
-  - name: Install repository
-    template: src=templates/etc/yum.repos.d/vuksan.repo.j2
-              dest=/etc/yum.repos.d/vuksan.repo
-    when: ansible_os_family == "RedHat"
-    tags:
-      - repo
+#  # vuksan repo is broken
+#  - name: Install repository
+#    template: src=templates/etc/yum.repos.d/vuksan.repo.j2
+#              dest=/etc/yum.repos.d/vuksan.repo
+#    when: ansible_os_family == "RedHat"
+#    tags:
+#      - repo
 
   - name: Install repo fix script
     template: src=templates/root/install_ganglia.j2
@@ -53,6 +55,14 @@
       - packages
       - fix
 
+  - name: Install local Ganglia repo
+    template: src=templates/etc/yum.repos.d/ganglia.repo.j2
+              dest=/etc/yum.repos.d/ganglia.repo
+    tags:
+      - packages
+      - fix
+
+# TODO: from rpm
 ### Ganglia web
   - name: Install ganglia-web
     git: repo=https://github.com/ganglia/ganglia-web.git

@@ -1,4 +1,6 @@
 #!/bin/bash
-_hosts=${1:-{{warewulf.os}}}
+_os=${1:-{{warewulf.os}}}
 shift
-wwvnfs --chroot=${PWD}/${_hosts}
+echo ""
+read -p "Do you wan to build clone image ${_os}?"
+wwvnfs --chroot=${PWD}/${_os} $*

@@ -39,6 +39,7 @@
       - tcpdump
       - tftp-server
       - mod_perl
+      - createrepo
       - perl-Term-ReadLine-Gnu
       - warewulf-common
       - warewulf-cluster
@@ -81,13 +82,18 @@
       - config
       - database
 
-  - name: Delete /etc/warewulf/database-root.conf
-    file: path=/etc/warewulf/database-root.conf
-          state=absent
+# TODO: DBD::mysql::db do failed: Access denied for user to database 'warewulf' 
+# at /usr/share/perl5/vendor_perl/Warewulf/DataStore/SQL/MySQL.pm line 177
+  - name: Install /etc/warewulf/database-root.conf
+    template: src=templates/etc/warewulf/database.conf.j2
+              dest=/etc/warewulf/database-root.conf
+              owner=root
+              group=root
+              mode=0644
+              backup=yes
     tags:
       - config
       - database
-      - clean
 
 ### DIRECTORIES
   - name: Create common directory

@@ -77,6 +77,8 @@ function clonesetup/finish() {
 }
 
 ### main
+echo ""
+read -p "Initialize clones?"
 clonesetup/init
 clonesetup/syslog
 clonesetup/ganglia
@@ -85,8 +87,7 @@ clonesetup/munge
 clonesetup/slurm
 clonesetup/ntpd
 clonesetup/ptpd
-clonesetup/autofs
+#clonesetup/autofs
 clonesetup/inittab
 clonesetup/tune
 clonesetup/finish
-

@@ -18,6 +18,7 @@ chroot ${_os} mknod /dev/urandom c 1 9
 ./cloneyum ${_os} install htop sysstat ntp ptpd rsync autofs x86info tuna
 
 ### install mainline kernel
+./cloneyum ${_os} remove kernel-firmware
 ./cloneyum ${_os} install kernel-ml kernel-ml-firmware --enablerepo=elrepo-kernel
 
 ### install slurm packages

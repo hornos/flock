@@ -15,14 +15,15 @@
 - include: roles/warewulf/ansible.yml
 
 # slurm stuff
-- include: roles/warewulf/slurmscripts.yml
+- include: roles/warewulf/slurm.yml
 
 # nfs server for homes
 # TODO: lustre ceph and FhGfs
-- include: roles/warewulf/nfsserver.yml
+# - include: roles/warewulf/nfsserver.yml
 
 # basic node helth check
-- include: roles/warewulf/healthcheck.yml
+# TODO
+# - include: roles/warewulf/healthcheck.yml
 
 # ganglia procstat
 - include: roles/warewulf/procstat.yml

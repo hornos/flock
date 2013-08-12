@@ -116,9 +116,9 @@
       - slurmctld
 
 ### keep the original for slurmconf
-  - name: Install /etc/slurm/slurm.conf
-    template: src=templates/etc/slurm/slurm-master.conf.j2
-              dest=/etc/slurm/slurm.slurmconf
+  - name: Install /etc/slurm/slurm.template.conf
+    template: src=templates/etc/slurm/slurm-master.conf.template.j2
+              dest=/etc/slurm/slurm.template
               owner=slurm
               group=slurm
               mode=0644

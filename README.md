@@ -614,36 +614,32 @@ Save:
     flock-vbox snap /ww ww
 
 #### Compute nodes
-Login to the master node and make a clone:
+Prepare the Warewulf OS node on the master node. Login to the master node and make a clone:
 
-    pushd /common/warewulf/chroots
+    pushd /home/warewulf/chroots
     ./cloneos centos-6
 
 Install basic packages:
 
     ./clonepackages centos-6
 
-Ad-hoc installations done by eg.:
+*NOTE:* Ad-hoc installations done:
 
     ./cloneyum centos-6 install ptpd
 
-Configure the clone directory (TODO: playbook):
+*NOTE:* Install new Ansible scripts:
+
+    flock play @@ww roles/warewulf/ansible --extra-vars=\"master=ww-01 backup=ww-02\"
+
+Configure the clone directory:
 
     ./clonesetup centos-6
 
 On the compute nodes NTP is used for initial time sync and PTP is used for fine sync. The controller node is a PTP master running both NTP and PTP.
 
-TODO: node firewalls
+FIX (if applicable): Edit `/usr/share/perl5/vendor_perl/Warewulf/Provision/Pxelinux.pm` line 201 comment the if block
 
-TODO: trusted login node
-
-TODO: LDAP & storage
-
-TODO: update/create warewulf packages
-
-FIX: Edit `/usr/share/perl5/vendor_perl/Warewulf/Provision/Pxelinux.pm` line 201 delete the if block
-
-FIX: Edit `/usr/share/perl5/vendor_perl/Warewulf/Provision/Dhcp/Isc.pm` line 273 delete if block
+FIX (if applicable): Edit `/usr/share/perl5/vendor_perl/Warewulf/Provision/Dhcp/Isc.pm` line 273 comment if block
 
 Edit `/etc/warewulf/vnfs.conf` to exclude unnecessary files and make the image (database tables are created automatically):
 
@@ -652,19 +648,28 @@ Edit `/etc/warewulf/vnfs.conf` to exclude unnecessary files and make the image (
 Edit `/etc/warewulf/bootstrap.conf` to load kernel modules/drivers/firmwares and bootstrap the kernel:
 
     ./clonekernel list centos-6
-    ./clonekernel centos-6 3.10.0-1.el6.elrepo.x86_64
+    ./clonekernel centos-6 3.10.5-1.el6.elrepo.x86_64
+
+FIX: Remove `/etc/warewulf/database-root.conf` which is used for DB creation.
+
+Create compute nodes:
+
+    flock out 3 cn
 
 Provision:
 
-    ./clonescan centos-6/3.10.0-1.el6.elrepo.x86_64 compute/cn-0[1-2]
+    ./clonescan centos-6/3.10.5-1.el6.elrepo.x86_64 compute/cn-0[1-2]
 
-Create compute VMs:
+You might have to restart cn nodes twice and add dynamic hosts:
 
-     for i in 1 2 ; do flock-vbox create cn-0$i;done
+    wwsh provision set cn-0[1-2] --fileadd dynamic_hosts
 
-Start the VMs.
+Verify the connection and monitoring:
 
-Reconfigure the scheduler, `slurmconf` copies pro/epi scripts as well:
+    ssh -i playbooks/keys/cluster cn-01 hostname
+    gstat -a
+
+TODO: Reconfigure the scheduler, `slurmconf` copies pro/epi scripts as well:
 
     ./slurmconf cn-0[1-2]
 
@@ -725,6 +730,12 @@ Compile the latest OpenMPI:
 Performance tests (TODO):
 
     ftp://ftp.mcs.anl.gov/pub/mpi/tools/perftest.tar.gz
+
+TODO: node firewalls
+
+TODO: trusted login node
+
+TODO: LDAP & storage
 
 TODO: [Soft RoCE](http://www.systemfabricworks.com/downloads/roce)
 

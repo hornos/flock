@@ -1,0 +1,62 @@
+#
+# https://docs.google.com/viewer?a=v&pid=forums&srcid=MTQ1NjA4MDk5MTk4MDc0MjE3NDcBMTM0NDg3MzI3NzQ2MDAzNzA5NzIBb0k0Nmc3djhPdndKATIBAXYy
+#
+
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - vars/warewulf.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_backup: "'$inventory_hostname' == '$backup'"
+
+  tasks:
+#    # BUG
+#    - debug: msg={{master}}
+#    - name: Create slurm home
+#      file: path={{warewulf.home}}/slurm
+#            state=directory
+#      tags:
+#        - directories
+#      when: '$is_master'
+#
+#### Slurm support scripts
+#    - name: Install scripts
+#      template: src=templates/home/slurm/{{item}}.j2
+#                dest={{warewulf.home}}/slurm/{{item}}
+#                backup=yes
+#                mode=0755
+#      with_items:
+#        - Prolog
+#        - Epilog
+#        - SrunProlog
+#        - SrunEpilog
+#        - TaskProlog
+#        - TaskEpilog
+#        - EpilogSlurmctld
+#        - PrologSlurmctld
+#      tags:
+#        - scripts
+#        - slurm
+#      when: '$is_master'
+#
+    - name: Install scripts
+      template: src=templates/home/slurm/{{item}}.j2
+                dest=/etc/slurm/{{item}}
+                backup=yes
+                mode=0755
+      with_items:
+        - Prolog
+        - Epilog
+        - SrunProlog
+        - SrunEpilog
+        - TaskProlog
+        - TaskEpilog
+        - EpilogSlurmctld
+        - PrologSlurmctld
+      tags:
+        - scripts
+        - slurm
