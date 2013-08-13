@@ -616,7 +616,7 @@ Save:
 #### Compute nodes
 Prepare the Warewulf OS node on the master node. Login to the master node and make a clone:
 
-    pushd /home/warewulf/chroots
+    pushd /ww/common/chroots
     ./cloneos centos-6
 
 Install basic packages:
@@ -650,7 +650,9 @@ Edit `/etc/warewulf/bootstrap.conf` to load kernel modules/drivers/firmwares and
     ./clonekernel list centos-6
     ./clonekernel centos-6 3.10.5-1.el6.elrepo.x86_64
 
-FIX: Remove `/etc/warewulf/database-root.conf` which is used for DB creation.
+FIX: Remove `/etc/warewulf/database-root.conf` which is used for DB creation
+
+    mv /etc/warewulf/database-root.conf /etc/warewulf/database-root.conf.old
 
 Create compute nodes:
 
@@ -659,17 +661,23 @@ Create compute nodes:
 Provision:
 
     ./clonescan centos-6/3.10.5-1.el6.elrepo.x86_64 compute/cn-0[1-2]
-
-You might have to restart cn nodes twice and add dynamic hosts:
-
     wwsh provision set cn-0[1-2] --fileadd dynamic_hosts
+
+or do it manually:
+
+    wwsh node new cn-01 --netdev=eth0 --hwaddr=<CN-01 MAC> --ipaddr=10.1.1.11 --groups=compute
+    wwsh provision set --lookup groups compute --vnfs=centos-6 --bootstrap=3.10.5-1.el6.elrepo.x86_64
+    wwsh provision set --lookup groups compute --fileadd dynamic_hosts
 
 Verify the connection and monitoring:
 
     ssh -i playbooks/keys/cluster cn-01 hostname
     gstat -a
 
-TODO: Reconfigure the scheduler, `slurmconf` copies pro/epi scripts as well:
+TODO: master slave host names
+TODO: scripts
+TODO: rsyslog pipi + inittab
+http://www.rsyslog.com/doc/ompipe.html
 
     ./slurmconf cn-0[1-2]
 

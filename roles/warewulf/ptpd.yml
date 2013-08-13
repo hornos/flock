@@ -1,4 +1,4 @@
-#
+# Precision time
 # http://ptpd.sourceforge.net/
 #
 ---
@@ -6,6 +6,10 @@
   vars_files:
     - networks.yml
     - vars/warewulf.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_backup: "'$inventory_hostname' == '$backup'"
 
   tasks:
     - name: Install packages
@@ -18,6 +22,7 @@
 
     - name: Enable service
       command: chkconfig --add ptpd2
+      when: '$is_master'
       tags:
         - packages
 
@@ -25,6 +30,7 @@
       template: src=templates/etc/sysconfig/ptpd2.j2
                 dest=/etc/sysconfig/ptpd2
                 backup=yes
+      when: '$is_master'
       tags:
         - configs
       notify:
@@ -34,6 +40,7 @@
       service: name=ptpd2
                state=started
                enabled=yes
+      when: '$is_master'
 
   handlers:
     - name: Restart ptpd2

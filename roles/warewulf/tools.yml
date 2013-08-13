@@ -5,13 +5,13 @@
     - vars/warewulf.yml
 
   tasks:
-    - name: Create /root/bin
-      file: path=/root/bin
+    - name: Create {{warewulf.common}}/bin
+      file: path={{warewulf.common}}/bin
             state=directory
 
     - name: Install warewulf tools
       template: src=templates/root/bin/{{item}}.j2
-                dest=/root/bin/{{item}}
+                dest={{warewulf.common}}/bin/{{item}}
                 owner=root
                 group=root
                 mode=0755

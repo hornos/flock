@@ -137,6 +137,7 @@
       - slurm
       - config
       - slurmctld
+      - slurmconf
 
   - name: Start slurmdbd
     service: name=slurmdbd

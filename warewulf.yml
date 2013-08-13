@@ -5,21 +5,22 @@
 ---
 # PTP
 - include: roles/warewulf/ptpd.yml
-# install warewulf toolkit
-# TODO: make upstream packages
+
+# Warewulf
 - include: roles/warewulf/warewulf.yml
 
+# CLI tools
 - include: roles/warewulf/tools.yml
 
-# ansible for the clones
+# Ansible for the clones
 - include: roles/warewulf/ansible.yml
 
-# slurm stuff
+# Slurm stuff
 - include: roles/warewulf/slurm.yml
 
 # nfs server for homes
 # TODO: lustre ceph and FhGfs
-# - include: roles/warewulf/nfsserver.yml
+- include: roles/warewulf/nfsserver.yml
 
 # basic node helth check
 # TODO

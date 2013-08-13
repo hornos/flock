@@ -28,15 +28,9 @@
       tags:
         - scratch
         - directories
-      when: '$is_master'
+      # gluster mode
+      # when: '$is_master'
 
-    - name: Create home directory
-      file: path={{warewulf.home}}
-            state=directory
-      tags:
-        - home
-        - directories
-      when: '$is_master'
 
     - name: Create software directory
       file: path={{warewulf.software}}
@@ -44,7 +38,8 @@
       tags:
         - home
         - directories
-      when: '$is_master'
+      # gluster mode
+      # when: '$is_master'
 
 ### CONFIGURATION
     - name: Install /etc/syconfig/nfs

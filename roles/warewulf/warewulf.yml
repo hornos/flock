@@ -82,6 +82,7 @@
       - config
       - database
 
+# Remove after the first image provision
 # TODO: DBD::mysql::db do failed: Access denied for user to database 'warewulf' 
 # at /usr/share/perl5/vendor_perl/Warewulf/DataStore/SQL/MySQL.pm line 177
   - name: Install /etc/warewulf/database-root.conf
@@ -103,7 +104,8 @@
           state=directory
     tags:
       - directories
-    when: '$is_master'
+    # gluster mode
+    # when: '$is_master'
 
   - name: Create common tftpboot directory
     file: path={{warewulf.common}}/tftpboot
@@ -113,7 +115,8 @@
     tags:
       - directories
       - ftp
-    when: '$is_master'
+    # gluster mode
+    # when: '$is_master'
 
   - name: Create directories
     file: path={{warewulf.common}}/{{item}}
@@ -126,7 +129,8 @@
     tags:
       - directories
       - ftp
-    when: '$is_master'
+    # gluster mode
+    # when: '$is_master'
 
 ### TFTP
   - name: Create common tftpboot/warewulf directory
@@ -137,14 +141,16 @@
     tags:
       - directories
       - ftp
-    when: '$is_master'
+    # gluster mode
+    # when: '$is_master'
 
   - name: Copy tfptboot files
     shell: /bin/cp /usr/share/warewulf/* {{warewulf.common}}/tftpboot/warewulf
     tags:
       - config
       - ftp
-    when: '$is_master'
+    # gluster mode
+    # when: '$is_master'
 
   - name: Install /etc/xinetd.d/tftp
     template: src=templates/etc/xinetd.d/tftp.j2
@@ -206,8 +212,17 @@
     tags:
       - config
       - dhcp
+    when: '$is_master or $is_backup'
     notify:
       - Update dhcp
+
+# pool tools
+  - name: Install DHCP pool tool
+    git: repo=git://git.code.sf.net/p/dhcpd-pools/code
+         dest=/opt/hcpd-pools
+    tags:
+      - dhcp
+      - tools
 
 ### CONFIGURATION
   - name: Install /etc/warewulf/vnfs.conf

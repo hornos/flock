@@ -1,3 +1,2 @@
-/common/scratch {{networks.compute}}/{{dhcp_masks.compute}}(rw,async,wdelay,no_root_squash)
-/common/home {{networks.compute}}/{{dhcp_masks.compute}}(rw,sync,root_squash)
-/common/software {{networks.compute}}/{{dhcp_masks.compute}}(ro,sync,no_root_squash)
+{{warewulf.scratch}} {{networks.compute}}/{{dhcp_masks.compute}}(rw,async,wdelay,no_root_squash)
+{{warewulf.software}} {{networks.compute}}/{{dhcp_masks.compute}}(ro,sync,no_root_squash)

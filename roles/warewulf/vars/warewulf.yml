@@ -7,9 +7,9 @@ warewulf:
   db: 'warewulf'
   user: 'warewulf'
   password: 'warewulf'
-  common: '/home/warewulf'
-  scratch: '/home/scratch'
-  software: '/home/software'
+  common: '/ww/common'
+  scratch: '/ww/scratch'
+  software: '/ww/software'
   interface: 'eth0'
   # merge
   loghost: '10.1.1.1'
