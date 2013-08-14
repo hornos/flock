@@ -285,6 +285,21 @@
     notify:
       - Restart shorewall
 
+  ### SCRIPTS
+  - name: Install scripts
+    template: src=templates/root/bin/slurmlog.j2
+              dest=/root/bin/slurmlog
+              mode=0750
+    tags:
+      - scripts
+
+  ### FIX
+  - name: Remove /usr/bin/cluster-env
+    file: path=/usr/bin/cluster-env
+          state=absent
+          backup=yes
+    tags:
+      - fix
 
   ### SERVICES
   - name: Start xinetd

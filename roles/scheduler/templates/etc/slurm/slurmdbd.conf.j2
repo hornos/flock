@@ -16,8 +16,11 @@ AuthType=auth/munge
 #AuthInfo=/var/run/munge/munge.socket.2
 #
 # slurmDBD info
+# meta names of roles/hpc/hosts
 DbdHost={{master}}
+{% if backup %}
 DbdBackupHost={{backup}}
+{% endif %}
 
 #DbdPort=7031
 SlurmUser=slurm

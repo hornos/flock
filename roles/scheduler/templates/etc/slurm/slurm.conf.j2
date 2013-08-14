@@ -3,8 +3,9 @@
 
 ClusterName={{slurm.cluster}}
 ControlMachine={{master}}
+{% if backup %}
 BackupController={{backup}}
-
+{% endif %}
 #
 SlurmUser=slurm
 #SlurmdUser=root
@@ -100,7 +101,9 @@ DefaultStorageType=slurmdbd
 AccountingStorageEnforce=associations,limits,qos
 AccountingStorageType=accounting_storage/slurmdbd
 AccountingStorageHost={{master}}
+{% if backup %}
 AccountingStorageBackupHost={{backup}}
+{% endif %}
 #AccountingStorageLoc=
 #AccountingStoragePass=
 #AccountingStorageUser=

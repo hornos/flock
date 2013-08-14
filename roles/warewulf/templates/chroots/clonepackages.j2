@@ -15,7 +15,7 @@ chroot ${_os} mknod /dev/urandom c 1 9
 ./cloneyum ${_os} makecache
 
 ### install kernel and utils
-./cloneyum ${_os} install htop sysstat ntp ptpd rsync autofs x86info tuna
+./cloneyum ${_os} install htop sysstat ntp ptpd rsync autofs x86info tuna numactl hwloc
 
 ### install mainline kernel
 ./cloneyum ${_os} remove kernel-firmware

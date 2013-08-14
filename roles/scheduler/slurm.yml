@@ -13,9 +13,6 @@
     is_backup: "'$inventory_hostname' == '$backup'"
 
   tasks:
-  - debug: msg={{master}}
-  - debug: msg={{backup}}
-
   - name: Install packages
     yum: name={{item}}
          state=installed
@@ -143,7 +140,7 @@
     service: name=slurmdbd
              state=started
              enabled=yes
-    when: '$is_master or $is_backup'
+    when: '$is_master'
     tags:
       - slurm
       - database
@@ -280,6 +277,14 @@
     notify:
       - Restart shorewall
 
+  - name: Start slurmdbd
+    service: name=slurmdbd
+             state=started
+             enabled=yes
+    when: '$is_backup'
+    tags:
+      - slurm
+      - database
 
   - name: Start slurm
     service: name=slurm

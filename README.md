@@ -516,19 +516,26 @@ Verify https in your browser:
 
 TODO: PFS SSL
 
+    flock-vbox snap /ww grid
+
 #### Monitoring
 
 TODO: OMD http://omdistro.org/
+
+#### Master and servant
+Name the master and backup node for a failover HA:
+
+    flock play @@ww roles/hpc/hosts --extra-vars=\"master=ww-01 backup=ww-02\"
+    flock-vbox snap /ww hosts
 
 #### Database
 SQL database is used for the scheduler backend. Install the SQL cluster:
 
     flock play @@ww roles/database/percona --extra-vars "master=ww-01"
 
-Login to the master node and bootstrap the cluster:
+Login to the master node and bootstrap the cluster (as root):
 
-    /etc/init.d/mysql start --wsrep-cluster-address="gcomm://"
-    mysql_secure_installation
+    /root/percona_bootstrap
 
 Now start the whole cluster:
 
@@ -551,7 +558,7 @@ Install a common state directory with Gluster:
 
     flock play @@ww roles/hpc/gluster --extra-vars="master=ww-01"
 
-Login to the master node and bootstrap the cluster:
+Login to the master node and bootstrap the cluster (as root):
 
     /root/gluster_bootstrap
 
@@ -560,7 +567,7 @@ Finally, mount the common directory (check tune parameters):
     flock play @@ww roles/hpc/glusterfs
     flock play @@ww roles/hpc/gtop
 
-Monitor the cluster:
+Monitor the cluster (as root):
 
     /root/bin/gtop
 
@@ -571,12 +578,10 @@ Save:
 #### HA Scheduler
 Generate a munge key for the compute cluster and setup the scheduler services:
 
-TODO: slurmdb start order
-
     dd if=/dev/random bs=1 count=4096 > keys/munge.key
     flock play @@ww scheduler --extra-vars=\"master=ww-01 backup=ww-02\"
 
-Scheduler authentication relies on NTP and the Munge key, keep it in secret. The basic Slurm setup contains only the controller machines.
+Scheduler authentication relies on NTP and the Munge key, keep it in secret. The basic Slurm setup contains only the controller machines. Restart `slurmdbd` can fail.
 
 Login to the master node and check the queue:
 
@@ -605,9 +610,9 @@ Verify HA so far. Shutdown the master node
 
     flock shutdown @@ww-01
 
-and check Slurm failover on the backup node:
+and check Slurm failover on the backup node (as root):
 
-    multitail /var/log/slurm/slurmdbd.log /var/log/slurm/slurmctld.log
+    /root/bin/slurmlog
 
 Save:
 
@@ -675,7 +680,7 @@ Verify the connection and monitoring:
     gstat -a
 
 TODO: master slave host names
-TODO: scripts
+TODO: scripts + cgroup
 TODO: rsyslog pipi + inittab
 http://www.rsyslog.com/doc/ompipe.html
 

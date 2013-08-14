@@ -14,7 +14,6 @@
 
   tasks:
 ### REDHAT
-    - debug: msg=$is_master
     - name: Create sstuser
       mysql_user: name=sstuser password={{wsrep.password}} priv=*.*:ALL login_user={{mariadb.user}} login_password={{mariadb.password}} state=present
       when: '$is_master'

@@ -13,7 +13,6 @@
 
   tasks:
 ### REDHAT
-    - debug: msg=$is_master
     - name: Download repository
       get_url: url={{url}}/{{rpm}} dest=/root
       when: ansible_os_family == "RedHat"
@@ -63,3 +62,14 @@
       when: '$is_master'
       tags:
         - config
+
+### SCRIPTS
+    - name: Install scripts
+      template: src=templates/root/{{item}}.j2
+                dest=/root/{{item}}
+                mode=0750
+      with_items:
+        - percona_bootstrap
+      tags:
+        - scripts
+
