@@ -17,6 +17,6 @@ warewulf:
   os: 'centos-6'
   # compute nodes
   compute:
-    start_ip: '10.1.1.11'
+    ip_first: '10.1.1.11'
     ip_range: '10.1.1.11 10.1.1.13'
     nodes: 'cn-[01-3]'

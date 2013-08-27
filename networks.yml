@@ -2,6 +2,27 @@
 # Simple Network Topology
 #
 ---
+# external
+# storage (system)
+bonds:
+  bond0:
+    - eth1
+    - eth2
+  bond1:
+    - eth3
+    - eth4
+    - eth5
+    - eth6
+
+# mind the bond networks!
+#paths:
+#  eth1: bond0
+#  eth2: bond1
+# no bond
+paths:
+  eth1: eth1
+  eth2: eth2
+
 interfaces:
   bmc: eth0
   system: eth0
@@ -9,10 +30,12 @@ interfaces:
   dhcp: eth1
   nosys: eth0
   masq: eth1
+  storage: eth2
 
 networks:
   bmc: 10.0.0.0
   system: 10.1.0.0
+  storage: 10.2.0.0
   compute: 10.1.1.0
   vpn: 10.8.0.0
   tinc: 10.10.10.0
@@ -28,6 +51,7 @@ masks:
   vpn: 24
   tinc: 24
   home: 24
+  storage: 16
 
 ntps:
   - 152.66.0.15
@@ -36,6 +60,7 @@ ntps:
 dhcp_masks:
   system: 255.255.0.0
   compute: 255.255.255.0
+  storage: 255.255.0.0
 
 broadcasts:
   system: 10.1.255.255

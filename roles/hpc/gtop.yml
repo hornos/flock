@@ -7,9 +7,6 @@
     - networks.yml
     - vars/gluster.yml
 
-  vars:
-    is_master: "'$inventory_hostname' == '$master'"
-
   tasks:
   - name: Install packages
     yum: name={{item}}
@@ -42,6 +39,11 @@
     file: src=/opt/gluster-monitor/gtop.py
           dest=/root/bin/gtop
           state=link
+
+  - name: Start snmpd
+    service: name=snmpd
+             state=started
+             enabled=yes
 
   handlers:
     - name: Restart snmpd

@@ -93,7 +93,7 @@
       with_items:
         - clonebook
         - cloneyum
-        - clonepackages
+        - clonepkg
         - cloneimage
         - clonemini
         - clonekernel

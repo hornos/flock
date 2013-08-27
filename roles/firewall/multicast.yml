@@ -6,11 +6,14 @@
 ---
 - hosts: all
 
+  vars_files:
+    - networks.yml
+
   tasks:
     - name: Enable multicast route
-      lineinfile: dest=/etc/sysconfig/network-scripts/route-eth0
+      lineinfile: dest=/etc/sysconfig/network-scripts/route-{{interfaces.system}}
                   regexp='^224.0.0.0'
-                  line='224.0.0.0/4 dev eth0'
+                  line="224.0.0.0/4 dev {{interfaces.system}}"
                   create=yes
       when: ansible_os_family == "RedHat"
       tags:

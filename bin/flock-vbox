@@ -13,6 +13,15 @@ function vm/path() {
   sed 's/[^.\/]*//'
 }
 
+# 4 more disks for brick testing
+# TODO: factor above
+function vm/mkdisk() {
+  local _disk=${1}
+  local _hdsize=${2:-2000000}
+  echo "Create HD ${_disk} [${_hdsize}MB]"
+  ${vbox} createhd --filename "${_disk}" --size ${_hdsize}
+}
+
 function vm/create() {
   local _name=${1}
   local _type=${2} # Ubuntu_64 RedHat_64
@@ -31,11 +40,12 @@ function vm/create() {
   ${vbox} createvm --name "${_name}" --ostype ${_type} --register
   if test $? -gt 0 ; then exit 1; fi
 
+  # TODO: vm/
   local _path=$(vm/path "${_name}")
   _path=$(dirname "${_path}")
-  local _disk="${_path}/${_name}-disk01.vdi"
-  echo -n "Create HD ${_disk} [${_hdsize}MB]"
-  ${vbox} createhd --filename "${_disk}" --size ${_hdsize}
+  local _disk="${_path}/${_name}-osdisk-1.vdi"
+
+  vm/mkdisk "${_disk}" "${_hdsize}"
   if test $? -gt 0 ; then exit 1; fi
 
   if test "${_hostnet}" = "bridged" ; then
@@ -60,6 +70,59 @@ function vm/create() {
                 --type hdd --medium "${_disk}"
 }
 
+# 1 + 2 + 4 network topolgy
+function vm/bondnet() {
+  local _name=${1}
+  local _hostnet=${2:-vboxnet1}
+  ${vbox} modifyvm "${_name}" \
+          --nic3 nat      --macaddress3 auto \
+          --nic4 hostonly --macaddress4 auto \
+            --hostonlyadapter4 ${_hostnet} \
+          --nic5 hostonly --macaddress5 auto \
+            --hostonlyadapter5 ${_hostnet} \
+          --nic6 hostonly --macaddress6 auto \
+            --hostonlyadapter6 ${_hostnet} \
+          --nic7 hostonly --macaddress7 auto \
+            --hostonlyadapter7 ${_hostnet}
+}
+
+function vm/intnet() {
+  local _name=${1}
+  ${vbox} modifyvm "${_name}" \
+          --nic3 intnet --macaddress3 auto
+}
+
+
+function vm/storage() {
+  local _name=${1}
+  local _hdsize=${2:-2000000}
+
+  local _path=$(vm/path "${_name}")
+  _path=$(dirname "${_path}")
+
+  # 1st disk
+  local _disk=""
+  local _controller="Controller: SATA"
+
+  for i in 1 2 3 4 ; do
+    _disk="${_path}/${_name}-storage-${i}.vdi"
+    vm/mkdisk "${_disk}" "${_hdsize}"
+    # attach
+    ${vbox} storageattach "${_name}" \
+            --storagectl "${_controller}" \
+            --port ${i} --device 0 \
+            --type hdd --medium "${_disk}"
+  done
+}
+
+function vm/list() {
+  local _group=${1}
+  ${vbox} list -l vms | \
+          grep ${_group} | \
+          grep Config | \
+          sed s/.*\\/// | \
+          sed s/\\..*//
+}
 
 ### main
 cmd=${1:-help}
@@ -106,6 +169,7 @@ case ${cmd} in
     hostnet=${6:-bridged}
     vm/create ${name} ${type} ${cpus} ${memory} ${hdsize} ${hostnet}
   ;;
+
   start)
     host="${1}"
     opts=""
@@ -117,25 +181,64 @@ case ${cmd} in
       host="${host:1}"
     fi
 
-    # host
+    # headless
     if [ "${host:0:1}" = "@" ] ; then
       opts="--type headless"
       host="${host:1}"
     fi
 
-    if ${group} ; then
-      _hosts=$(${vbox} list -l vms | \
-               grep /${host} | \
-               grep Config | \
-               sed s/.*\\/// | \
-               sed s/\\..*//)
-      for i in ${_hosts} ; do
-        ${vbox} startvm "${i}" ${opts}
-      done
-    else
+    if ! ${group} ; then
       ${vbox} startvm "${host}" ${opts}
+      exit $?
     fi
+
+    for i in $(vm/list "/${host}") ; do
+      ${vbox} startvm "${i}" ${opts}
+    done
   ;;
+
+  bondnet|intnet)
+    host="${1}"
+    opts=""
+    group=false
+
+    # group
+    if [ "${host:0:1}" = "/" ] ; then
+      group=true
+      host="${host:1}"
+    fi
+
+    if ! ${group} ; then
+      vm/${cmd} "${host}"
+      exit $?
+    fi
+
+    for i in $(vm/list "/${host}") ; do
+      vm/${cmd} "${i}"
+    done
+  ;;
+
+  storage)
+    host="${1}"
+    opts=""
+    group=false
+
+    # group
+    if [ "${host:0:1}" = "/" ] ; then
+      group=true
+      host="${host:1}"
+    fi
+
+    if ! ${group} ; then
+      vm/storage "${host}"
+      exit $?
+    fi
+
+    for i in $(vm/list "/${host}") ; do
+      vm/storage "${i}"
+    done
+  ;;
+
   off)
     host="${1}"
     opts=""
@@ -145,51 +248,43 @@ case ${cmd} in
       group=true
       host="${host:1}"
     fi
-    # host
-    if [ "${host:0:1}" = "@" ] ; then
-      opts="--type headless"
-      host="${host:1}"
-    fi
-    if ${group} ; then
-      _hosts=$(${vbox} list -l vms | \
-               grep /${host} | \
-               grep Config | \
-               sed s/.*\\/// | \
-               sed s/\\..*//)
-      for i in ${_hosts} ; do
-        ${vbox} controlvm "${i}" poweroff
-      done
-    else
+
+    if ! ${group} ; then
       ${vbox} controlvm "${host}" poweroff
+      exit $?
     fi
+
+    for i in $(vm/list "/${host}") ; do
+      ${vbox} controlvm "${i}" poweroff
+    done
   ;;
+
   reset)
+    # TODO: group
     ${vbox} controlvm "${1}" reset
   ;;
+
   snap)
     host=${1:-test}
     snap=${2:-init}
     group=false
+
     # group
     if [ "${host:0:1}" = "/" ] ; then
       group=true
       host="${host:1}"
     fi
-    if ${group} ; then
-      _hosts=$(${vbox} list -l vms | \
-               grep /${host} | \
-               grep Config | \
-               sed s/.*\\/// | \
-               sed s/\\..*//)
-      for i in ${_hosts} ; do
-        echo "Snapshot ${i}"
-        ${vbox} snapshot "${i}" take "${snap}"
-      done
-    else
-      echo "Snapshot ${host}"
+
+    if ! ${group} ; then
       ${vbox} snapshot "${host}" take "${snap}"
+      exit $?
     fi
+
+    for i in $(vm/list "/${host}") ; do
+      ${vbox} snapshot "${i}" take "${snap}"
+    done
   ;;
+
   boot)
     host=${1:-test}
     boot=${2:-net}
@@ -200,32 +295,24 @@ case ${cmd} in
       host="${host:1}"
     fi
 
-    if ${group} ; then
-      _hosts=$(${vbox} list -l vms | \
-               grep /${host} | \
-               grep Config | \
-               sed s/.*\\/// | \
-               sed s/\\..*//)
-      for i in ${_hosts} ; do
-        echo "Set boot device: $boot on ${i}"
-        ${vbox} modifyvm "${i}" --boot1 "${boot}"
-      done
-    else
-      echo "Set boot device: $boot on ${host}"
+    if ! ${group} ; then
       ${vbox} modifyvm "${host}" --boot1 "${boot}"
+      exit $?
     fi
+
+    for i in $(vm/list "/${host}") ; do
+      ${vbox} modifyvm "${i}" --boot1 "${boot}"
+    done
   ;;
+
   group)
     host=${1:-test}
     group=${2:-test}
     ${vbox} modifyvm "${host}" --groups "/${group}"
   ;;
+
   group?)
     group=${1:-/test}
-    ${vbox} list -l vms | \
-    grep ${group} | \
-    grep Config | \
-    sed s/.*\\/// | \
-    sed s/\\..*//
+    vm/list "${group}"
   ;;
 esac

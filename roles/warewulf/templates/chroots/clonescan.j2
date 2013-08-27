@@ -10,7 +10,7 @@ _group=${_nodes/\/*}
 _hosts=${_nodes/*\/}
 
 wwnodescan --netdev={{warewulf.interface}} \
-           --ipaddr={{warewulf.compute.start_ip}} \
+           --ipaddr={{warewulf.compute.ip_first}} \
            --netmask={{dhcp_masks.compute}} \
            --vnfs=${_os} --bootstrap=${_kernel} \
            ${_hosts} -g ${_group}

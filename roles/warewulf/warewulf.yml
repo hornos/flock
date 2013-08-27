@@ -216,13 +216,13 @@
     notify:
       - Update dhcp
 
-# pool tools
-  - name: Install DHCP pool tool
-    git: repo=git://git.code.sf.net/p/dhcpd-pools/code
-         dest=/opt/hcpd-pools
-    tags:
-      - dhcp
-      - tools
+## pool tools
+#  - name: Install DHCP pool tool
+#    git: repo=git://git.code.sf.net/p/dhcpd-pools/code
+#         dest=/opt/dhcpd-pools
+#    tags:
+#      - dhcp
+#      - tools
 
 ### CONFIGURATION
   - name: Install /etc/warewulf/vnfs.conf

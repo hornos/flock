@@ -237,6 +237,10 @@ case ${cmd} in
   bootstrap)
     group=${_arg1:-/test}
     for i in $(flock-vbox group? ${group}) ; do
+      echo ""
+      echo ""
+      echo "BOOTSTRAP [$i]"
+      echo "Please type the password below!"
       jockey password @${i}
       flock play root@@${i} bootstrap
     done

@@ -1,0 +1,48 @@
+#
+# http://www.tecmint.com/create-nic-channel-bonding-in-redhat-centos-fedora/
+#
+# if dhcp fails rerun the script
+#
+---
+- hosts: all
+
+  vars_files:
+    - [ "networks.yml" ]
+
+  tasks:
+
+### REDHAT
+  - name: Disable external network
+    shell: /sbin/ifdown {{interfaces.external}}
+    tags:
+      - external
+
+  - name: Stop bond0
+    shell: /sbin/ifdown bond0
+    ignore_errors: yes
+
+  # TODO: bond variable
+  - name: ifcfg for bond0
+    template: src=templates/etc/sysconfig/network-scripts/ifcfg-bond0-dhcp.j2
+              dest=/etc/sysconfig/network-scripts/ifcfg-bond0
+              backup=yes
+    tags:
+      - bond
+
+  - name: ifcfg for bond0 interfaces
+    template: src=templates/etc/sysconfig/network-scripts/ifcfg-eth-bond0.j2
+              dest=/etc/sysconfig/network-scripts/ifcfg-{{item}}
+              backup=yes
+    with_items: bonds.bond0
+    tags:
+      - interfaces
+
+  - name: Enable bonding module
+    template: src=templates/etc/modprobe.d/bonding.conf.j2
+              dest=/etc/modprobe.d/bonding.conf
+              backup=yes
+    tags:
+      - module
+
+  - name: Start bond0
+    shell: /sbin/ifup bond0

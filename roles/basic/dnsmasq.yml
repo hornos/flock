@@ -115,13 +115,13 @@
       tags:
         - hostname
 
-    - name: Localhost DNS for DHCP ({{interfaces.dhcp}})
-      template: src=templates/etc/dhcp/dhclient-{{interfaces.dhcp}}.conf.j2
-                dest=/etc/dhcp/dhclient-{{interfaces.dhcp}}.conf
+    - name: Localhost DNS for DHCP ({{paths[interfaces.dhcp]}})
+      template: src=templates/etc/dhcp/dhclient-{{paths[interfaces.dhcp]}}.conf.j2
+                dest=/etc/dhcp/dhclient-{{paths[interfaces.dhcp]}}.conf
                 owner=root
                 group=root
                 backup=yes
-      when: "'{{interfaces.dhcp}}' != ''"
+      when: "'{{paths[interfaces.dhcp]}}' != ''"
       tags:
         - dhcp
 

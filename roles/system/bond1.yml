@@ -1,0 +1,47 @@
+#
+# http://www.tecmint.com/create-nic-channel-bonding-in-redhat-centos-fedora/
+#
+# STORAGE NET aka LNET
+# http://myitnotes.info/doku.php?id=en:jobs:lustrefs
+#
+# Edit machine ips or mix networks and machine files
+#
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - vars/${inventory_hostname}.yml
+
+  tasks:
+
+### REDHAT
+  - name: Stop bond1
+    shell: /sbin/ifdown bond1
+    ignore_errors: yes
+
+  # TODO: bond variable
+  - name: ifcfg for bond1
+    template: src=templates/etc/sysconfig/network-scripts/ifcfg-bond1.j2
+              dest=/etc/sysconfig/network-scripts/ifcfg-bond1
+              backup=yes
+    tags:
+      - bond
+
+  - name: ifcfg for bond1 interfaces
+    template: src=templates/etc/sysconfig/network-scripts/ifcfg-eth-bond1.j2
+              dest=/etc/sysconfig/network-scripts/ifcfg-{{item}}
+              backup=yes
+    with_items: bonds.bond1
+    tags:
+      - interfaces
+
+  - name: Enable bonding module
+    template: src=templates/etc/modprobe.d/bonding.conf.j2
+              dest=/etc/modprobe.d/bonding.conf
+              backup=yes
+    tags:
+      - module
+
+  - name: Start bond1
+    shell: /sbin/ifup bond1

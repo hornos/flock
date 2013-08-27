@@ -1,0 +1,14 @@
+# TODO: better roles in ansible
+---
+- include: roles/system/bond0.yml
+- include: roles/system/bond1.yml
+- include: roles/system/tune.yml
+
+- hosts: all
+  tasks:
+    - name: Bond state done
+      lineinfile: dest=/etc/ANSIBLE_STATE
+                  regexp="^bond"
+                  line=secure
+                  state=present
+                  create=yes

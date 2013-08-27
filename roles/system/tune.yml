@@ -1,0 +1,62 @@
+#
+# http://www.tecmint.com/create-nic-channel-bonding-in-redhat-centos-fedora/
+#
+# STORAGE NET aka LNET
+# http://myitnotes.info/doku.php?id=en:jobs:lustrefs
+#
+---
+- hosts: all
+
+  tasks:
+
+### REDHAT
+  - name: net.core.rmem_max
+    lineinfile: dest=/etc/sysctl.conf
+                regexp='^net.core.rmem_max'
+                line='net.core.rmem_max = 8388608'
+    tags:
+      - tune
+
+  - name: net.core.wmem_max
+    lineinfile: dest=/etc/sysctl.conf
+                regexp='^net.core.wmem_max'
+                line='net.core.wmem_max = 8388608'
+    tags:
+      - tune
+
+  # increase default and maximum Linux TCP buffer sizes
+  - name: net.ipv4.tcp_rmem
+    lineinfile: dest=/etc/sysctl.conf
+                regexp='^net.ipv4.tcp_rmem'
+                line='net.ipv4.tcp_rmem = 4096 262144 8388608'
+    tags:
+      - tune
+
+  - name: net.ipv4.tcp_wmem
+    lineinfile: dest=/etc/sysctl.conf
+                regexp='^net.ipv4.tcp_wmem'
+                line='net.ipv4.tcp_wmem = 4096 262144 8388608'
+    tags:
+      - tune
+
+  # increase max backlog to avoid dropped packets
+  - name: net.core.netdev_max_backlog
+    lineinfile: dest=/etc/sysctl.conf
+                regexp='^net.core.netdev_max_backlog'
+                line='net.core.netdev_max_backlog = 2500'
+    tags:
+      - tune
+
+  - name: net.ipv4.tcp_mem
+    lineinfile: dest=/etc/sysctl.conf
+                regexp='^net.ipv4.tcp_mem'
+                line='net.ipv4.tcp_mem = 8388608 8388608 8388608'
+    tags:
+      - tune
+
+  - name: net.ipv4.tcp_ecn
+    lineinfile: dest=/etc/sysctl.conf
+                regexp='^net.ipv4.tcp_ecn'
+                line='net.ipv4.tcp_ecn = 0'
+    tags:
+      - tune

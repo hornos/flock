@@ -1,0 +1,10 @@
+DEVICE=bond1
+USERCTL=no
+BOOTPROTO=none
+IPADDR={{ipaddr}}
+NETMASK={{dhcp_masks.storage}}
+NETWORK={{networks.storage}}
+ONBOOT=yes
+# for production: balance-alb
+BONDING_OPTS="miimon=100 mode=balance-tlb"
+IPV6INIT=no

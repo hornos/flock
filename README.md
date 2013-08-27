@@ -600,8 +600,6 @@ Generate a cluster key. The cluster key is used to SSH to the compute nodes:
 
     ssh-keygen -b4096 -N "" -f keys/cluster
 
-TODO: provision node only on the master
-
 Check `networks.yml` and `vars/warewulf.yml` for ip ranges of compute nodes. Install Warewulf:
 
     flock play @@ww warewulf --extra-vars=\"master=ww-01 backup=ww-02\"
@@ -614,19 +612,27 @@ and check Slurm failover on the backup node (as root):
 
     /root/bin/slurmlog
 
+Verify NFS exports:
+
+    flock command @@ww "exportfs -v"
+
 Save:
 
     flock-vbox snap /ww ww
 
 #### Compute nodes
-Prepare the Warewulf OS node on the master node. Login to the master node and make a clone:
+Prepare the Warewulf OS node on the master node. Login to the master node and make a clone (as root):
 
     pushd /ww/common/chroots
     ./cloneos centos-6
 
 Install basic packages:
 
-    ./clonepackages centos-6
+    ./clonepkg centos-6
+
+<!--
+>>>>>>>>>>> TODO: ssh cluster key test
+-->
 
 *NOTE:* Ad-hoc installations done:
 
@@ -782,6 +788,78 @@ Enable elasticsearch:
 
 
 ## Message Queue
+
+
+## [Lustre](http://myitnotes.info/doku.php?id=en:jobs:lustrefs)
+Create the triangle:
+
+    flock out 3 lustre
+
+Start the kickstart servers:
+
+    flock http
+    flock boot
+
+and start the group in the background:
+
+    flock-vbox start /@lustre
+
+wait for the reboot signal and turn off the group:
+
+    flock-vbox off /lustre
+
+*Warning: bonding does not seem to work in VirtualBox!* Configure a 2 frontend + 4 backend network card setup for bonding, mind that eth0 is reserved for the host-only system network. Add a new host-only network `vboxnet1` according to `networks.yml`. Bonding topology:
+
+    bond0: eth1-2
+    bond1: eth3-6
+
+    flock-vbox bondnet /lustre
+
+Since host bonding fails just add on intnet interface:
+
+    flock-vbox intnet /lustre
+
+Add 4 more disks for testing purposes:
+
+    flock-vbox storage /lustre
+
+Switch to disk boot make a snapshot and start:
+
+    flock-vbox boot /lustre disk
+    flock-vbox start /@lustre
+
+Swith to the `lustre` nevironment:
+
+    flenv lustre
+
+Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
+
+    flock bootstrap /lustre
+
+Verify by `sysop`:
+
+    flock ping @@lustre
+
+*Warning: bonding does not seem to work in VirtualBox!* You might have to check `/etc/udev/rules.d/70-persistent-net.rules` for the mac address resolution. This setup configure DHCP with bonding.
+
+    flock play @@lustre bonding
+    flock reboot @@lustre
+
+Secure:
+
+    flock play @@lustre secure
+    flock reboot @@lustre
+    flock-vbox snap /lustre secure
+
+Check the network topology in `networks.yml`. Edit the `paths` section for interface mapping.
+
+Ground state:
+
+    flock play @@lustre ground
+    flock reboot @@lustre
+    flock-vbox snap /lustre ground
+
+
 
 <!--
 ##     ##    ###    ########   #######   #######  ########  

@@ -8,6 +8,7 @@
 #
 # Switch on NAT for the VPN
 # --extra-vars="natvpn=yes"
+#
 ---
 - hosts: all
 
