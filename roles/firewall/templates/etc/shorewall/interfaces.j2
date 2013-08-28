@@ -1,12 +1,12 @@
 #ZONE      INTERFACE     BROADCAST     OPTIONS
 # system network for inter node communications
 
-{% if nosys == "yes" %}
+{% if is_nosys %}
 ext        {{interfaces.nosys}} detect dhcp,tcpflags,nosmurfs,routefilter,logmartians,upnpclient
 {% else %}
 
 ## system
-sys        {{interfaces.system}}   detect dhcp
+sys        {{paths[interfaces.system]}} detect dhcp
 
 ## external network (internet)
 ## mind paths for bonding!
@@ -14,13 +14,14 @@ ext        {{paths[interfaces.external]}} detect dhcp,tcpflags,nosmurfs,routefil
 
 {% endif %}
 
+# TODO: extend interfaces in each playbook
+
 ## openvpn tunnel
 vpn        tun+
 
 ## docker.io
 doc        docker+
 
-## bonding - storage
-sys        bond1
+
 
 #LAST LINE -- ADD YOUR ENTRIES BEFORE THIS ONE -- DO NOT REMOVE

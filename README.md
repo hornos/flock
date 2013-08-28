@@ -859,6 +859,19 @@ Ground state:
     flock reboot @@lustre
     flock-vbox snap /lustre ground
 
+Tune the network if you need:
+
+    flock play roles/system/tune
+
+Install Lustre:
+
+    flock play roles/hpc/lustre
+    flock reboot @@lustre
+    flock-vbox snap /lustre lustre
+
+Create and mount filesystems. The default install uses 4 disks on the OSS without bonding.
+
+    flock play roles/hpc/lustrefs
 
 
 <!--

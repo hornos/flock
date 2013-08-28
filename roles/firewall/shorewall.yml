@@ -13,8 +13,8 @@
 - hosts: all
 
   vars:
-    is_nosys: "'$nosys' == 'yes'"
-    is_natvpn: "'$natvpn' == 'yes'"
+    is_nosys: false
+    is_natvpn: false
 
   vars_files:
     - networks.yml

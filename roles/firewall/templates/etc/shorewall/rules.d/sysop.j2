@@ -1,5 +1,5 @@
 # basic access for System Operators
-{% if nosys != "yes" %}
+{% if not is_nosys %}
 ACCEPT     sys:+sysop           $FW       tcp        22
 ACCEPT     sys:+sysop           $FW       tcp        80
 ACCEPT     sys:+sysop           $FW       tcp       443

@@ -13,11 +13,6 @@
     with_items:
       - cronie
       - mc
-      - htop
-      - iptraf-ng
-      - sysstat
-      - nmap
-      - mtr
       - man
       - git
       - gcc
@@ -45,6 +40,26 @@
       - unzip
       - xfsprogs
       - createrepo
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+  - name: Install preftools
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - htop
+      - iptraf-ng
+      - sysstat
+      - nmap
+      - mtr
+      - perf
+      - strace
+      - psinfo
+      - tcpstat
+      - sysstat
+      - dstat
+      - ifstat
     when: ansible_os_family == "RedHat"
     tags:
       - packages

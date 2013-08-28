@@ -31,17 +31,9 @@
 
   tasks:
 ### REDHAT
-#  # vuksan repo is broken
-#  - name: Install repository
-#    template: src=templates/etc/yum.repos.d/vuksan.repo.j2
-#              dest=/etc/yum.repos.d/vuksan.repo
-#    when: ansible_os_family == "RedHat"
-#    tags:
-#      - repo
-
   - name: Install repo fix script
-    template: src=templates/root/install_ganglia.j2
-              dest=/root/install_ganglia
+    template: src=templates/root/ganglia_local_repo.j2
+              dest=/root/ganglia_local_repo
               mode=0750
     when: ansible_os_family == "RedHat"
     tags:
@@ -49,7 +41,7 @@
       - fix
 
   - name: Run fix script
-    shell: /root/install_ganglia
+    shell: /root/ganglia_local_repo
     when: ansible_os_family == "RedHat"
     tags:
       - packages
@@ -61,6 +53,18 @@
     tags:
       - packages
       - fix
+
+  - name: Install packages
+    yum: name={{item}}
+         state=latest
+    with_items:
+      - ganglia-devel
+      - ganglia-gmetad
+      - ganglia-gmond
+      - ganglia-gmond-modules-python
+      - libganglia
+    tags:
+      - packages
 
 # TODO: from rpm
 ### Ganglia web

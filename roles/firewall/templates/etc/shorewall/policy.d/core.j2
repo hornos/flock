@@ -1,5 +1,5 @@
 #SOURCE    DEST        POLICY      LOG LEVEL    LIMIT:BURST
-{% if nosys != "yes" %}
+{% if not is_nosys %}
 # system to system
 sys        sys         ACCEPT
 # me to system

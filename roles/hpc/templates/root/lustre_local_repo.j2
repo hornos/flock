@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# https://wiki.hpdd.intel.com/display/PUB/Walk-thru-+Deploying+Lustre+pre-built+RPMs
+
+
+repo="/repo/lustre"
+mkdir -p "${repo}"
+pushd "${repo}"
+
+url="http://downloads.whamcloud.com/public/e2fsprogs/latest/el6/RPMS/x86_64"
+for i in $(curl -Ls ${url} | \
+  grep 'e2fsprogs\|libcom\|libss' | \
+  sed s/\.rpm.*// | \
+  sed s/.*=\"// | \
+  grep -v 'Index\|right') ; do
+
+  wget -N -q ${url}/${i}.rpm -O ${i}.rpm
+done
+
+url="http://downloads.whamcloud.com/public/lustre/latest-feature-release/el6/server/RPMS/x86_64"
+for i in $(curl -Ls ${url} | \
+  grep 'lustre\|perf\|kernel\|python' | \
+  sed s/\.rpm.*// | \
+  sed s/.*=\"// | \
+  grep -v 'Index\|right') ; do
+
+  wget -N -q ${url}/${i}.rpm -O ${i}.rpm
+done
+
+
+createrepo "${repo}"

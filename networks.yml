@@ -20,8 +20,12 @@ bonds:
 #  eth2: bond1
 # no bond
 paths:
+  eth0: eth0
   eth1: eth1
   eth2: eth2
+
+ansible_paths:
+  eth2: 'ansible_eth2'
 
 interfaces:
   bmc: eth0

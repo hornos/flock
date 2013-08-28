@@ -1,0 +1,104 @@
+#
+# http://myitnotes.info/doku.php?id=en:jobs:lustrefs
+#
+# https://wiki.hpdd.intel.com/display/PUB/Walk-thru-+Deploying+Lustre+pre-built+RPMs
+#
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    #- vars/lustre.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == '$master'"
+    is_repo: "'$repo' == 'yes'"
+
+  tasks:
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - net-snmp
+      - sysstat
+      - rsync
+      - htop
+      - trafshow
+    tags:
+      - packages
+
+
+# Create a local lustre repo
+  - name: Install repo fix script
+    template: src=templates/root/lustre_local_repo.j2
+              dest=/root/lustre_local_repo
+              mode=0750
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - fix
+
+  - name: Run fix script
+    shell: /root/lustre_local_repo
+    when: ansible_os_family == "RedHat"
+    when: '$is_repo'
+    tags:
+      - packages
+      - fix
+
+  - name: Install local Lustre repo
+    template: src=templates/etc/yum.repos.d/lustre.repo.j2
+              dest=/etc/yum.repos.d/lustre.repo
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - fix
+
+  - name: Remove packages
+    yum: name={{item}}
+         state=absent
+    with_items:
+      - e2fsprogs
+      - e2fsprogs-libs
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - remove
+
+  - name: Install Utilities
+    yum: name={{item}}
+         state=installed
+         enablerepo=lustre
+    with_items:
+      - e2fsprogs-libs
+      - e2fsprogs
+      - libss
+      - libcom_err
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - utilities
+
+  - name: Install Lustre
+    yum: name={{item}}
+         state=installed
+         enablerepo=lustre
+    with_items:
+      - kernel-firmware
+      - kernel
+      - lustre-ldiskfs
+      - perf
+      - lustre-modules
+      - lustre
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+      - lustre
+
+#  - name: Set grub default
+#    lineinfile: dest=/boot/grub/grub.conf
+#                regexp='^default'
+#                line='default=0'
+#    when: ansible_os_family == "RedHat"
+#    tags:
+#      - grub
+#

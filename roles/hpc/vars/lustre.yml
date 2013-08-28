@@ -1,0 +1,8 @@
+---
+lustre:
+  interface: eth2
+  vg_root: 'vg_lustre'
+  vg_pvs: '/dev/sdb,/dev/sdc,/dev/sdd,/dev/sde'
+  vg_size: 1048576
+  lv_data: 'lv_lustre'
+  lv_size: 256000

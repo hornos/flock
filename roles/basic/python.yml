@@ -1,8 +1,22 @@
+# psutil 1.1.0
+# psutil/_psutil_linux.c: In function ‘init_psutil_linux’:
+# psutil/_psutil_linux.c:418: error: ‘RLIMIT_RTTIME’ undeclared (first use in this function)
+# psutil/_psutil_linux.c:418: error: (Each undeclared identifier is reported only once
+# psutil/_psutil_linux.c:418: error: for each function it appears in.)
+#
 
 ---
 - hosts: all
 
   tasks:
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - python-psutil
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
 
   - name: Install basic python packages
     pip: name={{item}}
@@ -11,10 +25,12 @@
     with_items:
       - rainbow
       - configparser
+      # TODO: psutil version 1.1.0 bug
       - Glances
       - monner
     tags:
       - packages
+      - python
 
   - name: Install rainbow configs
     template: src=templates/usr/share/rainbow/configs/{{item}}.cfg.j2

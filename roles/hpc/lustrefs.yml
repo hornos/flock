@@ -1,0 +1,108 @@
+#
+# http://myitnotes.info/doku.php?id=en:jobs:lustrefs
+#
+# TODO: move network to lustre
+# hostvars for problem???
+---
+- hosts: all
+
+  vars_files:
+    - networks.yml
+    - vars/lustre.yml
+    - vars/${inventory_hostname}.yml
+
+  # TODO: better bonding detect
+  vars:
+    nobond: true
+
+  tasks:
+    # for bonding uncomment BONDING_OPTS
+    - name: Configure LNET interface
+      template: src=templates/etc/sysconfig/network-scripts/ifcfg-storage.j2
+                dest=/etc/sysconfig/network-scripts/{{paths[interfaces.storage]}}
+                backup=yes
+      when: nobond
+      tags:
+        - interfaces
+
+    - name: Start LNET interface
+      shell: /sbin/ifup {{paths[interfaces.storage]}}
+
+### NETWORK
+# /etc/network is installed
+    - name: Enable LNET modul
+      template: src=templates/etc/modprobe.d/lustre.conf.j2
+                dest=/etc/modprobe.d/lustre.conf
+                backup=yes
+      tags:
+        - module
+
+
+### FIREWALL
+    - name: Install ipset tables
+      template: src=templates/etc/ipset.d/{{item}}.j2
+                dest=/etc/ipset.d/{{item}}
+                owner=root
+                group=root
+                mode=0755
+      with_items:
+        - storage.sh
+      tags:
+        - firewall
+        - ipset
+      notify:
+        - Restart ipset
+
+    - name: Enable storage firewall
+      lineinfile: dest=/etc/shorewall/interfaces
+                  regexp="^sys {{paths[interfaces.storage]}}"
+                  line="sys {{paths[interfaces.storage]}}"
+                  insertbefore='^#LAST'
+                  backup=yes
+      notify:
+        - Restart shorewall
+      tags:
+        - firewall
+
+    - name: Install firewall rules
+      template: src=templates/etc/shorewall/rules.d/storage.j2
+                dest=/etc/shorewall/rules.d/storage
+                owner=root
+                group=root
+                mode=0640
+      tags:
+        - firewall
+      notify:
+      - Restart shorewall
+
+
+### DISKS
+    - name: Create lustre VG
+      lvg: vg={{lustre.vg_root}}
+           pvs={{lustre.vg_pvs}}
+           pesize={{lustre.vg_size}}
+      tags:
+        - vg
+
+    # ansbile bug
+    - name: Create lustre LV
+      lvol: vg={{lustre.vg_root}}
+            lv={{lustre.lv_data}}
+            size={{lustre.lv_size}}
+      ignore_errors: yes
+      tags:
+        - partition
+        - lvm
+
+    # format MGS/MDT master node
+
+    # format OSS/OST nodes
+
+  handlers:
+    - name: Restart ipset
+      service: name=ipset
+               state=reloaded
+
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted

@@ -102,7 +102,7 @@
         - wheel
 
 ### SSH KEY
-    - name: 
+    - name: Install sysop public key
       authorized_key: user=sysop
                       key="{{ lookup('file', 'keys/sysop.pub') }}"
                       manage_dir=yes

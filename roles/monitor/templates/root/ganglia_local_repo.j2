@@ -1,0 +1,16 @@
+#!/bin/bash
+repo="/repo/ganglia"
+mkdir -p "${repo}"
+pushd "${repo}"
+
+url="http://vuksan.com/centos/RPMS-6/x86_64"
+for i in $(curl -Ls ${url} | \
+  grep 'ganglia\|libconfuse\|libganglia' | \
+  sed s/\.rpm.*// | \
+  sed s/.*=\"// | \
+  grep -v 'Index\|right') ; do
+
+  wget -N -q ${url}/${i}.rpm -O ${i}.rpm
+done
+
+createrepo "${repo}"

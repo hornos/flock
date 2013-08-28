@@ -27,11 +27,11 @@ ignoreip = 127.0.0.1/8 {{networks.system}}/{{masks.system}} {%- for host in syso
 {%- endfor %}
 
 # "bantime" is the number of seconds that a host is banned.
-bantime  = {{timeout}}
+bantime  = {{fail2ban.timeout}}
 
 # A host is banned if it has generated "maxretry" during the last "findtime"
 # seconds.
-findtime  = {{timeout}}
+findtime  = {{fail2ban.timeout}}
 
 # "maxretry" is the number of failures before a host get banned.
 maxretry = {{fail2ban.retry}}

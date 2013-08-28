@@ -96,15 +96,15 @@
       - config
       - error
 
-  - name: Allow HTTP connect
-    seboolean: name=httpd_can_network_connect
-               state=true
-               persistent=yes
-    when: ansible_os_family == "RedHat"
-    notify:
-      - Restart httpd
-    tags:
-      - selinux
+#  - name: Allow HTTP connect
+#    seboolean: name=httpd_can_network_connect
+#               state=true
+#               persistent=yes
+#    when: ansible_os_family == "RedHat"
+#    notify:
+#      - Restart httpd
+#    tags:
+#      - selinux
 
   - name: Start httpd
     service: name={{service.httpd}}
