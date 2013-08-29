@@ -6,31 +6,19 @@ Flock / Rapid Infrastructure Prototype Engine
 ![Flock](http://24.media.tumblr.com/tumblr_lzinfntu2G1qj8pa7o1_500.gif)
 
 ## Install for OS X
-Go home:
+Install [homebrew](http://brew.sh) and [ansible](http://www.ansibleworks.com/docs/gettingstarted.html) and the following packages. *Do not use ansible development branch!*
 
-    cd
-
-For the Flock boot you need `ngnix` and `dnsmasq`:
-
-    brew install nginx dnsmasq python libyaml
+    brew install nginx dnsmasq
 
 Edit your `.profile` or `.bash_profile` and set PATH:
 
     PATH=/usr/local/bin:$PATH
 
-Install python packages:
-
-    pip pyyaml jinja2 paramiko
-
-For the Flock provision you need Ansible:
-
-    git clone git://github.com/ansible/ansible.git
-
 For the Flock you need Flock:
 
     git clone git://github.com/hornos/flock.git
 
-Install VirtualBox extension pack.
+Install [VirtualBox](https://www.virtualbox.org/) with the [extension pack](https://www.virtualbox.org/wiki/Downloads).
 
 ### Setup
 Edit your `.profile` or `.bash_profile`:
@@ -785,12 +773,84 @@ Enable elasticsearch:
 
     flock play @@core roles/monitor/elasticsearch
 
-
-
 ## Message Queue
 
+![FhGFS](http://www.fhgfs.com/wiki/images/FraunhoferFS.png)
 
-## [Lustre](http://myitnotes.info/doku.php?id=en:jobs:lustrefs)
+## FhGFS
+
+[FhGFS](http://www.fhgfs.com/wiki/wikka.php?wakka=FhGFS) is a kickass HPC fs you [should use](http://www.hpcwire.com/hpcwire/2013-07-24/fhgfs_designed_for_scalability_flexibility_in_hpc_clusters.html). Create a bunch of hosts by:
+
+    flock out 3 fhgfs
+
+Provision:
+
+    flock http
+    flock boot
+
+and start the group in the background:
+
+    flock-vbox start /@fhgfs
+
+wait for the reboot signal and turn off the group:
+
+    flock-vbox off /fhgfs
+
+switch to disk boot make a snapshot and start:
+
+    flock-vbox boot /fhgfs disk
+    flock-vbox start /@fhgfs
+    flock-vbox snap /fhgfs init
+
+Change the inventory:
+
+    flenv fhgfs
+
+Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
+
+    flock bootstrap /fhgfs
+
+and ping by `sysop`:
+
+    flock ping @@fhgfs
+
+Check the network topology in `networks.yml` and secure the flock:
+
+    flock play @@fhgfs secure
+    flock reboot @@fhgfs
+    flock-vbox snap /fhgfs secure
+
+Now, reach the ground state:
+
+    flock play @@fhgfs ground
+    flock reboot @@fhgfs
+    flock-vbox snap /fhgfs ground
+
+CentOS `kernel-devel` build link is broken, fix:
+
+     ln -v -f -s /usr/src/kernels/2.6.32-358.14.1.el6.x86_64 /lib/modules/2.6.32-358.el6.x86_64/build
+
+Install FhGFS (mind that InfiniBand is not configured):
+
+    flock play @@fhgfs roles/hpc/fhgfs --extra-vars="master=fhgfs-01"
+
+Verify (TODO cli):
+
+    fhgfs-ctl --listnodes --nodetype=meta --details
+    fhgfs-ctl --listnodes --nodetype=storage --details
+    fhgfs-net
+
+or check the GUI (use Java 6):
+
+    java -jar /opt/fhgfs/fhgfs-admon-gui/fhgfs-admon-gui.jar
+
+Save it for good:
+
+    flock-vbox snap /fhgfs fhgfs
+
+
+
+## FAIL [Lustre](http://myitnotes.info/doku.php?id=en:jobs:lustrefs)
 Create the triangle:
 
     flock out 3 lustre
@@ -861,11 +921,12 @@ Ground state:
 
 Tune the network if you need:
 
-    flock play roles/system/tune
+    flock play roles/network/tune
+    flock-vbox snap /lustre tune
 
 Install Lustre:
 
-    flock play roles/hpc/lustre
+    flock play @@lustre roles/hpc/lustre
     flock reboot @@lustre
     flock-vbox snap /lustre lustre
 
@@ -1125,81 +1186,6 @@ Create a machine and bootstrap:
 
     flock-vbox create kali Debian_64 1 2048
     jockey kick kali @kali 10.1.1.42 kali
-
-![FhGFS](http://www.fhgfs.com/wiki/images/FraunhoferFS.png)
-
-## FhGFS
-
-[FhGFS](http://www.fhgfs.com/wiki/wikka.php?wakka=FhGFS) is a kickass HPC fs you [should use](http://www.hpcwire.com/hpcwire/2013-07-24/fhgfs_designed_for_scalability_flexibility_in_hpc_clusters.html). Create a bunch of hosts by:
-
-    flock out 3 fhgfs centos64
-
-TODO: groupping in the GUI.
-
-Start the kickstart servers:
-
-    flock http
-    flock boot
-
-and start the group in the background:
-
-    flock-vbox start /@fhgfs
-
-wait for the reboot signal and turn off the group:
-
-    flock-vbox off /fhgfs
-
-switch to disk boot make a snapshot and start:
-
-    flock-vbox boot /fhgfs disk
-    flock-vbox start /@fhgfs
-    flock-vbox snap /fhgfs init
-
-Change the inventory:
-
-    flenv fhgfs
-
-Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
-
-    flock bootstrap /fhgfs
-
-and ping by `sysop`:
-
-    flock ping @@fhgfs
-
-Check the network topology in `networks.yml` and secure the flock:
-
-    flock play @@fhgfs secure
-    flock reboot @@fhgfs
-    flock-vbox snap /fhgfs secure
-
-Now, reach the ground state:
-
-    flock play @@fhgfs ground
-    flock reboot @@fhgfs
-    flock-vbox snap /fhgfs ground
-
-CentOS `kernel-devel` build link is broken, fix:
-
-     ln -v -f -s /usr/src/kernels/2.6.32-358.14.1.el6.x86_64 /lib/modules/2.6.32-358.el6.x86_64/build
-
-Install FhGFS (mind that InfiniBand is not configured):
-
-    flock play @@fhgfs roles/hpc/fhgfs --extra-vars="master=fhgfs-01"
-
-Verify (TODO cli):
-
-    fhgfs-ctl --listnodes --nodetype=meta --details
-    fhgfs-ctl --listnodes --nodetype=storage --details
-    fhgfs-net
-
-or check the GUI (use Java 6):
-
-    java -jar /opt/fhgfs/fhgfs-admon-gui/fhgfs-admon-gui.jar
-
-Save it for good:
-
-    flock-vbox snap /fhgfs fhgfs
 
 ## Ground state cross-check
 Create and `ostest` group with two machines:

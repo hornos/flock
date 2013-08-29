@@ -1,0 +1,26 @@
+#
+# https://coderwall.com/p/13lh6w
+#
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+
+  vars:
+    is_master: "'$inventory_hostname' == $master"
+    is_repo: true
+    nobond: true
+
+  tasks:
+  - debug: msg=master direct when
+    when: inventory_hostname == master
+
+  - debug: msg=master is_master {{is_master}}
+    when: $is_master
+
+
+  - name: Dump variables
+    template: src=templates/dump.j2
+              dest=/tmp/dump
+    tags:
+      - vars

@@ -6,3 +6,6 @@ lustre:
   vg_size: 1048576
   lv_data: 'lv_lustre'
   lv_size: 256000
+  fsname: 'lustre'
+  mdt: '/lustre/mdt'
+  ost: '/lustre/ost'

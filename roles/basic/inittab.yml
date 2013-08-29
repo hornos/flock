@@ -7,7 +7,7 @@
     - vars/inittab.yml
 
   vars:
-    is_reinit: "'$reinit' == 'yes'"
+    is_reinit: flase
 
   tasks:
 
@@ -247,4 +247,4 @@
 
   - name: Reinit
     command: /root/bin/reinit
-    when: '$is_reinit'
+    when: is_reinit

@@ -12,8 +12,7 @@
 - hosts: all
 
   vars:
-    nodetect: "no"
-    usehosts: "yes"
+    usehosts: true
 
   vars_files:
     - networks.yml
@@ -62,7 +61,7 @@
             group=root
             state=directory
       tags:
-        - hosts
+        - dnsmasq
 
     - name: Enable /etc/hosts.d
       lineinfile: dest=/etc/dnsmasq.conf
@@ -73,7 +72,7 @@
       notify:
         - Restart dnsmasq
       tags:
-        - hosts
+        - dnsmasq
 
     - name: Install /etc/hosts
       template: src=templates/etc/hosts.j2
@@ -82,7 +81,7 @@
                 group=root
                 mode=0644
                 backup=yes
-      when: "'$usehosts' == 'yes'"
+      when: usehosts
       notify:
         - Restart dnsmasq
       tags:

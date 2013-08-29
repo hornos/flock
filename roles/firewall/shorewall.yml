@@ -156,7 +156,7 @@
       - rules
       - vpn
       - masq
-    when: '$is_natvpn'
+    when: is_natvpn
     notify:
       - Restart shorewall
 

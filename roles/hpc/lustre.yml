@@ -3,15 +3,18 @@
 #
 # https://wiki.hpdd.intel.com/display/PUB/Walk-thru-+Deploying+Lustre+pre-built+RPMs
 #
+# FAIL: /usr/lib64/lustre/tests/llmount.sh
+#
 ---
 - hosts: all
   vars_files:
     - networks.yml
     #- vars/lustre.yml
+    - vars/${inventory_hostname}.yml
 
   vars:
-    is_master: "'$inventory_hostname' == '$master'"
-    is_repo: "'$repo' == 'yes'"
+    is_repo: true
+    nobond: true
 
   tasks:
   - name: Install packages
@@ -40,7 +43,7 @@
   - name: Run fix script
     shell: /root/lustre_local_repo
     when: ansible_os_family == "RedHat"
-    when: '$is_repo'
+    when: is_repo
     tags:
       - packages
       - fix
@@ -64,7 +67,7 @@
       - packages
       - remove
 
-  - name: Install Utilities
+  - name: Install Lustre Utilities
     yum: name={{item}}
          state=installed
          enablerepo=lustre
@@ -78,7 +81,7 @@
       - packages
       - utilities
 
-  - name: Install Lustre
+  - name: Install Lustre Server
     yum: name={{item}}
          state=installed
          enablerepo=lustre
@@ -89,16 +92,24 @@
       - perf
       - lustre-modules
       - lustre
+      - lustre-iokit
+      - lustre-osd-ldiskfs
+      - lustre-tests
+      - lustre-ldiskfs
     when: ansible_os_family == "RedHat"
     tags:
       - packages
       - lustre
+      - server
 
-#  - name: Set grub default
-#    lineinfile: dest=/boot/grub/grub.conf
-#                regexp='^default'
-#                line='default=0'
-#    when: ansible_os_family == "RedHat"
-#    tags:
-#      - grub
-#
+  # for bonding uncomment BONDING_OPTS
+  - name: Configure LNET interface
+    template: src=templates/etc/sysconfig/network-scripts/ifcfg-storage.j2
+              dest=/etc/sysconfig/network-scripts/ifcfg-{{paths[interfaces.storage]}}
+              backup=yes
+    when: nobond
+    tags:
+      - interfaces
+
+  - name: Start LNET interface
+    shell: /sbin/ifup {{paths[interfaces.storage]}}

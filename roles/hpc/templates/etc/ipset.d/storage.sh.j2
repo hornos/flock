@@ -22,10 +22,7 @@ case ${mode} in
   start)
     ipset/start
     echo "Setting storage servers"
-    # TODO: hostvars problem?
-    # {{hostvars[host]}}
     {% for host in hostvars %}
-      # {{host}}
       ipset -exist -A ${gbn} {{ hostvars[host]['ansible_'+paths[interfaces.storage]]['ipv4']['address'] }}
     {% endfor %}
     ipset/save

@@ -13,6 +13,12 @@
     yum: name={{item}}
          state=installed
     with_items:
+      - python-pip
+      - python-devel
+      - python-crypto
+      - python-setuptools
+      - python-sqlite2
+      - pyOpenSSL
       - python-psutil
     when: ansible_os_family == "RedHat"
     tags:

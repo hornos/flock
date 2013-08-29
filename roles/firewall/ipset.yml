@@ -26,8 +26,8 @@
     - vars/ipset.yml
 
   vars:
-    is_reset: "'$reset' == 'yes'"
-    is_hungary: "'$hungary' == 'yes'"
+    is_reset: false
+    is_hungary: false
 
   tasks:
 ### PACKAGES
@@ -89,7 +89,7 @@
       with_items:
         - vh.sh
         - tmobile.sh
-      when: '$is_hungary'
+      when: is_hungary
       tags:
         - config
         - hungary
@@ -103,7 +103,7 @@
         - root.save
         - sysop.save
         - private.save
-      when: '$is_reset'
+      when: is_reset
       tags:
         - fix
 

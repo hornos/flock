@@ -9,24 +9,13 @@
   vars_files:
     - networks.yml
     - vars/lustre.yml
-    - vars/${inventory_hostname}.yml
 
   # TODO: better bonding detect
   vars:
     nobond: true
+    format: false
 
   tasks:
-    # for bonding uncomment BONDING_OPTS
-    - name: Configure LNET interface
-      template: src=templates/etc/sysconfig/network-scripts/ifcfg-storage.j2
-                dest=/etc/sysconfig/network-scripts/{{paths[interfaces.storage]}}
-                backup=yes
-      when: nobond
-      tags:
-        - interfaces
-
-    - name: Start LNET interface
-      shell: /sbin/ifup {{paths[interfaces.storage]}}
 
 ### NETWORK
 # /etc/network is installed
@@ -94,7 +83,47 @@
         - partition
         - lvm
 
+### MASTER NODE
     # format MGS/MDT master node
+    # mkfs.lustre --fsname=FS --mgs --mdt --index=0 /dev/md1 (/dev/md1 is software RAID1)
+    # mkdir /mdt
+    # mount -t lustre /dev/md1 /mdt
+    # echo ”/dev/md1 /mdt lustre defaults,_netdev 0 0” » /etc/fstab
+    # fails
+    # - name: Format MGS/MDT partition
+    #   filesystem: fstype=lustre
+    #               dev=/dev/{{lustre.vg_root}}/{{lustre.lv_data}}
+    #               opts="--fsname={{lustre.fsname}} --reformat --mdt --mgs"
+    #               force=yes
+    #   when: inventory_hostname == master and format
+    #   tags:
+    #     - fs
+    - name: Format MGS/MDT partition
+      shell: '/usr/sbin/mkfs.lustre --reformat --fsname={{lustre.fsname}} --mdt --mgs /dev/{{lustre.vg_root}}/{{lustre.lv_data}}'
+      when: inventory_hostname == master and format
+      tags:
+        - fs
+
+
+    - name: Create MDT directory
+      file: path={{lustre.mdt}}
+            state=directory
+      when: inventory_hostname == master
+      tags:
+        - directories
+        - fs
+
+    - name: Mount MDT partition
+      mount: name={{lustre.mdt}}
+             src=/dev/{{lustre.vg_root}}/{{lustre.lv_data}}
+             fstype=lustre
+             opts='defaults,_netdev'
+             state=mounted
+      when: inventory_hostname == master
+      tags:
+        - fs
+
+### DATA NODES
 
     # format OSS/OST nodes
 
