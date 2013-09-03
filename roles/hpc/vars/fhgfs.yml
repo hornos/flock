@@ -11,8 +11,10 @@ key: RPM-GPG-KEY-fhgfs
 # http://www.fhgfs.com/wiki/wikka.php?wakka=StorageServerTuning
 #
 fhgfs:
-  vg_root: 'vg_root'
-  lv_data: 'lv_fhgfs_data'
+  vg_root: 'vg_fhgfs'
+  vg_pvs: '/dev/sdb,/dev/sdc,/dev/sdd,/dev/sde'
+  vg_size: 1048576
+  lv_data: 'lv_data'
   lv_data_size: 256000
   lv_data_opts: '-d su=64k,sw=9 -l version=2,su=64k'
   lv_data_mnt: '/data/fhgfs/data'
@@ -22,5 +24,6 @@ fhgfs:
   lv_meta_mnt: '/data/fhgfs/meta'
   data_opts: 'largeio,inode64,swalloc,noatime,nodiratime,allocsize=131072k,nobarrier'
   meta_opts: 'noatime,nodiratime,nobarrier,user_xattr'
+  interface: eth0
   state: '/common/fhgfs/state'
   mount: '/mnt/fhgfs'

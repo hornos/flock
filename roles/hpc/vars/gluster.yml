@@ -2,7 +2,10 @@ url: http://download.gluster.org/pub/gluster/glusterfs/LATEST/EPEL.repo
 repo: glusterfs-epel.repo
 
 gluster:
-  vg_root: 'vg_root'
+  interface: eth2
+  vg_root: 'vg_lustre'
+  vg_pvs: '/dev/sdb,/dev/sdc,/dev/sdd,/dev/sde'
+  vg_size: 1048576
   lv_data: 'lv_glusterfs_common_brick1'
   lv_size: 256000
   lv_mnt: '/data/glusterfs/common/brick1'

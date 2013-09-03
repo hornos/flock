@@ -204,6 +204,10 @@ case ${cmd} in
     jockey $cmd
     exit $?
     ;;
+  snap)
+    flock-vbox $cmd ${_args}
+    exit $?
+    ;;
   kick)
     jockey $cmd ${_args}
     exit $?

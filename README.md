@@ -775,11 +775,145 @@ Enable elasticsearch:
 
 ## Message Queue
 
-![FhGFS](http://www.fhgfs.com/wiki/images/FraunhoferFS.png)
+# Filesystems
 
-## FhGFS
+[Gluster vs FhGFS](http://moo.nac.uci.edu/~hjm/fhgfs_vs_gluster.html)
 
-[FhGFS](http://www.fhgfs.com/wiki/wikka.php?wakka=FhGFS) is a kickass HPC fs you [should use](http://www.hpcwire.com/hpcwire/2013-07-24/fhgfs_designed_for_scalability_flexibility_in_hpc_clusters.html). Create a bunch of hosts by:
+## Ceph FS
+
+## Gluster
+Triangle:
+
+    flock out 3 gluster
+
+Provision:
+
+    flock http
+    flock boot
+
+and start the group in the background:
+
+    flock-vbox start /@gluster
+
+wait for the reboot signal and turn off the group:
+
+    flock-vbox off /gluster
+
+switch to disk boot make a snapshot and start:
+
+    flock-vbox boot /gluster disk
+    flock-vbox start /@gluster
+    flock-vbox snap /gluster init
+
+Change the inventory:
+
+    flenv gluster
+
+Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
+
+    flock bootstrap /gluster
+
+and ping by `sysop`:
+
+    flock ping @@gluster
+
+Check the network topology in `networks.yml` and secure the flock:
+
+    flock play @@gluster secure
+    flock reboot @@gluster
+    flock snap /gluster secure
+
+Now, reach the ground state:
+
+    flock play @@gluster ground
+    flock reboot @@gluster
+    flock snap /gluster ground
+
+Install storage disks:
+
+    flock shutdown @@gluster
+    flock-vbox storage /gluster
+    flock-vbox intnet /gluster
+
+Change to the mainline kernel:
+
+    flock play @@gluster roles/system/kernel
+    flock reboot @@gluster
+    flock snap /gluster kernel
+
+Start the storage network:
+
+    flock play @@gluster roles/hpc/storagenet
+    flock play @@gluster roles/hpc/storagefw
+
+Start gluster server:
+
+    flock play @@gluster roles/hpc/gluster
+
+Bootstrap the cluster from the master node:
+
+    /root/gluster_bootstrap
+
+Start the client. (Be extremely careful with limits!):
+
+    flock play @@gluster roles/hpc/glusterfs
+
+Install the Gluster top:
+
+    flock play @@gluster roles/hpc/gtop
+
+Start to monitor with gtop:
+
+    /opt/gluster-monitor/gtop.py
+
+Save:
+
+    flock snap /gluster gluster
+
+Make a client (`centos` flock) with `intnet` and the new kernel and enable the storage network:
+
+    flock play @@centos roles/hpc/storagenet
+    flock play @@centos roles/hpc/storagefw --tag interface
+
+Enable client access on servers:
+
+    flock play @@gluster roles/hpc/glusterfw
+
+Try to ping and portmap Gluster ports from the client and mount the volume on the client:
+
+    flock play @@centos roles/hpc/glustermnt
+
+Test the fs with FIO:
+
+    yum install fio
+
+    flock snap /centos test
+    flock snap /gluster test
+
+TODO: HA test
+
+### [Troubleshooting](http://mjanja.co.ke/2013/03/troubleshooting-glusterfs-performance-issues/)
+Check the network bandwidth:
+
+    [root@gluster-01 ~]# iperf -s -p 49999
+    [root@centos-01 ~]# iperf -c 10.2.0.1 -P3 -p 49999 
+
+Check local disk speed (dd zero many times):
+
+    [root@gluster-01 ~]# echo 3 > /proc/sys/vm/drop_caches
+    [root@gluster-01 ~]# dd if=/dev/zero of=/tmp/zero bs=1M count=1000
+
+Check context switching (system cs column):
+
+    [root@gluster-01 ~]# pmstat
+
+<!--
+http://www.admin-magazine.com/HPC/Articles/GlusterFS
+http://gluster.org/community/documentation/index.php/Gluster_3.2:_Installing_GlusterFS_on_Red_Hat_Package_Manager_(RPM)_Distributions
+-->
+
+## [FhGFS](http://www.fhgfs.com/wiki/wikka.php?wakka=FhGFS)
+Triangle:
 
     flock out 3 fhgfs
 
@@ -818,23 +952,31 @@ Check the network topology in `networks.yml` and secure the flock:
 
     flock play @@fhgfs secure
     flock reboot @@fhgfs
-    flock-vbox snap /fhgfs secure
+    flock snap /fhgfs secure
 
 Now, reach the ground state:
 
     flock play @@fhgfs ground
     flock reboot @@fhgfs
-    flock-vbox snap /fhgfs ground
+    flock snap /fhgfs ground
 
-CentOS `kernel-devel` build link is broken, fix:
+Install storage disks:
 
-     ln -v -f -s /usr/src/kernels/2.6.32-358.14.1.el6.x86_64 /lib/modules/2.6.32-358.el6.x86_64/build
+    flock shutdown @@fhgfs
+    flock-vbox storage /fhgfs
+    flock-vbox intnet/fhgfs
+
+CentOS `kernel-devel` build link is broken, fix (*mind the actual version!*):
+
+     ln -v -f -s /usr/src/kernels/2.6.32-358.18.1.el6.x86_64 /lib/modules/2.6.32-358.el6.x86_64/build
+
+    flock snap /fhgfs storage
 
 Install FhGFS (mind that InfiniBand is not configured):
 
     flock play @@fhgfs roles/hpc/fhgfs --extra-vars="master=fhgfs-01"
 
-Verify (TODO cli):
+Verify (ont the master node):
 
     fhgfs-ctl --listnodes --nodetype=meta --details
     fhgfs-ctl --listnodes --nodetype=storage --details
@@ -844,13 +986,22 @@ or check the GUI (use Java 6):
 
     java -jar /opt/fhgfs/fhgfs-admon-gui/fhgfs-admon-gui.jar
 
+mirror metadata:
+
+    mkdir /mnt/fhgfs/test
+    fhgfs-ctl --mirrormd /mnt/fhgfs/test
+
+mirror data:
+
+    fhgfs-ctl --setpattern --chunksize=1m --numtargets=2 --raid10 /mnt/fhgfs/test
+
 Save it for good:
 
     flock-vbox snap /fhgfs fhgfs
 
+*Mind that, currently there is no any HA in FhGFS (distribute-only).*
 
-
-## FAIL [Lustre](http://myitnotes.info/doku.php?id=en:jobs:lustrefs)
+## [Lustre](http://myitnotes.info/doku.php?id=en:jobs:lustrefs)
 Create the triangle:
 
     flock out 3 lustre
@@ -933,6 +1084,8 @@ Install Lustre:
 Create and mount filesystems. The default install uses 4 disks on the OSS without bonding.
 
     flock play roles/hpc/lustrefs
+
+*Lustre test script failed*
 
 
 <!--

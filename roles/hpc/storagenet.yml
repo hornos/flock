@@ -1,0 +1,19 @@
+
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    - vars/${inventory_hostname}.yml
+
+  tasks:
+
+### NETWORK
+    - name: Configure storage interface
+      template: src=templates/etc/sysconfig/network-scripts/ifcfg-storage.j2
+                dest=/etc/sysconfig/network-scripts/ifcfg-{{paths[interfaces.storage]}}
+                backup=yes
+      tags:
+        - interfaces
+
+    - name: Start storage interface
+      shell: /sbin/ifup {{paths[interfaces.storage]}}

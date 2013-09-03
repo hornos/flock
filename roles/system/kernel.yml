@@ -1,9 +1,6 @@
 #
 # Install Mainline Kernel
 #
-# Clean old kernel stuff:
-# --extra-vars "clean=yes"
-#
 ---
 - hosts: all
 
@@ -11,7 +8,7 @@
     - vars/kernel.yml
 
   vars:
-    is_clean: "'$clean' == 'yes'"
+    clean: true
 
   tasks:
 
@@ -22,7 +19,7 @@
     with_items:
       - kernel-headers
       - kernel-devel
-    when: '$is_clean'
+    when: clean
     tags:
       - packages
 

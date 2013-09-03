@@ -1,0 +1,43 @@
+
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    - vars/${inventory_hostname}.yml
+
+  tasks:
+
+### FIREWALL
+    - name: Install ipset tables
+      template: src=templates/etc/ipset.d/{{item}}.j2
+                dest=/etc/ipset.d/{{item}}
+                owner=root
+                group=root
+                mode=0755
+      with_items:
+        - gluster.sh
+      tags:
+        - ipset
+      notify:
+        - Restart ipset
+
+    - name: Install firewall rules
+      template: src=templates/etc/shorewall/rules.d/gluster.j2
+                dest=/etc/shorewall/rules.d/gluster
+                owner=root
+                group=root
+                mode=0640
+      tags:
+        - rules
+      notify:
+      - Restart shorewall
+
+
+  handlers:
+    - name: Restart ipset
+      service: name=ipset
+               state=reloaded
+
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted

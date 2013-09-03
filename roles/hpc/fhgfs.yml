@@ -6,11 +6,8 @@
 ---
 - hosts: all
   vars_files:
-    - ["custom.yml", "networks.yml"]
+    - networks.yml
     - vars/fhgfs.yml
-
-  vars:
-    is_master: "'$inventory_hostname' == '$master'"
 
   tasks:
   - name: Download FhGFS release key
@@ -56,98 +53,107 @@
       - fhgfs-mgmtd
       - fhgfs-admon
       - java-1.6.0-openjdk
-    when: $is_master
+    when: inventory_hostname == master
     tags:
       - packages
 
-### DATA
-  - name: Create FhGFS data partition
+### CRATE VG
+  - name: Create fhgfs VG
+    lvg: vg={{fhgfs.vg_root}}
+         pvs={{fhgfs.vg_pvs}}
+         pesize={{fhgfs.vg_size}}
+    tags:
+      - vg
+
+
+### DATA PARTITION
+# should run on storage nodes
+  - name: Create data partition
     lvol: vg={{fhgfs.vg_root}}
           lv={{fhgfs.lv_data}}
           size={{fhgfs.lv_data_size}}
+    ignore_errors: yes
+    when: inventory_hostname != master
     tags:
-      - partition
       - data
-      - lvm
 
-  - name: Create filesystem for data
+  - name: Create fs for data
     filesystem: fstype=xfs
-                dev=/dev/${fhgfs.vg_root}/${fhgfs.lv_data}
-                opts="${fhgfs.lv_data_opts}"
+                dev=/dev/{{fhgfs.vg_root}}/{{fhgfs.lv_data}}
+                opts="{{fhgfs.lv_data_opts}}"
+    when: inventory_hostname != master
     tags:
-      - partition
       - data
-      - fs
 
   - name: Creat mount dir for data
-    file: path=${fhgfs.lv_data_mnt}
+    file: path={{fhgfs.lv_data_mnt}}
           state=directory
+    when: inventory_hostname != master
     tags:
-      - partition
       - data
 
   - name: Mount data partition
-    mount: name=${fhgfs.lv_data_mnt}
-           src=/dev/${fhgfs.vg_root}/${fhgfs.lv_data}
+    mount: name={{fhgfs.lv_data_mnt}}
+           src=/dev/{{fhgfs.vg_root}}/{{fhgfs.lv_data}}
            fstype=xfs
-           opts="${fhgfs.data_opts}"
+           opts="{{fhgfs.data_opts}}"
            state=mounted
+    when: inventory_hostname != master
     tags:
-      - partition
       - data
 
 
-### META
+### META PARTITION
+# should run on storage or meta nodes
   - name: Create meta partition
-    lvol: vg=${fhgfs.vg_root}
-          lv=${fhgfs.lv_meta}
-          size=${fhgfs.lv_meta_size}
+    lvol: vg={{fhgfs.vg_root}}
+          lv={{fhgfs.lv_meta}}
+          size={{fhgfs.lv_meta_size}}
+    ignore_errors: yes
+    when: inventory_hostname == master
     tags:
-      - partition
       - meta
-      - lvm
 
-  - name: Create filesystem for meta
+  - name: Create fs for meta
     filesystem: fstype=ext4
-                dev=/dev/${fhgfs.vg_root}/${fhgfs.lv_meta}
-                opts="${fhgfs.lv_meta_opts}"
+                dev=/dev/{{fhgfs.vg_root}}/{{fhgfs.lv_meta}}
+                opts="{{fhgfs.lv_meta_opts}}"
+    when: inventory_hostname == master
     tags:
-      - partition
       - meta
-      - fs
 
   - name: Creat mount dir for meta
-    file: path=${gluster.lv_meta_mnt}
+    file: path={{gluster.lv_meta_mnt}}
           state=directory
+    when: inventory_hostname == master
     tags:
-      - partition
       - meta
 
   - name: Mount meta partition
-    mount: name=${fhgfs.lv_meta_mnt}
-           src=/dev/${fhgfs.vg_root}/${fhgfs.lv_meta}
+    mount: name={{fhgfs.lv_meta_mnt}}
+           src=/dev/{{fhgfs.vg_root}}/{{fhgfs.lv_meta}}
            fstype=ext4
-           opts="${fhgfs.meta_opts}"
+           opts="{{fhgfs.meta_opts}}"
            state=mounted
+    when: inventory_hostname == master
     tags:
-      - partition
       - meta
 
+
 ### SECURITY
-# in production use separate storage network 10/100Ge or IB
+# in production use separate and redundant storage network 10/100Ge or IB
   - name: Create connInterfacesFile
-    copy: content=eth0
+    copy: content={{fhgfs.interface}}
           dest=/etc/fhgfs/connInterfacesFile
     tags:
-      - config
-      - security
+      - interfaces
 
   - name: Create connNetFilterFile
     copy: content={{networks.system}}/{{masks.system}}
           dest=/etc/fhgfs/connNetFilterFile
     tags:
-      - config
-      - security
+      - netfilter
+
 
 ### MANAGEMENT SERVER
   - name: Create state directory
@@ -155,54 +161,44 @@
           owner=root
           group=root
           state=directory
-    when: '$is_master'
+    when: inventory_hostname == master
     tags:
-      - directories
       - state
-      - config
-      - mgmt
-
-  - name: Create client mount directory
-    file: path={{fhgfs.mount}}
-          owner=root
-          group=root
-          state=directory
-    tags:
-      - directories
-      - config
 
   - name: Install mgmtd config
     template: src=templates/etc/fhgfs/fhgfs-mgmtd.conf.j2
               dest=/etc/fhgfs/fhgfs-mgmtd.conf
               backup=yes
     tags:
-      - config
       - mgmt
-    when: '$is_master'
+    when: inventory_hostname == master
     notify:
       - Restart fhgfs-mgmtd
+
 
 ### METADATA SERVER
   - name: Install meta config
     template: src=templates/etc/fhgfs/fhgfs-meta.conf.j2
               dest=/etc/fhgfs/fhgfs-meta.conf
               backup=yes
+    when: inventory_hostname == master
     tags:
-      - config
       - meta
     notify:
       - Restart fhgfs-meta
+
 
 #### STORAGE SERVER
   - name: Install storage config
     template: src=templates/etc/fhgfs/fhgfs-storage.conf.j2
               dest=/etc/fhgfs/fhgfs-storage.conf
               backup=yes
+    when: inventory_hostname != master
     tags:
-      - config
       - storage
     notify:
       - Restart fhgfs-storage
+
 
 #### MONITOR SERVER
   - name: Install admon config
@@ -210,13 +206,21 @@
               dest=/etc/fhgfs/fhgfs-admon.conf
               backup=yes
     tags:
-      - config
-      - admon
-    when: '$is_master'
+      - monitor
+    when: inventory_hostname == master
     notify:
       - Restart fhgfs-admon
 
-#### CLIENT
+
+### CLIENTS
+  - name: Create client mount directory
+    file: path={{fhgfs.mount}}
+          owner=root
+          group=root
+          state=directory
+    tags:
+      - client
+
   - name: Install client config
     template: src=templates/etc/fhgfs/fhgfs-client.conf.j2
               dest=/etc/fhgfs/fhgfs-client.conf
@@ -227,32 +231,46 @@
     notify:
       - Restart fhgfs-client
 
+
 ### SERVICES
   - name: Start master services
     service: name={{item}}
              state=started
              enabled=yes
-    when: '$is_master'
+    when: inventory_hostname == master
     with_items:
       - fhgfs-mgmtd
       - fhgfs-admon
+      - fhgfs-meta
     tags:
       - services
       - master
 
-  - name: Start common services
+  - name: Start storage services
     service: name={{item}}
              state=started
              enabled=yes
     with_items:
-      - fhgfs-meta
       - fhgfs-storage
+    when: inventory_hostname != master
+    tags:
+      - services
+      - slave
+
+
+  - name: Start client services
+    service: name={{item}}
+             state=started
+             enabled=yes
+    with_items:
       - fhgfs-helperd
       - fhgfs-client
     tags:
       - services
-      - common
+      - client
 
+
+### HANDLERS
   handlers:
     - name: Restart fhgfs-mgmtd
       service: name=fhgfs-mgmtd

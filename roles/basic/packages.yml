@@ -52,9 +52,11 @@
       - sysstat
       - dstat
       - ifstat
+      - iperf
     when: ansible_os_family == "RedHat"
     tags:
       - packages
+      - perf
 
 # TODO: nodejs and repos
   - name: Install packages
