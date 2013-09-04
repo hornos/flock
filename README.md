@@ -1,9 +1,13 @@
-Flock / Rapid Infrastructure Prototype Engine
+Flock - Infrastructure Prototype Engine
 =================================================
 
 *The fact is, Adelmo's death has caused much spiritual unease among my flock.*
 
 ![Flock](http://24.media.tumblr.com/tumblr_lzinfntu2G1qj8pa7o1_500.gif)
+
+You can use flock to install and setup arbitrary large infrastructure from scratch from a Linux or OS X laptop. All you need is some basic CLI tools, Ansible and internet connection.
+
+Virtual environments are built in VirtualBox. The goal is to keep virtual (test) and production systems as close as possible.
 
 ## Install for OS X
 Install [homebrew](http://brew.sh) and [ansible](http://www.ansibleworks.com/docs/gettingstarted.html) and the following packages. *Do not use ansible development branch!*
@@ -21,23 +25,30 @@ For the Flock you need Flock:
 Install [VirtualBox](https://www.virtualbox.org/) with the [extension pack](https://www.virtualbox.org/wiki/Downloads).
 
 ### Setup
-Edit your `.profile` or `.bash_profile`:
+Edit your `.profile` or `.bash_profile` and login again:
 
     source $HOME/flock/flockrc
 
-Or run
-
-    source $HOME/flock/flockrc
-
-Mind that `flock` always works relative to the current directory:
+Mind that `flock` always works relative to the current directory so make your moves in the flock directory:
 
     pushd flock
 
-Generate SSH keys:
+You need some initial step after install eg. generate SSH keys:
 
     flock init
 
 Keys and certificates are in the `keys` directory.
+
+### Flock Commands
+
+    flock      - main Ansible wrapper
+    flock-ca   - simple CA manager
+    flock-vbox - VirtualBox wrapper
+    flock-vpn  - OpenVPN wrapper
+    jockey     - Bootp wrapper
+
+#### Operators
+
 
 ## Network Install
 Download [syslinux 4.X](https://www.kernel.org/pub/linux/utils/boot/syslinux/) and the following files to `space/boot`:
@@ -67,6 +78,14 @@ Space Jockey (`jockey`) is a simple Cobbler replacement. You need a simple inven
 
 The boot server listens on `boot_server` IP and Debian-based systems use the `interface` interface to reach the internet (NAT or bridged or 2nd physical network card). DNSmasq gives IPs from the `dhcp_range`.
 
+Boot server is started on the selected interface by:
+
+    flock boot
+
+Kickstart or preseed files are fetched from a HTTP server started by:
+
+    flock http
+
 ### Core Servers
 The following network topology is used:
 
@@ -95,6 +114,9 @@ Switch to disk boot make a snapshot and start again:
 
     flock-vbox boot /core disk
     flock-vbox start /@core
+
+With the `snap` command you can snapshot the VM:
+
     flock-vbox snap /core init
 
 Change the inventory:

@@ -109,10 +109,13 @@ case ${cmd} in
     exit 0
     ;;
   keys)
-    # check SSH keys
+    echo ""
+    echo "SSH id : bits  FP  email (type)"
+    echo "------------------------------------------------"
     for i in sysop nopass ; do
       echo "${i} : $(ssh-keygen -lf keys/${i})"
     done
+    echo ""
     exit 0
     ;;
   play)
@@ -122,10 +125,6 @@ case ${cmd} in
     fi
     command="ansible-playbook"
     command_options="${module} -l ${hosts}"
-    ;;
-  rollback)
-    command="ansible-playbook"
-    command_options="${module} -l ${hosts} --extra-vars \"rollback=yes\""
     ;;
   show)
     command="ansible-playbook"
@@ -141,7 +140,7 @@ case ${cmd} in
     command="ansible"
     command_options="${hosts} -m ${module}"
     ;;
-  setup)
+  setup|facts|ohai)
     command="ansible"
     command_options="${hosts} -m setup"
     ;;
@@ -221,7 +220,7 @@ case ${cmd} in
     os=${1:-RedHat_64}
 
     echo ""
-    read -p "Create machines?"
+    read -p "Create fock of ${no} machines?"
 
     echo "[${name}]" > ${name}
     for i in $(seq 1 ${no}) ; do
