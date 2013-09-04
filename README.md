@@ -890,7 +890,7 @@ Test the fs with FIO:
     flock snap /centos test
     flock snap /gluster test
 
-TODO: HA test
+HA tests OK. Tune the timeout parameters!
 
 ### [Troubleshooting](http://mjanja.co.ke/2013/03/troubleshooting-glusterfs-performance-issues/)
 Check the network bandwidth:

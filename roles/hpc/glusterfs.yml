@@ -56,6 +56,13 @@
     tags:
       - limits
 
+  - name: Create common dir
+    file: path={{gluster.common}}
+          state=directory
+    tags:
+      - partition
+      - common
+
   - name: Mount common
     mount: name={{gluster.common}}
            src=127.0.0.1:/{{gluster.volume}}
@@ -64,6 +71,7 @@
            state=mounted
     tags:
       - mount
+      - common
 
 #### SELINUX
 ## http://ramblings.narrabilis.com/making-an-selinux-module-quickly

@@ -1,6 +1,10 @@
 url: http://download.gluster.org/pub/gluster/glusterfs/LATEST/EPEL.repo
 repo: glusterfs-epel.repo
 
+#
+# tune ping and frame timeouts
+#
+
 gluster:
   interface: eth2
   vg_root: 'vg_lustre'
@@ -12,7 +16,9 @@ gluster:
   transport: 'tcp,rdma'
   volume: 'common'
   replica: 3
-  common: '/common'
+  common: '/gluster/common'
   fio_size: '100M'
   disk: 'sda'
-  opts: 'defaults,_netdev'
+  opts: 'defaults,fetch-attempts=9,_netdev'
+  ping: 30
+  frame: 60

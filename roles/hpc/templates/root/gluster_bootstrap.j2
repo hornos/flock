@@ -39,6 +39,11 @@ read -p "Start volume $VOLUME?"
 gluster volume start $VOLUME
 
 echo ""
+read -o "Set timeouts on $VOLUME?"
+gluster volume set $VOLUME {{gluster.ping}} 30
+gluster volume set $VOLUME {{gluster.frame}} 60
+
+echo ""
 read -p "Volume info $VOLUME?"
 gluster volume info
 

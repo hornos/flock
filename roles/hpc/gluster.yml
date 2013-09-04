@@ -62,12 +62,6 @@
     tags:
       - partition
 
-  - name: Create common dir
-    file: path={{gluster.common}}
-          state=directory
-    tags:
-      - partition
-
   - name: Mount glusterfs
     mount: name={{gluster.lv_mnt}}
            src=/dev/{{gluster.vg_root}}/{{gluster.lv_data}}
