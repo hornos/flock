@@ -37,7 +37,7 @@ You need some initial step after install eg. generate SSH keys:
 
     flock init
 
-Keys and certificates are in the `keys` directory.
+Keys and certificates are in the `keys` directory. By default all your operations are done by the `sysop` user on the remote machines.
 
 ### Flock Commands
 
@@ -49,6 +49,8 @@ Keys and certificates are in the `keys` directory.
 
 #### Operators
 
+#### Customize for production
+Flock playbooks are never general. You might have to make customized playbook trees for production systems. Please keep the flock tree intact and create a new directory for your needs. Since flock commands are realtive you can use any directory.
 
 ## Network Install
 Download [syslinux 4.X](https://www.kernel.org/pub/linux/utils/boot/syslinux/) and the following files to `space/boot`:
@@ -56,7 +58,7 @@ Download [syslinux 4.X](https://www.kernel.org/pub/linux/utils/boot/syslinux/) a
     core/pxelinux.0
     com32/mboot/mboot.c32
 
-Get install images eg. for Debian (mind the trailing slash!):
+Download install images eg. for Debian (mind the trailing slash!):
 
     pushd space/boot
     rsync -avP ftp.us.debian.org::debian/dists/wheezy/main/installer-amd64/current/images/netboot/ ./wheezy
