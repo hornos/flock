@@ -88,3 +88,7 @@ LABEL ubcpp
 	MENU LABEL ubcpp
 	KERNEL precise/ubuntu-installer/amd64/linux
 	APPEND vga=788 initrd=precise/ubuntu-installer/amd64/initrd.gz auto=true priority=critical netcfg/choose_interface=INTERFACE preseed/url=http://KICKSTART netcfg/get_hostname=ubcpp
+LABEL coreos
+    MENU LABEL coreos
+    KERNEL coreos/vmlinuz
+    APPEND initrd=coreos/initrd.gz root=squashfs: state=tmpfs: sshkey="SSHKEY"

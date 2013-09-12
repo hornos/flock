@@ -53,25 +53,37 @@ Keys and certificates are in the `keys` directory. By default all your operation
 Flock playbooks are never general. You might have to make customized playbook trees for production systems. Please keep the flock tree intact and create a new directory for your needs. Since flock commands are realtive you can use any directory.
 
 ## Network Install
+### Prepare Syslinux
 Download [syslinux 4.X](https://www.kernel.org/pub/linux/utils/boot/syslinux/) and the following files to `space/boot`:
 
     core/pxelinux.0
     com32/mboot/mboot.c32
 
+### Ubuntu and Debian
 Download install images eg. for Debian (mind the trailing slash!):
 
     pushd space/boot
     rsync -avP ftp.us.debian.org::debian/dists/wheezy/main/installer-amd64/current/images/netboot/ ./wheezy
     popd
 
-Debian-based systems should be installed with NAT.
+*Warning: Debian-based systems should be installed with NAT!*
 
+### CentOS
 Or get the kickass Debian killer CentOS (mind the trailing slash!):
 
     pushd space/boot
     rsync -avP rsync.hrz.tu-chemnitz.de::ftp/pub/linux/centos/6.4/os/x86_64/isolinux/ ./centos64
     popd
 
+### CoreOS
+Finally, it is [here](http://coreos.com/docs/pxe/):
+
+    mkdir space/boot/coreos
+    pushd space/boot/coreos
+    curl http://storage.core-os.net/coreos/amd64-generic/72.0.0/coreos_production_pxe.vmlinuz > vmlinuz
+    curl http://storage.core-os.net/coreos/amd64-generic/72.0.0/coreos_production_pxe_image.cpio.gz > initrd.gz
+
+### Bootp setup
 Space Jockey (`jockey`) is a simple Cobbler replacement. You need a simple inventory file like this (`space/hosts`):
 
     boot_server=10.1.1.254
@@ -155,6 +167,19 @@ For the awesome PCP download `ftp://oss.sgi.com/projects/pcp/download/mac/` and 
 
     pmstat -h 10.1.1.1 -h 10.1.1.2 -h 10.1.1.3
     /Applications/pmchart.app/Contents/MacOS/pmchart -h 10.1.1.1 -c Overview 
+
+### Boot CoreOS
+Create an empty machine:
+
+    flock-vbox create coreos
+    flock coreos @coreos
+
+Start the boot servers
+
+    flock boot
+    flock http
+
+TODO: network setting, ansible bootstrap
 
 ### FreeIPA
 

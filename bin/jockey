@@ -197,10 +197,12 @@ case ${cmd} in
   ;;
 
   ### just do the ipxe part
-  ipxe)
+  ipxe|coreos)
     ### args
     system=${arg:-local}
     mac=${1}
+    key=${2}
+
     if [ -z "${mac}" ] ; then exit 1; fi
     mac=$(jockey/mac ${mac})
     ks=$(echo "${mac}" | sed s/:/-/g | tr '[:upper:]' '[:lower:]')
@@ -210,10 +212,24 @@ case ${cmd} in
     ipxe_kickstart="${ipxe_root}/01-${ks}"
     template="${jockey_root}/boot/kickstart"
 
-    cat "${template}" | \
-    awk -v k=${http_kickstart} -v d=${system} -v i=${interface} \
-    '{gsub("KICKSTART",k); gsub("_DEFAULT",d); gsub("INTERFACE",i); print}' \
-    > "${ipxe_kickstart}"
+    echo ""
+    echo "kickstart: ${system}"
+    echo "mac: ${mac}"
+    echo ""
+
+    # http://coreos.com/docs/pxe/
+    if [ "${cmd}" = "coreos" ] ; then
+      key=$(cat ${key})
+      cat "${template}" | \
+      awk -v s="${key}" -v d=${system} \
+      '{gsub("SSHKEY",s); gsub("_DEFAULT",d); print}' \
+      > "${ipxe_kickstart}"
+    else
+      cat "${template}" | \
+      awk -v k=${http_kickstart} -v d=${system} -v i=${interface} \
+      '{gsub("KICKSTART",k); gsub("_DEFAULT",d); gsub("INTERFACE",i); print}' \
+      > "${ipxe_kickstart}"
+    fi
   ;;
 
   dump)

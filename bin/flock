@@ -55,6 +55,7 @@ fi
 
 ### common options
 key=./keys/${user}
+pubkey=./keys/${user}.pub
 _key=""
 if test -r ${key} ; then
   _key="--private-key=${key}"
@@ -209,6 +210,10 @@ case ${cmd} in
     ;;
   kick)
     jockey $cmd ${_args}
+    exit $?
+    ;;
+  coreos)
+    jockey $cmd $cmd ${_args} ${pubkey}
     exit $?
     ;;
   out)
