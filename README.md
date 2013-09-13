@@ -817,6 +817,25 @@ TODO:
 * Kernel 3.10 full nohz cpuset scheduler numa shit ptp
 * error: /usr/sbin/nhc: exited with status 0x0100
 
+#### CoreOS
+Download CoreOS:
+
+    TFTROOT=/ww/common/tftpboot/warewulf
+    mkdir -p ${TFTROOT}/coreos
+    cd ${TFTROOT}/coreos
+    curl http://storage.core-os.net/coreos/amd64-generic/72.0.0/coreos_production_pxe.vmlinuz > vmlinuz
+    curl http://storage.core-os.net/coreos/amd64-generic/72.0.0/coreos_production_pxe_image.cpio.gz > initrd.gz
+
+Make the following PXE default config (`${TFTROOT}/pxelinux.cfg/default`):
+
+    default coreos
+    label coreos
+      menu default
+      kernel /coreos/vmlinuz
+      append initrd=/coreos/initrd.gz root=squashfs: state=tmpfs: sshkey="<SSHKEY>"
+
+where `<SSHKEY>` is your SSH public key.
+
 ### Logstash with Kibana
 Enable elasticsearch:
 
