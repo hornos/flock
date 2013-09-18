@@ -8,8 +8,48 @@ if test -r ${ansiblerc} ; then
   source ${ansiblerc} &> /dev/null
 fi
 
-function flenv() {
-  if test -r $1 ; then
-    export ANSIBLE_HOSTS=$1
+function aninv() {
+  local _inventory=./inventory/${1:-hosts}.ansible
+  if test -f ${_inventory} ; then
+    _inventory=$(cd ./inventory;pwd)/${1:-hosts}.ansible
+    export ANSIBLE_HOSTS=${_inventory}
+  else
+    echo "Not found: ${_inventory}"
   fi
+}
+
+function cminv() {
+  local _inventory=./inventory/${1:-hosts}.cmonkey
+  if test -f ${_inventory} ; then
+    _inventory=$(cd ./inventory;pwd)/${1:-hosts}.cmonkey
+    export CMONKEY_HOSTS=${_inventory}
+  else
+    echo "Not found: ${_inventory}"
+  fi
+}
+
+function lsinv() {
+  if test -n "${ANSIBLE_HOSTS}" ; then
+    local _inventory=${ANSIBLE_HOSTS}
+    if test -f ${_inventory} ; then
+      echo ""
+      cat ${_inventory}
+    fi
+  fi
+
+  if test -n "${CMONKEY_HOSTS}" ; then
+    _inventory=${CMONKEY_HOSTS}
+    if test -f ${_inventory} ; then
+      echo ""
+      cat ${_inventory}
+    fi
+  fi
+}
+
+function cmonkey() {
+  local _opts=""
+  if test -f "${CMONKEY_HOSTS}"; then
+    _opts="-c ${CMONKEY_HOSTS}"
+  fi
+  cloudmonkey ${_opts} $*
 }

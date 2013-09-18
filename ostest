@@ -1,3 +1,0 @@
-[ostest]
-centos64 ansible_ssh_host=10.1.1.1 ansible_connection=paramiko
-raring ansible_ssh_host=10.1.1.2 ansible_connection=paramiko

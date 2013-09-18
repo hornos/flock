@@ -150,6 +150,16 @@ case ${cmd} in
     vm/create ${name} ${type} ${cpus} ${memory} ${hdsize} ${hostnet}
   ;;
 
+  template)
+    name=${1:-test}
+    type=${2:-RedHat_64}
+    cpus=${3:-1}
+    memory=${4:-1024}
+    hdsize=${5:-20000}
+    hostnet=${6:-vboxnet0}
+    vm/create ${name} ${type} ${cpus} ${memory} ${hdsize} ${hostnet}
+  ;;
+
   xcp)
     name=${1:-xcp-01}
     type=${2:-RedHat_64}
@@ -262,6 +272,31 @@ case ${cmd} in
   reset)
     # TODO: group
     ${vbox} controlvm "${1}" reset
+  ;;
+
+  clone)
+    host=${1:-test}
+    ${vbox} clonevm ${host} --mode machine \
+                            --name ${host}-clone \
+                            --register
+    exit $?
+  ;;
+
+  vhd)
+    # http://www.sysprobs.com/vdi-vhd-convert-virtualbox-virtual-machines-virtual-pc
+    host=${1:-test}
+    disk=$(${vbox} showvminfo ${host} | \
+    grep vdi | \
+    sed s/\(UUID.*// | \
+    cut -d: -f 3 | \
+    sed -e 's/^ *//g' -e 's/ *$//g')
+    if ! test -f "${disk}" ; then
+      echo "Disk not found: ${disk}"
+      exit 1
+    fi
+    dest="${disk%%vdi}vhd"
+    ${vbox} clonehd "${disk}" "${dest}"  --format VHD
+    exit $?
   ;;
 
   snap)

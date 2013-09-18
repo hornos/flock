@@ -1,2 +1,0 @@
-[centos]
-centos-01 ansible_ssh_host=10.1.1.10 ansible_connection=paramiko

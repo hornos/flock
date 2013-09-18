@@ -1,0 +1,21 @@
+#
+# Clean up for the firewall ipset and shorewall
+#
+---
+- hosts: all
+
+  tasks:
+
+### REDHAT
+  - name: Clean SSH host keys
+    file: path=/etc/ssh/{{item}}
+          state=absent
+    with_items:
+      - ssh_host_dsa_key
+      - ssh_host_dsa_key.pub
+      - ssh_host_key
+      - ssh_host_key.pub
+      - ssh_host_rsa_key
+      - ssh_host_rsa_key.pub
+    tags:
+      - keys

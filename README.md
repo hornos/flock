@@ -10,7 +10,7 @@ You can use flock to install and setup arbitrary large infrastructure from scrat
 Virtual environments are built in VirtualBox. The goal is to keep virtual (test) and production systems as close as possible.
 
 ## Install for OS X
-Install [homebrew](http://brew.sh) and [ansible](http://www.ansibleworks.com/docs/gettingstarted.html) and the following packages. *Do not use ansible development branch!*
+Install [homebrew](http://brew.sh) and [ansible](http://www.ansibleworks.com/docs/gettingstarted.html) and the following packages. *Do not use ansible development branch!* Optionally, you should install [Cloud Monkey](https://cwiki.apache.org/confluence/display/CLOUDSTACK/CloudStack+cloudmonkey+CLI) to hack Cloudstack.
 
     brew install nginx dnsmasq
 
@@ -39,13 +39,25 @@ You need some initial step after install eg. generate SSH keys:
 
 Keys and certificates are in the `keys` directory. By default all your operations are done by the `sysop` user on the remote machines.
 
+#### Inventories
+Ansible host inventories and Cloud Monkey config files are kept under the `inventory` directory with names `.ansible` and `.cmonkey`, respectively. To change Ansbile or Cloud Monkey inventory:
+
+    aninv <HOSTS>
+    cminv <CONF>
+
+where `<HOSTS>` and `<CONF>` are the suffix truncated basename of the inventory file. List inventories by `lsinv`.
+
+If you use RVM you can set prompt indicators, check `profile`.
+
 ### Flock Commands
 
-    flock      - main Ansible wrapper
-    flock-ca   - simple CA manager
+    flock      - Ansible wrapper
+    flock-ca   - Simple CA manager
     flock-vbox - VirtualBox wrapper
     flock-vpn  - OpenVPN wrapper
+    flock-cm   - Cloud Monkey wrapper
     jockey     - Bootp wrapper
+    cmonkey    - Inventory aware Cloud Monkey CLI
 
 #### Operators
 
@@ -100,12 +112,75 @@ Kickstart or preseed files are fetched from a HTTP server started by:
 
     flock http
 
-### Core Servers
-The following network topology is used:
+### Cloudstack (CS) setup
+Mind that network setup can be different in the cloud. Usually, eth0 is connected to the Internet and eth1 is for internal connections. So the topology is the following:
 
-    Network   VBox Net IPv4 Addr  Mask DHCP
-    system    vboxnet0 10.1.1.254 16   off
-    external  NAT/Bridged
+    Network  | Inerface    | IPv4 Addr  | Mask | DHCP
+    -------------------------------------------------
+    external | eth0        | CS         | CS   | on
+    system   | eth1        |                     off
+
+You have to provide IP adresses for the system network. Mind that this network has an assigned IP range.
+
+#### Create Templates
+You can create a template on Cloudstack or in your VirtualBox. Create a template machine (for CentOS with a 20GB disk):
+
+    flock-vbox template centos-template 
+
+Create an Ansible inventory (`.inventory/template.ansible`):
+
+    [template]
+    centos-template ansible_ssh_host=10.1.1.10 ansible_connection=paramiko
+
+Bootstrap the machine:
+
+    flock kick centos64-template @centos-template 10.1.1.10 centos-template
+
+Start the servers and the machine:
+
+    flock http
+    flock boot
+    flock-vbox start centos-template
+
+Switch off bootp and restart the machine:
+
+    flock-vbox off centos-template
+    flock-vbox boot centos-template disk
+    flock-vbox start centos-template
+
+Switch to the template inventory and start cheffing :)
+
+    aninv template
+    jockey password @centos-template
+    flock play root@@template bootstrap
+    flock play @@template secure
+    flock reboot @@template
+    flock-vbox snap centos-template secure
+
+Reach the ground state:
+
+    flock play @@template ground
+    flock reboot @@template
+    flock-vbox snap centos-template ground
+
+Create a template. *Mind that network, firewall resets!* You might have to change NTP settings as well.
+
+    flock play @@template template
+    flock shutdown @@template
+
+Clone the machine or merge all snapshots since VDI to VHD needs a singel disk file.
+
+    flock-vbox clone centos-template
+    flock-vbox vhd centos-template-clone
+
+
+### Core Servers
+The following network topology is used. You have to use vboxnet0 as eth0 since bootp works only on the first interface. For a production or a cloud environment you have to exchange the two.
+
+    Network  | VBox Net    | IPv4 Addr  | Mask | DHCP
+    -------------------------------------------------
+    system   | vboxnet0    | 10.1.1.254 | 16   | off
+    external | NAT/Bridged |
 
 Create 3 VMs:
 
@@ -631,6 +706,8 @@ Verify the queue:
 Save:
 
     flock-vbox snap /ww slurm
+
+[Back to the future](https://www.youtube.com/watch?v=KG2M4ttzBnY).
 
 #### Warewulf
 Generate a cluster key. The cluster key is used to SSH to the compute nodes:

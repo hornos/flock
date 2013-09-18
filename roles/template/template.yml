@@ -1,0 +1,6 @@
+---
+
+- include: network.yml
+- include: firewall.yml
+# fails
+# - include: sshd.yml

@@ -1,0 +1,51 @@
+#
+# Clean up for the firewall ipset and shorewall
+#
+---
+- hosts: all
+
+  tasks:
+
+### REDHAT
+  - name: Clean ipset rules
+    file: path=/etc/ipset.d/{{item}}
+          state=absent
+    with_items:
+      - core.save
+      - core.sh
+      - sysop.save
+      - sysop.sh
+    tags:
+      - ipset
+
+  - name: Change shorewall interface for external network
+    lineinfile: dest=/etc/shorewall/interfaces
+                regexp='^ext'
+                line='ext  eth0 detect dhcp,tcpflags,nosmurfs,routefilter,logmartians'
+    tags:
+      - shorewall
+
+  - name: Change shorewall interface for internal network
+    lineinfile: dest=/etc/shorewall/interfaces
+                regexp='^sys'
+                line='sys  eth1'
+    tags:
+      - shorewall
+
+  - name: Remove rules
+    file: path=/etc/shorewall/rules.d/{{item}}
+          state=absent
+    with_items:
+      - core
+      - ganglia
+      - pmcd
+      - sysop
+      - vpn
+    tags:
+      - shorewall
+
+  - name: Install basic core rule
+    template: src=templates/etc/shorewall/rules.d/core.j2
+              dest=/etc/shorewall/rules.d/core
+    tags:
+      - rules

@@ -220,6 +220,7 @@ case ${cmd} in
     # args
     no=${_arg1:-3}
     name=${_arg2:-core}
+    inventory="./inventory/${name}.ansible"
     type=${1:-centos64}
     shift
     os=${1:-RedHat_64}
@@ -227,7 +228,7 @@ case ${cmd} in
     echo ""
     read -p "Create fock of ${no} machines?"
 
-    echo "[${name}]" > ${name}
+    echo "[${name}]" > ${inventory}
     for i in $(seq 1 ${no}) ; do
       echo ""
       _no=$(printf %0.2d ${i})
@@ -238,7 +239,7 @@ case ${cmd} in
       flock-vbox boot ${_id} net
       flock-vbox group ${_id} ${name}
       jockey kick ${type} @${_id} ${_ip} ${_id}
-      echo "${_id} ansible_ssh_host=${_ip} ansible_connection=paramiko" >> ${name}
+      echo "${_id} ansible_ssh_host=${_ip} ansible_connection=paramiko" >> ${inventory}
     done
     exit $?
     ;;
