@@ -1,0 +1,16 @@
+#
+# Clean up for the firewall ipset and shorewall
+#
+---
+- hosts: all
+
+  tasks:
+
+### REDHAT
+  - name: Text mode Grub
+    lineinfile: dest=/boot/grub/grub.conf
+                regexp='^(.*)rhgb.*quiet(.*)$'
+                backrefs=yes
+                line='\1\2'
+    tags:
+      - textgrub

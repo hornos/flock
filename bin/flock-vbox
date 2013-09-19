@@ -1,8 +1,21 @@
 #!/bin/bash
 # VM tool
 
+### init
+gdn=$(cd $(dirname $0); pwd)
+usrlocal=/usr
+if [ ! -z "${OSTYPE/darwin/}" ]; then
+  usrlocal=/usr/local
+fi
+
+http_bin=$(which nginx)
+if [ -z "${http_bin}" ] ; then
+  http_bin=${usrlocal}/sbin/nginx
+fi
+
 vbox="VBoxManage -q"
 
+### functions
 function vm/valid() {
   ${vbox} showvminfo ${1} 2>/dev/null
 }
@@ -113,6 +126,17 @@ function vm/storage() {
             --port ${i} --device 0 \
             --type hdd --medium "${_disk}"
   done
+}
+
+function vm/disk() {
+  local _host=${1}
+  local _type=${2:-vdi}
+  local _disk=$(${vbox} showvminfo ${_host} | \
+    grep ${_type} | \
+    sed s/\(UUID.*// | \
+    cut -d: -f 3 | \
+    sed -e 's/^ *//g' -e 's/ *$//g')
+  echo ${_disk}
 }
 
 function vm/list() {
@@ -285,17 +309,57 @@ case ${cmd} in
   vhd)
     # http://www.sysprobs.com/vdi-vhd-convert-virtualbox-virtual-machines-virtual-pc
     host=${1:-test}
-    disk=$(${vbox} showvminfo ${host} | \
-    grep vdi | \
-    sed s/\(UUID.*// | \
-    cut -d: -f 3 | \
-    sed -e 's/^ *//g' -e 's/ *$//g')
+    disk=$(vm/disk ${host})
     if ! test -f "${disk}" ; then
       echo "Disk not found: ${disk}"
       exit 1
     fi
     dest="${disk%%vdi}vhd"
+    if test -r "${dest}"; then
+      rm -f "${dest}"
+    fi
     ${vbox} clonehd "${disk}" "${dest}"  --format VHD
+    exit $?
+  ;;
+
+  http)
+    host=${1:-test}
+    allow=${2:-127.0.0.1/32}
+    port=${3:-8080}
+    disk=$(vm/disk ${host})
+    disk="${disk%%vdi}vhd"
+    if ! test -r "${disk}" ; then
+      echo "Disk not found: ${disk}"
+      exit 1
+    fi
+    vmdir=$(dirname "${disk}")
+
+    # create nginx config
+
+    # trap vm/http/exit INT TERM EXIT
+  
+    cat "${gdn}/http" | \
+    awk -v a="${allow}" \
+        -v l="0.0.0.0:${port}" \
+        -v r="${vmdir}" '{
+      gsub("HTTP_LISTEN",l);
+      gsub("HTTP_ALLOW",a);
+      gsub("HTTP_ROOT",r);
+      print}' \
+    > "${vmdir}/http"
+
+    disk=$(basename "${disk}")
+    myip=$(curl -s http://ifconfig.me)
+    chmod -R a+rX "${vmdir}"
+    echo ""
+    echo "http://${myip}:${port}/${disk}"
+    echo ""
+    echo "HTTP server started on ${port}"
+    echo "Press Ctrl+C to exit"
+    ${http_bin} -c "${vmdir}/http"
+
+    rm -f "${vmdir}/http"
+    # start nginx
     exit $?
   ;;
 

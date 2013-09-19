@@ -7,15 +7,27 @@
   tasks:
 
 ### REDHAT
-  - name: Clean SSH host keys
-    file: path=/etc/ssh/{{item}}
-          state=absent
-    with_items:
-      - ssh_host_dsa_key
-      - ssh_host_dsa_key.pub
-      - ssh_host_key
-      - ssh_host_key.pub
-      - ssh_host_rsa_key
-      - ssh_host_rsa_key.pub
+  - name: Install first boot script
+    template: src=templates/root/first_boot.j2
+              dest=/root/first_boot
+              owner=root
+              group=root
+              mode=0700
     tags:
-      - keys
+      - scripts
+
+  - name: Enable first boot script
+    lineinfile: dest=/etc/rc.d/rc.local
+                regexp='^/root/first_boot'
+                line='/root/first_boot'
+    tags:
+      - rc
+
+  - name: Install first boot flag
+    copy: content="first boot"
+          dest=/.first_boot
+          owner=root
+          group=root
+          mode=0600
+    tags:
+      - flags

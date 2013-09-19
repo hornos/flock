@@ -1,0 +1,19 @@
+#
+# Logo
+#
+---
+- hosts: all
+
+  tasks:
+### NTPDATE
+    - name: Set NTP server for ntpdate
+      file: path=/etc/sysconfig/ntpdate
+            state=absent
+            backup=yes
+      tags:
+        - ntpdate
+
+    - name: Stop ntpdate
+      service: name=ntpdate
+               state=stopped
+               enabled=no

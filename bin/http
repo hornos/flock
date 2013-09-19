@@ -16,11 +16,13 @@ http {
   server {
     listen HTTP_LISTEN;
     #LISTEN
-    server_name jockey;
+    server_name vmdir;
     # access_log /dev/stdout main;
     # error_log /dev/stdout warn;
     location / {
-      root HTTP_ROOT;
+      allow HTTP_ALLOW;
+      deny all;
+      root "HTTP_ROOT";
       autoindex on;
     }
   }

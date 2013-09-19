@@ -1,0 +1,6 @@
+# TODO: better roles in ansible
+---
+- include: roles/template/network.yml
+- include: roles/template/grub.yml
+- include: roles/template/sshd.yml
+- include: roles/template/xenguest.yml

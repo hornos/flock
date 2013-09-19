@@ -1,0 +1,22 @@
+#
+# Clean up for the firewall ipset and shorewall
+#
+---
+- hosts: all
+
+  tasks:
+
+### REDHAT
+  - name: Install xen guest rpms
+    copy: src=rpms/{{item}}
+          dest=/root/{{item}}
+    with_items:
+      - xe-guest-utilities-6.2.0-1120.x86_64.rpm
+      - xe-guest-utilities-xenstore-6.2.0-1120.x86_64.rpm
+    tags:
+      - rpms
+
+  - name: Install rpms
+    shell: yum -y localinstall /root/xe-guest-utilities-*.rpm
+    tags:
+      - packages

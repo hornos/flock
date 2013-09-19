@@ -157,15 +157,19 @@ Switch to the template inventory and start cheffing :)
     flock reboot @@template
     flock-vbox snap centos-template secure
 
+You can upload the template at this point as well:
+
+    flock play @@template minimal-template
+
 Reach the ground state:
 
     flock play @@template ground
     flock reboot @@template
     flock-vbox snap centos-template ground
 
-Create a template. *Mind that network, firewall resets!* You might have to change NTP settings as well.
+Create a template. *Mind that network, firewall resets!* You might have to change NTP settings as well. Fot the xenguest playbook you have to copy `xen-guest-utilities*.rpm` into the `rpms` directory.
 
-    flock play @@template template
+    flock play @@template ground-template
     flock shutdown @@template
 
 Clone the machine or merge all snapshots since VDI to VHD needs a singel disk file.
@@ -173,6 +177,25 @@ Clone the machine or merge all snapshots since VDI to VHD needs a singel disk fi
     flock-vbox clone centos-template
     flock-vbox vhd centos-template-clone
 
+Upload to a URL or start ad-hoc ngnix for template deploy (http runs on port 8080):
+
+    flock-vbox http centos-template-clone <ALLOW>
+
+where `<ALLOW>` is an ngnix allow rule range or address.
+
+Switch to your [Cloud Monkey](https://www.youtube.com/watch?v=y6wX4UhJ_Vg) inventory by `cminv <INVENTORY>` and upload the YOLO:
+
+    list templates templatefilter=community
+    list ostypes
+    cmonkey list virtualmachines name=<NAME> | grep ipaddress
+    TBD
+
+    flock-cm inv2inv <NAME>
+    aninv <NAME>
+
+Start profit and happy cheffing :)
+
+    flock ssh @@<NAME>
 
 ### Core Servers
 The following network topology is used. You have to use vboxnet0 as eth0 since bootp works only on the first interface. For a production or a cloud environment you have to exchange the two.
@@ -256,6 +279,26 @@ Start the boot servers
 
 TODO: network setting, ansible bootstrap
 
+#### Templating
+
+    flock-vbox template coreos
+    flock coreos @coreos
+
+Check the IP at boot and login (Ansible TBD):
+
+    ssh -i keys/sysop core@<IP>
+    sudo bash
+    coreos-install -d /dev/sda
+    reboot
+    (relogin)
+    mount /dev/sda9 /mnt/
+    mkdir -p /mnt/overlays/home/core/
+    chown core.core /mnt/overlays/home/core/
+    cp -Ra ~core/.ssh /mnt/overlays/home/core/
+
+    flock-vbox vhd coreos
+    flock-vbox http coreos <ALLOW>
+
 ### FreeIPA
 
 ### Globus CA
@@ -316,6 +359,14 @@ Check `ssl.conf` for a strong [PFS](http://vincent.bernat.im/en/blog/2011-ssl-pe
 If you want to enable the CA certificate system-wide run:
 
     /root/bin/enable_grid_cert
+
+#### Production
+
+    flock-ca host coreca <FQDN> -ip <IP>
+    flock-ca sign coreca <FQDN>
+
+    flock play @@<FQDN> grid
+
 
 ### Clustering
 Create common authentication key (`keys/authkey`):
