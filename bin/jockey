@@ -1,6 +1,9 @@
 #!/bin/bash
-gbn=$(basename $0)
-gdn=$(cd $(dirname $0); pwd)
+source $(dirname $0)/../lib/header
+import pass
+import vbox
+
+
 jockey_root="${gdn}/../space"
 jockey_root=$(cd ${jockey_root}; pwd)
 
@@ -54,43 +57,8 @@ function jockey/http/exit() {
   exit 1
 }
 
-# trap jockey/exit INT TERM EXIT
-
-function help/jockey() {
-  cat <<EOF
-
-Space Jockey Kickstart Manager
-
-  kick <system> <mac> [ip] [name] [pass]
-  ipxe <system> <mac>
-  dump         - listen to bootp requests
-  http         - start ngnix http server on host IP
-  masq         - start dnsmasq server on host IP
-EOF
-  exit 1
-}
-
-function jockey/__pass() {
-  awk '{print(substr($0,1,4))"-"(substr($0,5,4))"-"(substr($0,9,4))"-"(substr($0,13,4))}'
-}
-
-function jockey/_pass() {
-  awk '{print((substr($0,1,4))(substr($0,5,4)))}'
-}
-
-function jockey/pass() {
-  local _r=""
-  for i in {1..5}; do _r=${_r}$RANDOM; done
-
-  echo ${_r} | jockey/_pass
-}
-
-function jockey/netpass() {
-  curl -s "https://www.random.org/strings/?num=1&len=16&digits=on&unique=off&&rnd=new&format=plain" | \
-  jockey/_pass
-}
-
-function jockey/mac() {
+# TBD
+function vbox/mac() {
   local _mac=$*
   if [ "${1:0:1}" = "@" ] ; then
     local _host="${1:1}"
@@ -111,23 +79,43 @@ shift
 
 ### main
 case ${cmd} in
+  #/* Generates a password
+  #// pass|netpass
   pass|netpass)
-    jockey/${cmd}
+    pass/${cmd}
   ;;
-  password)
-    mac=$(jockey/mac ${arg} | tr [A-Z] [a-z])
+
+  #/* Show password for the VM:
+  #// getpass <MAC>
+  #//         @<HOST>
+  getpass)
+    mac=$(vbox/mac ${arg} | tr [A-Z] [a-z])
     pass="${jockey_root}/${mac}.pass"
     if test -r "${pass}" ; then
       echo "${arg} [${mac}]: $(cat ${pass})"
     fi
   ;;
-  ### real kickstart
+
+  ls)
+    echo ""
+    echo "Available systems:"
+    for i in ${jockey_root}/kickstart.* ; do
+      i=$(basename ${i})
+      echo "  ${i##kickstart.}"
+    done
+    echo ""
+  ;;
+
+  #/* Kickstart a VM with the following parameters
+  #// Run jockey ls for system list
+  #// kick <SYS> <MAC> <IP> <HOSTNAME>
+  #//            @<HOST>
   kick)
     ### args
     system=${arg:-${default}}
     mac=${1}
     if [ -z "${mac}" ] ; then exit 1; fi
-    mac=$(jockey/mac ${mac})
+    mac=$(vbox/mac ${mac})
     shift
     addr=${1:-10.1.1.1}
     shift
@@ -135,14 +123,14 @@ case ${cmd} in
     shift
 
     ### password
-    pass=${1:-$(jockey/pass)}
+    pass=${1:-$(pass/pass)}
     root_pass=$(openssl passwd -1 "${pass}")
     ks=$(echo "${mac}" | sed s/:/-/g | tr '[:upper:]' '[:lower:]')
     echo "${pass}" > ${jockey_root}/${ks}.pass
 
     echo ""
-    echo "kickstart: ${system}"
-    echo "password: ${pass}"
+    echo "Kickstart: ${system}"
+    echo "Password: ${pass}"
     echo ""
 
     ### kickstart
@@ -196,7 +184,10 @@ case ${cmd} in
     fi
   ;;
 
-  ### just do the ipxe part
+  #/* Kickstart a VM with the following parameters
+  #// <KEY> is for CoreOS SSH pubkey
+  #// ipxe|coreos <SYS> <MAC> <KEY>
+  #//                   @<HOST>
   ipxe|coreos)
     ### args
     system=${arg:-local}
@@ -204,7 +195,7 @@ case ${cmd} in
     key=${2}
 
     if [ -z "${mac}" ] ; then exit 1; fi
-    mac=$(jockey/mac ${mac})
+    mac=$(vbox/mac ${mac})
     ks=$(echo "${mac}" | sed s/:/-/g | tr '[:upper:]' '[:lower:]')
 
     ### pxelinux
@@ -213,8 +204,8 @@ case ${cmd} in
     template="${jockey_root}/boot/kickstart"
 
     echo ""
-    echo "kickstart: ${system}"
-    echo "mac: ${mac}"
+    echo "Kickstart: ${system}"
+    echo "Mac: ${mac}"
     echo ""
 
     # http://coreos.com/docs/pxe/
@@ -232,10 +223,14 @@ case ${cmd} in
     fi
   ;;
 
+  #/* Dump traffic on interface <IFC>
+  #// dump <IFC>
   dump)
     tcpdump -i ${arg} port bootps
   ;;
 
+  #/* Start http server for kickstart files
+  #// http
   http)
     trap jockey/http/exit INT TERM EXIT
     cat ${jockey_root}/http | \
@@ -249,9 +244,10 @@ case ${cmd} in
     ${http_bin} -c ${http_conf}
   ;;
 
+  #/* Start server for TP-link WRT firmware debrick
+  #// wrt
   wrt)
-    # WRT Hacking
-     boot_server=192.168.0.5
+    boot_server=192.168.0.5
 
     cat ${jockey_root}/wrt | \
     awk -v p=${masq_root} \
@@ -265,6 +261,8 @@ case ${cmd} in
     sudo ${masq_bin} -d -C ${masq_conf}
   ;;
 
+  #/* Start bootp server
+  #// masq|boot
   masq|boot)
     trap jockey/masq/exit INT TERM EXIT
     # interfaces="interface=${boot_interface}"
@@ -298,6 +296,8 @@ case ${cmd} in
     sudo ${masq_bin} -d -C ${masq_conf}
   ;;
 
+  #/* Ipmi tool wrapper
+  #// ipmi <CMDS*>
   ipmi)
     sub=${arg}
     shift
@@ -319,7 +319,8 @@ case ${cmd} in
       ;;
     esac
   ;;
+
   *)
-    help/jockey
+    help $0
   ;;
 esac

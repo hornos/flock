@@ -1,0 +1,30 @@
+### globals (redefined)
+gkn="kernel"
+gcn="config"
+
+# initial include path
+gip="$(dirname ${BASH_SOURCE})"
+grd=$(cd "${gip}/..";pwd)
+gip=":${grd}/lib:"
+
+# loaded modules
+gim=""
+
+# return values
+_true_=0
+_false_=1
+_abort_=255
+
+failure="return ${_false_}"
+success="return ${_true_}"
+abort="return ${_abort_}"
+
+# bootstrap
+for i in util help error namespace import parallel; do
+  __k="${grd}/lib/.kernel/${i}"
+  if ! test -r "${__k}" ; then
+    "SHF3: Not found ${__k}"
+    exit 1
+  fi
+  source "${__k}"
+done

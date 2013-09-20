@@ -209,13 +209,13 @@ The first card is the default and should be connected to the Internet. You can e
     serviceofferingid = <SERVICEID>
     networkids = <INTERNETID>,<INTERNALID>
 
-`diskofferingid=<DISKID>` is optional. Flock out a flock:
+`diskofferingid=<DISKID>` is optional. Stack out the flock:
 
-    flock-cm out 3 core
+    stack out 3 core
 
 Create ansible inventory:
 
-    flock-cm inv2inv <NAME>
+    stack inventory <NAME>
     aninv <NAME>
 
 Profit and happy cheffing :)

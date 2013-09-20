@@ -1,0 +1,95 @@
+
+function help/gui/txt() {
+  cat << EOF
+Print out a text
+
+Parameters:
+  \$1 string - text
+  \$2 string - fg color
+  \$3 string - bg color
+  \$4 string - font style
+EOF
+}
+
+function gui/txt() {
+  local _txt=${1:-$FUNCNAME}
+  local _fg=${2:-none}
+  local _bg=${3:-none}
+  local _st=${4:-normal}
+  local _h=""
+  local _t=""
+
+  _fg=$(ns/aa "${gui_color}" "${_fg}")
+  _bg=$(ns/aa "${gui_color}" "${_bg}")
+  _st=$(ns/aa "${gui_style}" "${_st}")
+
+  # fg
+  if test "${_fg}" != "none" ; then
+    _h="${gui_esc}[${_st};${_fg}m"
+    _t="${gui_esc}[0m"
+  fi
+  # bg
+  if test "${_bg}" != "none" ; then
+    _bg=$((_bg+10))
+    _h="${_h}${gui_esc}[${_bg}m"
+    if test "${_t}" == "" ; then
+    _t="${gui_esc}[0m"
+    fi
+  fi
+  echo -e "${_h}${_txt}${_t}"
+}
+
+function gui/title() {
+  echo -e "\033]0;${1}\007"
+}
+
+function gui/line() {
+  local _l=${1:-84}
+  local _ch="${2:--}"
+  local i
+  for ((i=0;i<_l;++i)) ; do
+    printf "${_ch}"
+  done
+  printf "\n"
+}
+
+function gui/cline() {
+  local _l=${1:-72}
+  local _ch="${2:--}"
+  local _fg=${3:-white}
+  local _bg=${4}
+  gui/txt $(gui/line) ${_fg} ${_bg}
+}
+
+function gui/cat() {
+  gui/line
+  cat $*
+  gui/line
+}
+
+function gui/pass() {
+  gui/txt "${*}" "black" "black"
+}
+
+function gui/done() {
+  gui/txt "${*}" "green"
+}
+
+function gui/err() {
+  gui/txt "${*}" "red"
+}
+
+function gui/wrn() {
+  gui/txt "${*}" "yellow"
+}
+
+function gui/section() {
+  echo ""
+  msg $*
+  gui/line
+}
+
+# depricated
+function gui/header() {
+  gui/section $*
+}

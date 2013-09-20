@@ -1,0 +1,138 @@
+function sys/dir/lsl() {
+  import gui
+
+  local _d="${1:-.}"
+  local _s="${2}"
+  if ! test -z "${_s}" ; then
+    msg "${_s}"
+  fi
+  gui/line
+  ls -lhR ${_d}
+  echo ""
+  gui/line
+}
+
+function sys/dir/rls() {
+  local _d="${1:-.}"
+  find "${_d}" -type d
+}
+
+function sys/dir/mk() {
+  local _d="${1}"
+  if test -z "${_d}" ; then
+    return ${_false_}
+  fi
+  if ! test -d "${_d}" ; then
+    mkdir -p "${_d}"
+    return $?
+  fi
+  return ${_true_}
+}
+
+function sys/dir/rm() {
+  local _d="${1}"
+  if test -z "${_d}" ; then
+    return ${_false_}
+  fi
+  if test -d "${_d}" ; then
+    rm -fR "${_d}"
+    return $?
+  fi
+  return ${_true_}
+}
+
+function sys/dir/mv() {
+  local _src="${1}"
+  local _dst="${2}"
+  if test -z "${_src}" || \
+     test -z "${_dst}"; then
+    return ${_false_}
+  fi
+  if ! test -d "${_src}" ; then
+    return ${_false_}
+  fi
+  if test -d "${_dst}" ; then
+    rm -fR "${_dst}"
+  fi
+  mv -f "${_src}" "${_dst}"
+}
+
+function help/sys/dir/svwd() {
+  cat << EOF
+Save working directory and enters into directory
+
+\$1 directory
+EOF
+}
+
+function sys/dir/svwd() {
+  local _d="${1}"
+  if test "${_d}" = "" ; then
+    return ${_true_}
+  fi
+
+  # first
+  if test -z "${sys_dir_wd}" ; then
+    sys_dir_wd=$(pwd)
+    return ${_true_}
+  fi
+  sys_dir_wd="${sys_dir_wd}:$(pwd)"
+
+  # enter
+  cd "${_d}"
+}
+
+function sys/dir/ldwd() {
+  if test -z "${sys_dir_wd}" ; then
+    return ${_true_}
+  fi
+  local _d=$(echo "${sys_dir_wd}" | awk '{n=split($0,a,":"); print a[n-1]}')
+  if ! test -z "${_d}" ; then
+    sys_dir_wd=${sys_dir_wd%%:${_d}}
+    cd "${_d}"
+  fi
+}
+
+function sys/dir/sync() {
+  import gui
+
+  local _src="${1}"
+  local _dst="${2}"
+  local _opt="${3}"
+
+  local i
+  for i in "${_src}" "${_dst}" ; do
+    if test -z "${i}" || ! test -d "${i}" ; then
+      msg "Not found: ${i}"
+      return ${_false_}
+    fi
+  done
+
+  msg "Source : ${_src}"
+  msg "Dest.  : ${_dst}"
+  answer "Start sync?"
+  if test $? -gt 0 ; then
+    return ${_false_}
+  fi
+  ${sys_dir_sync} ${_opt} "${_src}" "${_dst}"
+}
+
+function sys/dir/perm() {
+  local _d="${1:-.}"
+
+  if test -z "${_d}" ; then
+    return ${_false_}
+  fi
+
+  local d
+  local _p
+  for d in $(find "${_d}" -type d) ; do
+    _p="${d}/${sys_dir_perm}"
+    if test -r "${_p}" ; then
+      msg "Permissions: ${d}"
+      sys/dir/svwd "${d}"
+      source $(basename "${_p}")
+      sys/dir/ldwd
+    fi
+  done
+}
