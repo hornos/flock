@@ -10,7 +10,7 @@ You can use flock to install and setup arbitrary large infrastructure from scrat
 Virtual environments are built in VirtualBox. The goal is to keep virtual (test) and production systems as close as possible.
 
 ## Install for OS X
-Install [homebrew](http://brew.sh) and [ansible](http://www.ansibleworks.com/docs/gettingstarted.html) and the following packages. *Do not use ansible development branch!* Optionally, you should install [Cloud Monkey](https://cwiki.apache.org/confluence/display/CLOUDSTACK/CloudStack+cloudmonkey+CLI) to hack Cloudstack.
+Install [Homebrew](http://brew.sh) and [Ansible](http://www.ansibleworks.com/docs/gettingstarted.html) and the following packages. *Do not use ansible development branch!* Optionally, you should install [Cloud Monkey](https://cwiki.apache.org/confluence/display/CLOUDSTACK/CloudStack+cloudmonkey+CLI) to hack Cloudstack.
 
     brew install nginx dnsmasq
 
@@ -181,21 +181,52 @@ Upload to a URL or start ad-hoc ngnix for template deploy (http runs on port 808
 
     flock-vbox http centos-template-clone <ALLOW>
 
-where `<ALLOW>` is an ngnix allow rule range or address.
+where `<ALLOW>` is an ngnix allow rule range or address (eg. 192.168.1.0/24).
 
-Switch to your [Cloud Monkey](https://www.youtube.com/watch?v=y6wX4UhJ_Vg) inventory by `cminv <INVENTORY>` and upload the YOLO:
+Switch to your [Cloud Monkey](https://www.youtube.com/watch?v=y6wX4UhJ_Vg) inventory by `cminv <INVENTORY>` and upload/[register](https://cloudstack.apache.org/docs/api/apidocs-4.0.0/user/registerTemplate.html) the YOLO:
 
-    list templates templatefilter=community
+    set display table
     list ostypes
-    cmonkey list virtualmachines name=<NAME> | grep ipaddress
-    TBD
+    list zones
+    register template displaytext=template-test format=VHD hypervisor=XenServer name=template-test ostypeid=<OSTYPEID> url=<URL TO VHD> zoneid=<ZONEID>
+
+All you need is zone, template, compute and disk offering, affinity and network
+
+    list zones
+    list templates templatefilter=community
+    list serviceofferings
+    list diskofferings
+    list networkofferings
+
+    deploy virtualmachine name=test displayname=test zoneid=<ZONEID> templateid=<TEMPID> serviceofferingid=<SERVICEID> diskofferingid=<DISKID> networkids=<INTERNETID>,<INTERNALID>
+
+The first card is the default and should be connected to the Internet. You can extend cmonkey inventory with default values and do the YOLO. Add a new section:
+
+    [defaultvm]
+    ostypeid = <OSTYPEID>
+    zoneid = <ZONEID>
+    templateid = <TEMPID>
+    serviceofferingid = <SERVICEID>
+    networkids = <INTERNETID>,<INTERNALID>
+
+`diskofferingid=<DISKID>` is optional. Flock out a flock:
+
+    flock-cm out 3 core
+
+Create ansible inventory:
 
     flock-cm inv2inv <NAME>
     aninv <NAME>
 
-Start profit and happy cheffing :)
+Profit and happy cheffing :)
 
-    flock ssh @@<NAME>
+    flock ping @@core
+    flock setup @@core
+    flock command @@core hostname
+    flock ssh @@<HOST>
+
+TBD genders pssh
+TBD initial reset dyndns
 
 ### Core Servers
 The following network topology is used. You have to use vboxnet0 as eth0 since bootp works only on the first interface. For a production or a cloud environment you have to exchange the two.
@@ -299,7 +330,7 @@ Check the IP at boot and login (Ansible TBD):
     flock-vbox vhd coreos
     flock-vbox http coreos <ALLOW>
 
-### FreeIPA
+TBD
 
 ### Globus CA
 Install the certificate utilities and Globus on your mac:

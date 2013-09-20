@@ -1,0 +1,52 @@
+#
+# Clean up for a template image
+#
+---
+- hosts: all
+
+  tasks:
+
+### REDHAT
+  - name: Clean /etc/hosts
+    lineinfile: dest=/etc/hosts
+                regexp='{{inventory_hostname}}'
+                state=absent
+    tags:
+      - hosts
+
+
+  - name: Reset eth0 HWADDR
+    lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth0
+                regexp='^HWADDR'
+                state='absent'
+    tags:
+      - interfaces
+
+  - name: Reset eth0 UUID
+    lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth0
+                regexp='^UUID'
+                state='absent'
+    tags:
+      - interfaces
+
+
+  - name: Reset eth1 HWADDR
+    lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth1
+                regexp='^HWADDR'
+                state='absent'
+    tags:
+      - interfaces
+
+  - name: Reset eth1 UUID
+    lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-eth1
+                regexp='^UUID'
+                state='absent'
+    tags:
+      - interfaces
+
+
+  - name: Clear persistent rules
+    file: path=/etc/udev/rules.d/70-persistent-net.rules
+          state=absent
+    tags:
+      - udev
