@@ -367,6 +367,10 @@ case ${cmd} in
       serviceofferingid=${INI__defaultvm__serviceofferingid} \
       networkids=${INI__defaultvm__networkids} \
       ${disk}
+      if test $? -gt 0; then
+        echo "Failed to deploy VM: ${host}"
+        exit 1
+      fi
     done
   ;;
 esac

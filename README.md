@@ -227,6 +227,7 @@ Profit and happy cheffing :)
 
 TBD genders pssh
 TBD initial reset dyndns
+TBD [ansible shell](https://github.com/dominis/ansible-shell)
 
 ### Core Servers
 The following network topology is used. You have to use vboxnet0 as eth0 since bootp works only on the first interface. For a production or a cloud environment you have to exchange the two.
