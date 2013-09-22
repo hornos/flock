@@ -4,4 +4,9 @@ udp("{{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}" port(514));
 {% endfor %}
 };
 
+# multicast
+# destination loghost {
+# udp("239.2.11.71" port(514));
+# };
+
 log { source(s_sys); destination(loghost); };

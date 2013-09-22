@@ -8,7 +8,30 @@ if test -r ${ansiblerc} ; then
   source ${ansiblerc} &> /dev/null
 fi
 
-function aninv() {
+# Main flock wrapper function
+# flock on changes ansible inventory
+function flock() {
+  if [ "$1" == "ls" ] ; then
+    if ! test -d ./inventory ; then
+      return 1
+    fi
+    if test -r ./inventory/${2}.ansible; then
+      cat ./inventory/${2}.ansible
+      return $?
+    fi
+    for i in ./inventory/*.ansible; do
+      i=$(basename $i)
+      echo ${i%%.ansible}
+    done
+    return $?
+  fi
+
+  if [ "$1" != "on" ] ; then
+    $(which flock) $*
+    return $?
+  fi
+
+  shift
   local _inventory=./inventory/${1:-hosts}.ansible
   if test -f ${_inventory} ; then
     _inventory=$(cd ./inventory;pwd)/${1:-hosts}.ansible
@@ -18,7 +41,28 @@ function aninv() {
   fi
 }
 
-function cminv() {
+function stack() {
+  if [ "$1" == "ls" ] ; then
+    if ! test -d ./inventory ; then
+      return 1
+    fi
+    if test -r ./inventory/${2}.cmonkey; then
+      cat ./inventory/${2}.cmonkey
+      return $?
+    fi
+    for i in ./inventory/*.cmonkey; do
+      i=$(basename $i)
+      echo ${i%%.cmonkey}
+    done
+    return $?
+  fi
+
+  if [ "$1" != "on" ] ; then
+    $(which stack) $*
+    return $?
+  fi
+
+  shift
   local _inventory=./inventory/${1:-hosts}.cmonkey
   if test -f ${_inventory} ; then
     _inventory=$(cd ./inventory;pwd)/${1:-hosts}.cmonkey
@@ -28,7 +72,7 @@ function cminv() {
   fi
 }
 
-function lsinv() {
+function inventory() {
   if test -n "${ANSIBLE_HOSTS}" ; then
     local _inventory=${ANSIBLE_HOSTS}
     if test -f ${_inventory} ; then

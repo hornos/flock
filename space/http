@@ -17,8 +17,8 @@ http {
     listen HTTP_LISTEN;
     #LISTEN
     server_name jockey;
-    # access_log /dev/stdout main;
-    # error_log /dev/stdout warn;
+    access_log /dev/stdout main;
+    error_log /dev/stdout warn;
     location / {
       root HTTP_ROOT;
       autoindex on;

@@ -92,23 +92,27 @@ case ${cmd} in
     jockey password ${_arg1}
     exit $?
     ;;
+
   init)
-    # create SSH keys
     echo ""
-    echo "Generating System Operator key (sysop)"
-    ssh-keygen -b2048 -f keys/sysop
-    echo ""
-    echo "Generating passwordless internode root key (nopass)"
-    ssh-keygen -b2048 -N "" -f keys/nopass
-    echo ""
+    read -p "Do you want to initialize flock?"
     if [ ! -d ./keys ]; then
       mkdir ./keys
     fi
     if [ ! -d ./space/boot/pxelinux.cfg ]; then
       mkdir -p ./space/boot/pxelinux.cfg
     fi
+    echo ""
+    echo "Generating System Operator key (sysop)"
+    ssh-keygen -b2048 -f keys/sysop
+    echo ""
+    echo "Generating no password root key (nopass)"
+    ssh-keygen -b2048 -N "" -f keys/nopass
+    echo ""
+
     exit 0
     ;;
+
   keys)
     echo ""
     echo "SSH id : bits  FP  email (type)"
@@ -204,8 +208,13 @@ case ${cmd} in
     jockey $cmd
     exit $?
     ;;
+  provision)
+    # TBD auto kill trap
+    xterm -geometry 182x47 -e provision
+    exit $?
+    ;;
   snap)
-    flock-vbox $cmd ${_args}
+    vbox $cmd ${_args}
     exit $?
     ;;
   kick)
@@ -235,9 +244,9 @@ case ${cmd} in
       _id=${name}-${_no}
       _ip=10.1.1.${i}
       echo "Creating ${_id}..."
-      flock-vbox create ${_id} ${os}
-      flock-vbox boot ${_id} net
-      flock-vbox group ${_id} ${name}
+      vbox create ${_id} ${os}
+      vbox boot ${_id} net
+      vbox group ${_id} ${name}
       jockey kick ${type} @${_id} ${_ip} ${_id}
       echo "${_id} ansible_ssh_host=${_ip} ansible_connection=paramiko" >> ${inventory}
     done
@@ -245,7 +254,7 @@ case ${cmd} in
     ;;
   bootstrap)
     group=${_arg1:-/test}
-    for i in $(flock-vbox group? ${group}) ; do
+    for i in $(vbox group? ${group}) ; do
       echo ""
       echo ""
       echo "BOOTSTRAP [$i]"
@@ -255,10 +264,26 @@ case ${cmd} in
     done
     exit $?
     ;;
+
+  secure)
+    group=${_arg1:-/test}
+    for i in $(vbox group? ${group}) ; do
+      echo ""
+      echo ""
+      echo "Bootstrap and secure: $i"
+      echo ""
+      jockey password @${i}
+      ${gbn} play root@@${i} bootstrap
+      ${gbn} play @@${i} secure
+      ${gbn} reboot @@${i}
+    done
+    exit $?
+    ;;
+
   cert)
     ca=${_arg1:-coreca}
     group=${_arg2:-/test}
-    for i in $(flock-vbox group? ${group}) ; do
+    for i in $(vbox group? ${group}) ; do
       echo ""
       echo "Creating certificate for $i"
       flock-ca host $ca $i

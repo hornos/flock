@@ -42,10 +42,10 @@ Keys and certificates are in the `keys` directory. By default all your operation
 #### Inventories
 Ansible host inventories and Cloud Monkey config files are kept under the `inventory` directory with names `.ansible` and `.cmonkey`, respectively. To change Ansbile or Cloud Monkey inventory:
 
-    aninv <HOSTS>
-    cminv <CONF>
+    flock on <HOSTS>
+    stack on <CONF>
 
-where `<HOSTS>` and `<CONF>` are the suffix truncated basename of the inventory file. List inventories by `lsinv`.
+where `<HOSTS>` and `<CONF>` are the suffix truncated basename of the inventory file. Show actual inventory by `inventory`, list inventories by `{flock,stack} ls [<INV>]`.
 
 If you use RVM you can set prompt indicators, check `profile`.
 
@@ -53,13 +53,11 @@ If you use RVM you can set prompt indicators, check `profile`.
 
     flock      - Ansible wrapper
     flock-ca   - Simple CA manager
-    flock-vbox - VirtualBox wrapper
+    vbox       - VirtualBox wrapper
     flock-vpn  - OpenVPN wrapper
-    flock-cm   - Cloud Monkey wrapper
+    stack      - Cloud Monkey wrapper
     jockey     - Bootp wrapper
     cmonkey    - Inventory aware Cloud Monkey CLI
-
-#### Operators
 
 #### Customize for production
 Flock playbooks are never general. You might have to make customized playbook trees for production systems. Please keep the flock tree intact and create a new directory for your needs. Since flock commands are realtive you can use any directory.
@@ -104,6 +102,12 @@ Space Jockey (`jockey`) is a simple Cobbler replacement. You need a simple inven
 
 The boot server listens on `boot_server` IP and Debian-based systems use the `interface` interface to reach the internet (NAT or bridged or 2nd physical network card). DNSmasq gives IPs from the `dhcp_range`.
 
+Start bootp provision servers by:
+
+    flock provision
+
+*Mind that you have to Ctrl-C from each server session! Do not close the XTerm window.*
+<!--
 Boot server is started on the selected interface by:
 
     flock boot
@@ -111,21 +115,20 @@ Boot server is started on the selected interface by:
 Kickstart or preseed files are fetched from a HTTP server started by:
 
     flock http
+-->
 
 ### Cloudstack (CS) setup
-Mind that network setup can be different in the cloud. Usually, eth0 is connected to the Internet and eth1 is for internal connections. So the topology is the following:
+Network can be different in the cloud. Usually, eth0 is connected to the Internet and eth1 is for internal connections:
 
     Network  | Inerface    | IPv4 Addr  | Mask | DHCP
     -------------------------------------------------
     external | eth0        | CS         | CS   | on
     system   | eth1        |                     off
 
-You have to provide IP adresses for the system network. Mind that this network has an assigned IP range.
-
 #### Create Templates
 You can create a template on Cloudstack or in your VirtualBox. Create a template machine (for CentOS with a 20GB disk):
 
-    flock-vbox template centos-template 
+    vbox template centos-template 
 
 Create an Ansible inventory (`.inventory/template.ansible`):
 
@@ -138,48 +141,42 @@ Bootstrap the machine:
 
 Start the servers and the machine:
 
-    flock http
-    flock boot
-    flock-vbox start centos-template
+    flock provision
+    vbox start centos-template
 
 Switch off bootp and restart the machine:
 
-    flock-vbox off centos-template
-    flock-vbox boot centos-template disk
-    flock-vbox start centos-template
+    vbox cycle centos-template with disk
 
 Switch to the template inventory and start cheffing :)
 
-    aninv template
-    jockey password @centos-template
-    flock play root@@template bootstrap
-    flock play @@template secure
-    flock reboot @@template
-    flock-vbox snap centos-template secure
+    flock on template
+    flock secure /template
+    vbox snap centos-template secure
 
-You can upload the template at this point as well:
+Optionally, at this point you can prepare the template for upload:
 
     flock play @@template minimal-template
 
-Reach the ground state:
+Or reach the ground state:
 
     flock play @@template ground
     flock reboot @@template
-    flock-vbox snap centos-template ground
+    vbox snap centos-template ground
 
-Create a template. *Mind that network, firewall resets!* You might have to change NTP settings as well. Fot the xenguest playbook you have to copy `xen-guest-utilities*.rpm` into the `rpms` directory.
+Create a template. *Mind that network, firewall resets!* You might have to change NTP settings as well. Fot the xenguest playbook you have to copy `xen-guest-utilities*.rpm` into the `rpms` directory. TBD multicast change
 
     flock play @@template ground-template
     flock shutdown @@template
 
 Clone the machine or merge all snapshots since VDI to VHD needs a singel disk file.
 
-    flock-vbox clone centos-template
-    flock-vbox vhd centos-template-clone
+    vbox clone centos-template
+    vbox vhd centos-template-clone
 
 Upload to a URL or start ad-hoc ngnix for template deploy (http runs on port 8080):
 
-    flock-vbox http centos-template-clone <ALLOW>
+    vbox http centos-template-clone <ALLOW>
 
 where `<ALLOW>` is an ngnix allow rule range or address (eg. 192.168.1.0/24).
 
@@ -216,7 +213,7 @@ The first card is the default and should be connected to the Internet. You can e
 Create ansible inventory:
 
     stack inventory <NAME>
-    aninv <NAME>
+    flock on <NAME>
 
 Profit and happy cheffing :)
 
@@ -248,20 +245,20 @@ Start the boot/kickstart servers on your OS X host each in a separate Terminal t
 
 Start the background flock:
 
-    flock-vbox start /@core
+    vbox start /@core
 
 wait for the reboot signal and turn off the group:
 
-    flock-vbox off /core
+    vbox off /core
 
 Switch to disk boot make a snapshot and start again:
 
-    flock-vbox boot /core disk
-    flock-vbox start /@core
+    vbox boot /core disk
+    vbox start /@core
 
 With the `snap` command you can snapshot the VM:
 
-    flock-vbox snap /core init
+    vbox snap /core init
 
 Change the inventory:
 
@@ -279,13 +276,13 @@ Check the network topology in `networks.yml` and secure the flock:
 
     flock play @@core secure
     flock reboot @@core
-    flock-vbox snap /core secure
+    vbox snap /core secure
 
 Now, reach the ground state:
 
     flock play @@core ground
     flock reboot @@core
-    flock-vbox snap /core ground
+    vbox snap /core ground
 
 Mind that the system network is not protected, due to performance reasons core servers can reach each other wihtout restriction or authentication. Monitoring is done by Ganglia in multicast mode.
 
@@ -301,7 +298,7 @@ For the awesome PCP download `ftp://oss.sgi.com/projects/pcp/download/mac/` and 
 ### Boot CoreOS
 Create an empty machine:
 
-    flock-vbox create coreos
+    vbox create coreos
     flock coreos @coreos
 
 Start the boot servers
@@ -313,7 +310,7 @@ TODO: network setting, ansible bootstrap
 
 #### Templating
 
-    flock-vbox template coreos
+    vbox template coreos
     flock coreos @coreos
 
 Check the IP at boot and login (Ansible TBD):
@@ -328,8 +325,8 @@ Check the IP at boot and login (Ansible TBD):
     chown core.core /mnt/overlays/home/core/
     cp -Ra ~core/.ssh /mnt/overlays/home/core/
 
-    flock-vbox vhd coreos
-    flock-vbox http coreos <ALLOW>
+    vbox vhd coreos
+    vbox http coreos <ALLOW>
 
 TBD
 
@@ -607,16 +604,16 @@ Start the kickstart servers:
 
 and start the group in the background:
 
-    flock-vbox start /@ww
+    vbox start /@ww
 
 wait for the reboot signal and turn off the group:
 
-    flock-vbox off /ww
+    vbox off /ww
 
 switch to disk boot make a snapshot and start:
 
-    flock-vbox boot /ww disk
-    flock-vbox start /@ww
+    vbox boot /ww disk
+    vbox start /@ww
 
 Swith to the `ww` nevironment:
 
@@ -634,19 +631,19 @@ Check the network topology in `networks.yml` and secure the flock:
 
     flock play @@ww secure
     flock reboot @@ww
-    flock-vbox snap /ww secure
+    vbox snap /ww secure
 
 #### Ground state
 
     flock play @@ww ground
     flock reboot @@ww
-    flock-vbox snap /ww ground
+    vbox snap /ww ground
 
 finally, change the old kernel for good:
 
     flock play @@ww roles/system/kernel --extra-vars "clean=yes"
     flock reboot @@ww
-    flock-vbox snap /ww kernel
+    vbox snap /ww kernel
 
 Check the boot log for sure:
 
@@ -711,7 +708,7 @@ Verify https in your browser:
 
 TODO: PFS SSL
 
-    flock-vbox snap /ww grid
+    vbox snap /ww grid
 
 #### Monitoring
 
@@ -721,7 +718,7 @@ TODO: OMD http://omdistro.org/
 Name the master and backup node for a failover HA:
 
     flock play @@ww roles/hpc/hosts --extra-vars=\"master=ww-01 backup=ww-02\"
-    flock-vbox snap /ww hosts
+    vbox snap /ww hosts
 
 #### Database
 SQL database is used for the scheduler backend. Install the SQL cluster:
@@ -746,7 +743,7 @@ Enable php admin interface:
 
 The mysql admin page is at `http://10.1.1.1/phpmyadmin`.
 
-    flock-vbox snap /ww sql
+    vbox snap /ww sql
 
 #### Gluster
 Install a common state directory with Gluster:
@@ -768,7 +765,7 @@ Monitor the cluster (as root):
 
 Save:
 
-    flock-vbox snap /ww gluster
+    vbox snap /ww gluster
 
 #### HA Scheduler
 Generate a munge key for the compute cluster and setup the scheduler services:
@@ -788,7 +785,7 @@ Verify the queue:
 
 Save:
 
-    flock-vbox snap /ww slurm
+    vbox snap /ww slurm
 
 [Back to the future](https://www.youtube.com/watch?v=KG2M4ttzBnY).
 
@@ -815,7 +812,7 @@ Verify NFS exports:
 
 Save:
 
-    flock-vbox snap /ww ww
+    vbox snap /ww ww
 
 #### Compute nodes
 Prepare the Warewulf OS node on the master node. Login to the master node and make a clone (as root):
@@ -1021,17 +1018,17 @@ Provision:
 
 and start the group in the background:
 
-    flock-vbox start /@gluster
+    vbox start /@gluster
 
 wait for the reboot signal and turn off the group:
 
-    flock-vbox off /gluster
+    vbox off /gluster
 
 switch to disk boot make a snapshot and start:
 
-    flock-vbox boot /gluster disk
-    flock-vbox start /@gluster
-    flock-vbox snap /gluster init
+    vbox boot /gluster disk
+    vbox start /@gluster
+    vbox snap /gluster init
 
 Change the inventory:
 
@@ -1060,8 +1057,8 @@ Now, reach the ground state:
 Install storage disks:
 
     flock shutdown @@gluster
-    flock-vbox storage /gluster
-    flock-vbox intnet /gluster
+    vbox storage /gluster
+    vbox intnet /gluster
 
 Change to the mainline kernel:
 
@@ -1152,17 +1149,17 @@ Provision:
 
 and start the group in the background:
 
-    flock-vbox start /@fhgfs
+    vbox start /@fhgfs
 
 wait for the reboot signal and turn off the group:
 
-    flock-vbox off /fhgfs
+    vbox off /fhgfs
 
 switch to disk boot make a snapshot and start:
 
-    flock-vbox boot /fhgfs disk
-    flock-vbox start /@fhgfs
-    flock-vbox snap /fhgfs init
+    vbox boot /fhgfs disk
+    vbox start /@fhgfs
+    vbox snap /fhgfs init
 
 Change the inventory:
 
@@ -1191,8 +1188,8 @@ Now, reach the ground state:
 Install storage disks:
 
     flock shutdown @@fhgfs
-    flock-vbox storage /fhgfs
-    flock-vbox intnet/fhgfs
+    vbox storage /fhgfs
+    vbox intnet/fhgfs
 
 CentOS `kernel-devel` build link is broken, fix (*mind the actual version!*):
 
@@ -1225,7 +1222,7 @@ mirror data:
 
 Save it for good:
 
-    flock-vbox snap /fhgfs fhgfs
+    vbox snap /fhgfs fhgfs
 
 *Mind that, currently there is no any HA in FhGFS (distribute-only).*
 
@@ -1241,31 +1238,31 @@ Start the kickstart servers:
 
 and start the group in the background:
 
-    flock-vbox start /@lustre
+    vbox start /@lustre
 
 wait for the reboot signal and turn off the group:
 
-    flock-vbox off /lustre
+    vbox off /lustre
 
 *Warning: bonding does not seem to work in VirtualBox!* Configure a 2 frontend + 4 backend network card setup for bonding, mind that eth0 is reserved for the host-only system network. Add a new host-only network `vboxnet1` according to `networks.yml`. Bonding topology:
 
     bond0: eth1-2
     bond1: eth3-6
 
-    flock-vbox bondnet /lustre
+    vbox bondnet /lustre
 
 Since host bonding fails just add on intnet interface:
 
-    flock-vbox intnet /lustre
+    vbox intnet /lustre
 
 Add 4 more disks for testing purposes:
 
-    flock-vbox storage /lustre
+    vbox storage /lustre
 
 Switch to disk boot make a snapshot and start:
 
-    flock-vbox boot /lustre disk
-    flock-vbox start /@lustre
+    vbox boot /lustre disk
+    vbox start /@lustre
 
 Swith to the `lustre` nevironment:
 
@@ -1288,7 +1285,7 @@ Secure:
 
     flock play @@lustre secure
     flock reboot @@lustre
-    flock-vbox snap /lustre secure
+    vbox snap /lustre secure
 
 Check the network topology in `networks.yml`. Edit the `paths` section for interface mapping.
 
@@ -1296,18 +1293,18 @@ Ground state:
 
     flock play @@lustre ground
     flock reboot @@lustre
-    flock-vbox snap /lustre ground
+    vbox snap /lustre ground
 
 Tune the network if you need:
 
     flock play roles/network/tune
-    flock-vbox snap /lustre tune
+    vbox snap /lustre tune
 
 Install Lustre:
 
     flock play @@lustre roles/hpc/lustre
     flock reboot @@lustre
-    flock-vbox snap /lustre lustre
+    vbox snap /lustre lustre
 
 Create and mount filesystems. The default install uses 4 disks on the OSS without bonding.
 
@@ -1337,17 +1334,17 @@ Start the kickstart servers:
 
 and start the group in the background:
 
-    flock-vbox start /@hadoop
+    vbox start /@hadoop
 
 wait for the reboot signal and turn off the group:
 
-    flock-vbox off /hadoop
+    vbox off /hadoop
 
 switch to disk boot make a snapshot and start:
 
-    flock-vbox boot /hadoop disk
-    flock-vbox start /@hadoop
-    flock-vbox snap /hadoop init
+    vbox boot /hadoop disk
+    vbox start /@hadoop
+    vbox snap /hadoop init
 
 Swith to the `hadoop` nevironment:
 
@@ -1365,13 +1362,13 @@ Check the network topology in `networks.yml` and secure the flock:
 
     flock play @@hadoop secure
     flock reboot @@hadoop
-    flock-vbox snap /hadoop secure
+    vbox snap /hadoop secure
 
 Now, reach the ground state:
 
     flock play @@hadoop ground
     flock reboot @@hadoop
-    flock-vbox snap /hadoop ground
+    vbox snap /hadoop ground
 
 ### Prepare
 Install Gluster and setup a 3-node FS cluster if you want a storage based HA:
@@ -1425,7 +1422,7 @@ Enable Yarn:
 
     flock play @@hadoop roles/hadoop/start_yarn --extra-vars \"master=hadoop-01\"
 
-    flock-vbox snap /hadoop hdfs
+    vbox snap /hadoop hdfs
 
 Verify mapreduce. Create a [test file](https://github.com/ansible/ansible-examples/tree/master/hadoop) in `/tmp` (hdfs) and run:
 
@@ -1494,7 +1491,7 @@ http://blog.kreyolys.com/2011/03/17/no-panic-its-just-a-kernel-panic/
 ## XenServer 6.2
 Mount (link) the ISO under `boot/xs62/repo` into jockey's root directory.
 
-    flock-vbox create xs62 RedHat_64 2 2048
+    vbox create xs62 RedHat_64 2 2048
     jockey kick xs62 @xs62 10.1.1.30 xs62
 
 ### OpenStack
@@ -1504,10 +1501,10 @@ Ground state controller:
     flock play root@@xc bootstrap
     flock play @@xc secure
     flock reboot @@xc
-    flock-vbox snap xc init
+    vbox snap xc init
     flock play @@xc ground
     flock reboot @@xc
-    flock-vbox snap xc ground
+    vbox snap xc ground
 
 SQL and MQ:
 
@@ -1522,7 +1519,7 @@ Login to `xc` and secure SQL:
     flock play @@xc roles/mq/rabbitmq.yml
     flock play @@xc roles/monitor/icinga.yml --extra-vars \"schema=yes master=xc\"
 
-    flock-vbox snap xc prestack
+    vbox snap xc prestack
 
 #### Identity service
 Create admin token:
@@ -1565,14 +1562,14 @@ Download the installer package:
 
 Create a machine and bootstrap:
 
-    flock-vbox create kali Debian_64 1 2048
+    vbox create kali Debian_64 1 2048
     jockey kick kali @kali 10.1.1.42 kali
 
 ## Ground state cross-check
 Create and `ostest` group with two machines:
 
-    flock-vbox create raring Ubuntu_64 1 2048
-    flock-vbox create centos64 RedHat_64 1 2048
+    vbox create raring Ubuntu_64 1 2048
+    vbox create centos64 RedHat_64 1 2048
 
     jockey kick centos64 @centos64 10.1.1.1 centos64
     jockey kick raring @raring 10.1.1.2 raring
@@ -1595,10 +1592,10 @@ Secure and reboot:
 
 Save and start to reach the ground state:
 
-    flock-vbox snap /ostest secure
+    vbox snap /ostest secure
     flock play @@ostest ground
     flock reboot @@ostest
-    flock-vbox snap /ostest ground
+    vbox snap /ostest ground
 
 ## Docker
 
@@ -1611,17 +1608,17 @@ Start the kickstart servers:
 
 and start the group in the background:
 
-    flock-vbox start /@docker
+    vbox start /@docker
 
 wait for the reboot signal and turn off the group:
 
-    flock-vbox off /docker
+    vbox off /docker
 
 switch to disk boot make a snapshot and start:
 
-    flock-vbox boot /docker disk
-    flock-vbox start /@docker
-    flock-vbox snap /docker init
+    vbox boot /docker disk
+    vbox start /@docker
+    vbox snap /docker init
 
 Swith to the `docker` nevironment:
 
@@ -1639,12 +1636,12 @@ Check the network topology in `networks.yml` and secure the flock:
 
     flock play @@docker secure
     flock reboot @@docker
-    flock-vbox snap /docker secure
+    vbox snap /docker secure
 
 Now, reach the ground state:
 
     flock play @@docker ground
     flock reboot @@docker
-    flock-vbox snap /docker ground
+    vbox snap /docker ground
 
 Install docker:

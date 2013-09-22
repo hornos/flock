@@ -26,6 +26,12 @@
     tags:
       - interfaces
 
+  - name: Reset multicast
+    file: path=/etc/sysconfig/network-scripts/route-eth0
+          state=absent
+    tags:
+      - multicast
+
   - name: Clear persistent rules
     file: path=/etc/udev/rules.d/70-persistent-net.rules
           state=absent

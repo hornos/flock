@@ -17,8 +17,8 @@ http {
     listen HTTP_LISTEN;
     #LISTEN
     server_name vmdir;
-    # access_log /dev/stdout main;
-    # error_log /dev/stdout warn;
+    access_log /dev/stdout main;
+    error_log /dev/stdout warn;
     location / {
       allow HTTP_ALLOW;
       deny all;
