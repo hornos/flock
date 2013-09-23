@@ -19,9 +19,10 @@ shift
 
 ### args
 # http://stackoverflow.com/questions/8789729/zero-padding-in-bash
+
 case ${cmd} in
   keys)
-    domain=${1}
+    domain=${1}.
     name=${2:-test}
     count=${3:-1}
     read -p "Generate DNSSEC keys?"
@@ -32,6 +33,38 @@ case ${cmd} in
     for i in $(seq -f "%02g" 1 ${count}); do
       host=${name}-${i}.${domain}
       ${dnskey} -a ${algo} -b ${bits} -n USER ${host}
+    done
+
+    # alias links
+    for i in *.key ; do
+      j=$i
+      j=${j%%.*}
+      j=${j:1}.key
+      ln -s ${i} ${j}
+    done
+
+    for i in *.private ; do
+      j=$i
+      j=${j%%.*}
+      j=${j:1}.private
+      ln -s ${i} ${j}
+    done
+  ;;
+
+  ln)
+    cd ./dnssec
+    for i in *.key ; do
+      j=$i
+      j=${j%%.*}
+      j=${j:1}.key
+      ln -s ${i} ${j}
+    done
+
+    for i in *.private ; do
+      j=$i
+      j=${j%%.*}
+      j=${j:1}.private
+      ln -s ${i} ${j}
     done
   ;;
   ls)

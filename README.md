@@ -51,13 +51,13 @@ If you use RVM you can set prompt indicators, check `profile`.
 
 ### Flock Commands
 
-    flock      - Ansible wrapper
-    flock-ca   - Simple CA manager
-    vbox       - VirtualBox wrapper
-    flock-vpn  - OpenVPN wrapper
-    stack      - Cloud Monkey wrapper
-    jockey     - Bootp wrapper
-    cmonkey    - Inventory aware Cloud Monkey CLI
+    flock    - Ansible wrapper
+    flock-ca - Simple CA manager
+    vbox     - VirtualBox wrapper
+    ovpn     - OpenVPN wrapper
+    stack    - Cloud Monkey wrapper
+    jockey   - Bootp wrapper
+    cmonkey  - Inventory aware Cloud Monkey CLI
 
 #### Customize for production
 Flock playbooks are never general. You might have to make customized playbook trees for production systems. Please keep the flock tree intact and create a new directory for your needs. Since flock commands are realtive you can use any directory.
@@ -490,19 +490,19 @@ Download Easy RSA CA:
 
 Create a VPN CA (`vpnca`):
 
-    flock-vpn create
+    ovpn create
 
 Create server certificates:
 
-    for i in 1 2 3 ; do flock-vpn server vpnca core-0$i; done
+    for i in 1 2 3 ; do ovpn server vpnca core-0$i; done
 
 Create sysop client certificate:
 
-    flock-vpn client vpnca sysop
+    ovpn client vpnca sysop
 
 Create DH and TA parameters:
 
-    flock-vpn param vpnca
+    ovpn param vpnca
 
 You need the following files:
 
@@ -519,7 +519,7 @@ client.key | client | Client Key | YES
 
 Install OpenVPN servers:
 
-    flock play @core roles/vpn/openvpn
+    flock play @@core roles/vpn/openvpn
 
 Install Tunnelblick on your mac and link:
 
@@ -529,12 +529,12 @@ Install Tunnelblick on your mac and link:
 
 Install the sysop certificate for Tunnelblick:
 
-    flock-vpn blick vpnca sysop
+    ovpn blick vpnca sysop
 
 Prepare VPN configuration for iPhone:
 
-    flock-vpn client vpnca iphone
-    flock-vpn iphone
+    ovpn client vpnca iphone
+    ovpn iphone
 
 Edit `ca/vpnca/iphone/iphone.ovpn` and connect iPhone go to DEVICES/Phone Apps tab and File Sharing section. Select OpenVPN and Add all the files in the `iphone` directory.
 

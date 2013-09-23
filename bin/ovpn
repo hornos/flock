@@ -140,11 +140,34 @@ case "${cmd}" in
     shift
     opts=${*}
 
-    dest="${HOME}/.openvpn/${fqdn}"
+    dest="${HOME}/.openvpn/${fqdn}-${ca_cn}"
+    conf="${dest}.ovpn"
     if ! test -d "${dest}"; then
       mkdir ${dest}
+    else
+      echo "Found configuration: ${dest}"
+      exit 1
     fi
 
+    cat > "${conf}" <<EOF
+client
+proto tcp
+remote <REMOTE> 11940
+dev tun
+ca ${fqdn}-${ca_cn}/ca.crt
+cert ${fqdn}-${ca_cn}/client.crt
+key ${fqdn}-${ca_cn}/client.key
+tls-auth ${fqdn}-${ca_cn}/ta.key 1
+keepalive 10 120
+cipher DES-EDE3-CBC
+comp-lzo
+persist-key
+persist-tun
+verb 3
+EOF
+
+    echo ""
+    echo "Creating OVPN config"
     pushd "ca/${ca_cn}/${ca_ver}/keys"
     cp -v ${fqdn}.crt "${dest}/client.crt"
     cp -v ${fqdn}.key "${dest}/client.key"

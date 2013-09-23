@@ -1,24 +1,11 @@
 #
 # http://openvpn.net/index.php/open-source/documentation/howto.html#quick
 #
-# reset ipset:
-# --extra-vars "reset=yes"  --tag reset
-#
-# I am in Hungary
-# --extra-vars "hungary=yes"
-#
-# Standalone
-# --extra-vars="nosys=yes"
-#
 ---
 - hosts: all
 
   vars_files:
     - vars/openvpn.yml
-
-  vars:
-    is_reset: "'$reset' == 'yes'"
-    is_hungary: "'$hungary' == 'yes'"
 
   tasks:
     - name: Install packages

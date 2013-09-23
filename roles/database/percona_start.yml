@@ -23,8 +23,8 @@
 # GRANT RELOAD, LOCK TABLES, REPLICATION CLIENT ON *.* TO 'sstuser'@'localhost';
 # FLUSH PRIVILEGES;
 
-    - name: Start mysqld
+    - name: Restart mysqld
       service: name=mysql
-               state=started
+               state=restarted
                enabled=yes
 
