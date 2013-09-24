@@ -1,14 +1,13 @@
 #
 # Install Mainline Kernel
 #
+#  --extra-vars="clean=true"
+#
 ---
 - hosts: all
 
   vars_files:
     - vars/kernel.yml
-
-  vars:
-    clean: true
 
   tasks:
 

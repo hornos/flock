@@ -1,0 +1,43 @@
+#
+# mount gluster on clients
+#
+# --extra-vars="master=10.2.0.1"
+#
+---
+- hosts: all
+
+  vars_files:
+    - vars/gluster.yml
+
+  tasks:
+
+  - name: Install repository
+    get_url: url={{url}}/{{repo}} dest=/etc/yum.repos.d/{{repo}}
+    tags:
+      - packages
+      - repo
+
+  - name: Install packages
+    yum: name={{item}}
+         state=latest
+    with_items:
+      - xfsprogs
+      - glusterfs-server
+      - glusterfs-fuse
+    tags:
+      - packages
+
+  - name: Create common dir
+    file: path={{gluster.common}}
+          state=directory
+    tags:
+      - partition
+
+  - name: Mount common
+    mount: name={{gluster.common}}
+           src={{master}}:/{{gluster.volume}}
+           fstype=glusterfs
+           opts={{gluster.opts}},log-level=WARNING,log-file=/var/log/gluster.log
+           state=mounted
+    tags:
+      - mount

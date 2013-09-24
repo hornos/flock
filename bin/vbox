@@ -141,7 +141,7 @@ function vm/disk() {
 
 function vm/list() {
   local _group=${1}
-  ${vbox} list -l vms | \
+  ${vbox} list -l vms 2>/dev/null | \
           grep ${_group} | \
           grep Config | \
           sed s/.*\\/// | \

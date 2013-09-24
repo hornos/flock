@@ -454,7 +454,7 @@ Change to the latest mainline kernel:
 
 Install Gluster and setup a 3-node FS cluster:
 
-    flock play @@core roles/cluster/gluster
+    flock play @@core roles/hpc/gluster
 
 Login to the master node and bootstrap the cluster:
 
@@ -462,8 +462,8 @@ Login to the master node and bootstrap the cluster:
 
 Finally, mount the common directory:
 
-    flock play @@core roles/cluster/glusterfs
-    flock play @@core roles/cluster/gtop
+    flock play @@core roles/hpc/glusterfs
+    flock play @@core roles/hpc/gtop
 
 Monitor the cluster:
 

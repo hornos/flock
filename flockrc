@@ -72,6 +72,13 @@ function stack() {
   fi
 }
 
+function flack() {
+  local _flock=$(echo "$*" | cut -d@ -f 1)
+  local _stack=$(echo "$*" | cut -d@ -f 2)
+  flock on ${_flock}
+  stack on ${_stack}
+}
+
 function inventory() {
   if test -n "${ANSIBLE_HOSTS}" ; then
     local _inventory=${ANSIBLE_HOSTS}

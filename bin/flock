@@ -60,7 +60,7 @@ _key=""
 if test -r ${key} ; then
   _key="--private-key=${key}"
 fi
-options="-u ${user} ${_key} -i ${inventory} ${_opts} ${opts}"
+options="-u ${user} ${_key} -i ${inventory}"
 
 ### modules
 _module=$module
@@ -151,7 +151,8 @@ case ${cmd} in
     ;;
   command)
     command="ansible"
-    command_options="${hosts} -m command -a \"${module}\""
+    command_options="${hosts} -m command -a \"${module} ${opts}\""
+    opts=""
     ;;
   restart|stop|start)
     command="ansible"
@@ -298,6 +299,7 @@ esac
 
 ### done
 echo ""
-echo "Running: $command $command_options $options"
+echo "Running: $command $command_options $options ${_opts} $opts"
 echo ""
-eval "$command $command_options $options"
+eval "$command $command_options $options ${_opts} $opts"
+

@@ -40,8 +40,10 @@ gluster volume start $VOLUME
 
 echo ""
 read -o "Set timeouts on $VOLUME?"
-gluster volume set $VOLUME {{gluster.ping}} 30
-gluster volume set $VOLUME {{gluster.frame}} 60
+echo ""
+read -o "Set timeouts on $VOLUME?"
+gluster volume set $VOLUME network.ping-timeout {{gluster.ping}}
+gluster volume set $VOLUME network.frame-timeout {{gluster.frame}}
 
 echo ""
 read -p "Volume info $VOLUME?"
