@@ -88,7 +88,7 @@ case ${cmd} in
   #/* Show password for the VM:
   #// getpass <MAC>
   #//         @<HOST>
-  getpass)
+  getpass|password)
     mac=$(vbox/mac ${arg} | tr [A-Z] [a-z])
     pass="${jockey_root}/${mac}.pass"
     if test -r "${pass}" ; then

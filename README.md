@@ -141,7 +141,8 @@ Bootstrap the machine:
 
 Start the servers and the machine:
 
-    flock provision
+    flock http
+    flock boot
     vbox start centos-template
 
 Switch off bootp and restart the machine:
@@ -773,7 +774,7 @@ Generate a munge key for the compute cluster and setup the scheduler services:
     dd if=/dev/random bs=1 count=4096 > keys/munge.key
     flock play @@ww scheduler --extra-vars=\"master=ww-01 backup=ww-02\"
 
-Scheduler authentication relies on NTP and the Munge key, keep it in secret. The basic Slurm setup contains only the controller machines. Restart `slurmdbd` can fail.
+Scheduler authentication relies on NTP and the Munge key. Keep the key in secret! The basic Slurm setup contains only the controller machines. Restart `slurmdbd` can fail.
 
 Login to the master node and check the queue:
 
@@ -1193,7 +1194,7 @@ Install storage disks:
 
 CentOS `kernel-devel` build link is broken, fix (*mind the actual version!*):
 
-     ln -v -f -s /usr/src/kernels/2.6.32-358.18.1.el6.x86_64 /lib/modules/2.6.32-358.el6.x86_64/build
+     ln -v -f -s ../../../usr/src/kernels/2.6.32-358.18.1.el6.x86_64 /lib/modules/2.6.32-358.el6.x86_64/build
 
     flock snap /fhgfs storage
 

@@ -12,5 +12,6 @@
                 regexp='^(.*)rhgb.*quiet(.*)$'
                 backrefs=yes
                 line='\1\2'
+    when: ansible_os_family == "RedHat"
     tags:
       - textgrub

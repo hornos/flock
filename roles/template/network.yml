@@ -6,7 +6,6 @@
 
   tasks:
 
-### REDHAT
   - name: Clean /etc/hosts
     lineinfile: dest=/etc/hosts
                 regexp='{{inventory_hostname}}'
@@ -14,24 +13,39 @@
     tags:
       - hosts
 
+### REDHAT
   - name: Reset eth0
     template: src=templates/etc/sysconfig/network-scripts/ifcfg-eth0.j2
               dest=/etc/sysconfig/network-scripts/ifcfg-eth0
+    when: ansible_os_family == "RedHat"
     tags:
       - interfaces
 
   - name: Reset eth1
     template: src=templates/etc/sysconfig/network-scripts/ifcfg-eth1.j2
               dest=/etc/sysconfig/network-scripts/ifcfg-eth1
+    when: ansible_os_family == "RedHat"
     tags:
       - interfaces
 
   - name: Reset multicast
     file: path=/etc/sysconfig/network-scripts/route-eth0
           state=absent
+    when: ansible_os_family == "RedHat"
     tags:
       - multicast
 
+### DEBIAN - én kérek elnézést
+  - name: Reset interfaces
+    template: src=templates/etc/network/interfaces.j2
+              dest=/etc/network/interfaces
+    when: ansible_os_family == "Debian"
+    tags:
+      - interfaces
+
+# TBD: multicast?
+
+### COMMON
   - name: Clear persistent rules
     file: path=/etc/udev/rules.d/70-persistent-net.rules
           state=absent

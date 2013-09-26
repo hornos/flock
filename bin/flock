@@ -184,6 +184,7 @@ case ${cmd} in
     command="ansible"
     command_options="${hosts} -m ping"
     ;;
+
   ssh)
     _hosts=$(cat ${inventory} | \
     grep ^${hosts} | \
@@ -205,6 +206,7 @@ case ${cmd} in
     ssh -X ${opts} ${_key} ${user}@${host}
     exit $?
     ;;
+
   http|boot|masq)
     jockey $cmd
     exit $?
@@ -226,6 +228,7 @@ case ${cmd} in
     jockey $cmd $cmd ${_args} ${pubkey}
     exit $?
     ;;
+
   out)
     # args
     no=${_arg1:-3}
@@ -253,6 +256,7 @@ case ${cmd} in
     done
     exit $?
     ;;
+
   bootstrap)
     group=${_arg1:-/test}
     for i in $(vbox group? ${group}) ; do
@@ -292,6 +296,7 @@ case ${cmd} in
     done
     exit $?
     ;;
+
   help|*)
     help/flock
     ;;

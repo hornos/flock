@@ -80,6 +80,10 @@ LABEL raring
 	MENU LABEL raring
 	KERNEL raring/ubuntu-installer/amd64/linux
 	APPEND vga=788 initrd=raring/ubuntu-installer/amd64/initrd.gz auto=true priority=critical netcfg/choose_interface=INTERFACE preseed/url=http://KICKSTART
+LABEL raring-template
+	MENU LABEL raring-template
+	KERNEL raring/ubuntu-installer/amd64/linux
+	APPEND vga=788 initrd=raring/ubuntu-installer/amd64/initrd.gz auto=true priority=critical netcfg/choose_interface=INTERFACE preseed/url=http://KICKSTART
 LABEL precise
 	MENU LABEL precise
 	KERNEL precise/ubuntu-installer/amd64/linux

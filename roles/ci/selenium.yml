@@ -1,0 +1,24 @@
+#
+# http://docs.seleniumhq.org/docs/05_selenium_rc.jsp
+# http://docs.opsview.com/doku.php?id=thirdparty:selenium
+#
+---
+
+- hosts: all
+  tasks:
+    - name: Install packages
+      yum: name={{item}}
+           state=installed
+      with_items:
+        - java-1.7.0-openjdk
+        - xorg-x11-server-Xvfb
+        - xorg-x11-xauth
+        - xorg-x11-fonts-100dpi
+        - xorg-x11-fonts-75dpi
+        - firefox
+        - mozilla-https-everywhere
+      tags:
+        - packages
+
+    - name: Install Xvfb init script
+      

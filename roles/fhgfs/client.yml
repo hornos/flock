@@ -1,0 +1,79 @@
+#
+# http://www.fhgfs.com/
+#
+# --extra-vars="master=fhgfs-01"
+#
+---
+- hosts: all
+  vars_files:
+    - networks.yml
+    - vars/fhgfs.yml
+
+  tasks:
+  - name: Download FhGFS release key
+    get_url: url={{key_url}}/{{key}} dest=/root/fhgfs-release.asc
+    tags:
+      - packages
+      - key
+
+  - name: Install FhGFS release key
+    shell: /bin/rpm --import /root/fhgfs-release.asc
+    tags:
+      - packages
+      - key
+
+  - name: Download FhGFS repo
+    get_url: url={{url}}/{{repo}} dest=/etc/yum.repos.d/{{repo}}
+    tags:
+      - packages
+      - repo
+
+  - name: Install packages
+    yum: name={{item}}
+         state=installed
+    with_items:
+      - fhgfs-common
+      - fhgfs-utils
+      - fhgfs-client
+      - fhgfs-helperd
+      - kernel-devel
+    tags:
+      - packages
+
+### CLIENTS
+  - name: Create client mount directory
+    file: path={{fhgfs.mount}}
+          owner=root
+          group=root
+          state=directory
+    tags:
+      - client
+
+  - name: Install client config
+    template: src=templates/etc/fhgfs/fhgfs-client.conf.j2
+              dest=/etc/fhgfs/fhgfs-client.conf
+              backup=yes
+    tags:
+      - config
+      - client
+    notify:
+      - Restart fhgfs-client
+
+
+  - name: Start client services
+    service: name={{item}}
+             state=started
+             enabled=yes
+    with_items:
+      - fhgfs-helperd
+      - fhgfs-client
+    tags:
+      - services
+      - client
+
+
+### HANDLERS
+  handlers:
+    - name: Restart fhgfs-client
+      service: name=fhgfs-client
+               state=restarted

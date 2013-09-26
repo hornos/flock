@@ -20,6 +20,16 @@
     lineinfile: dest=/etc/rc.d/rc.local
                 regexp='^/root/first_boot'
                 line='/root/first_boot'
+    when: ansible_os_family == "RedHat"
+    tags:
+      - rc
+
+  - name: Enable first boot script
+    lineinfile: dest=/etc/rc.local
+                regexp='^/root/first_boot'
+                line='/root/first_boot'
+                insertbefore='^exit'
+    when: ansible_os_family == "Debian"
     tags:
       - rc
 

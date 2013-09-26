@@ -13,10 +13,28 @@
     with_items:
       - xe-guest-utilities-6.2.0-1120.x86_64.rpm
       - xe-guest-utilities-xenstore-6.2.0-1120.x86_64.rpm
+    when: ansible_os_family == "RedHat"
     tags:
       - rpms
 
   - name: Install rpms
     shell: yum -y localinstall /root/xe-guest-utilities-*.rpm
+    when: ansible_os_family == "RedHat"
+    tags:
+      - packages
+
+### DEBIAN - gyönyörű f*s
+  - name: Install xen guest debs
+    copy: src=debs/{{item}}
+          dest=/root/{{item}}
+    with_items:
+      - xe-guest-utilities_6.2.0-1120_amd64.deb
+    when: ansible_os_family == "Debian"
+    tags:
+      - debs
+
+  - name: Install debs
+    shell: dpkg -i /root/xe-guest-utilities_6.2.0-1120_amd64.deb
+    when: ansible_os_family == "Debian"
     tags:
       - packages
