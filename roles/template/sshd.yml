@@ -8,7 +8,7 @@
 
 ### REDHAT
   - name: Install first boot script
-    template: src=templates/root/first_boot.j2
+    template: src=templates/root/first_boot.{{ansible_os_family}}.j2
               dest=/root/first_boot
               owner=root
               group=root

@@ -1,0 +1,14 @@
+#!/bin/bash
+
+gbn=$(basename $0)
+flag="/.${gbn}"
+
+# clean ssh host keys
+if ! test -r "${flag}" ; then
+  exit 0
+fi
+
+rm -f /etc/ssh/ssh_host_*
+rm -f ${flag}
+
+service ssh restart

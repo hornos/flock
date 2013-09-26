@@ -15,3 +15,42 @@
     when: ansible_os_family == "RedHat"
     tags:
       - textgrub
+
+#
+# http://askubuntu.com/questions/92276/how-do-i-boot-into-true-text-mode
+#
+### DEBIAN - az igazi betegség
+  - name: GRUB_CMDLINE_LINUX_DEFAULT
+    lineinfile: dest=/etc/default/grub
+                regexp='^GRUB_CMDLINE_LINUX_DEFAULT'
+                line='GRUB_CMDLINE_LINUX_DEFAULT="text"'
+    notify:
+      - Update grub
+    when: ansible_os_family == "Debian"
+    tags:
+      - textgrub
+
+  - name: GRUB_CMDLINE_LINUX
+    lineinfile: dest=/etc/default/grub
+                regexp='^GRUB_CMDLINE_LINUX'
+                line='GRUB_CMDLINE_LINUX="text"'
+    notify:
+      - Update grub
+    when: ansible_os_family == "Debian"
+    tags:
+      - textgrub
+
+  - name: GRUB_TERMINAL
+    lineinfile: dest=/etc/default/grub
+                regexp='^GRUB_TERMINAL'
+                line='GRUB_TERMINAL=console'
+    notify:
+      - Update grub
+    when: ansible_os_family == "Debian"
+    tags:
+      - textgrub
+
+  handlers:
+    - name: Update grub
+      shell: update-grub
+      when: ansible_os_family == "Debian"
