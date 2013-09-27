@@ -11,4 +11,6 @@ fi
 rm -f /etc/ssh/ssh_host_*
 rm -f ${flag}
 
+/usr/sbin/dpkg-reconfigure --force openssh-server
+sleep 2
 service ssh restart

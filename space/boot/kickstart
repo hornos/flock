@@ -88,6 +88,10 @@ LABEL precise
 	MENU LABEL precise
 	KERNEL precise/ubuntu-installer/amd64/linux
 	APPEND vga=788 initrd=precise/ubuntu-installer/amd64/initrd.gz auto=true priority=critical netcfg/choose_interface=INTERFACE preseed/url=http://KICKSTART
+LABEL precise-template
+	MENU LABEL precise-template
+	KERNEL precise/ubuntu-installer/amd64/linux
+	APPEND vga=788 initrd=precise/ubuntu-installer/amd64/initrd.gz auto=true priority=critical netcfg/choose_interface=INTERFACE preseed/url=http://KICKSTART
 LABEL gateway
 	MENU LABEL gateway
 	KERNEL precise/ubuntu-installer/amd64/linux

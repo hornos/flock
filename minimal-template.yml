@@ -4,3 +4,4 @@
 - include: roles/template/grub.yml
 - include: roles/template/sshd.yml
 - include: roles/template/xenguest.yml
+# - include: roles/template/inittab.yml

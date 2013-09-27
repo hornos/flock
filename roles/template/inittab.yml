@@ -1,0 +1,18 @@
+# reinit:
+# --extra-vars "reinit=yes"
+---
+- hosts: all
+
+  vars_files:
+    - vars/inittab.yml
+
+  tasks:
+  - name: Install Init messages
+    template: src=templates/etc/init/tty1.conf.j2
+              dest=/etc/init/tty1.conf
+              owner=root
+              group=root
+              mode=0640
+    when: ansible_os_family == "Debian"
+    tags:
+      - messages

@@ -24,6 +24,17 @@
       - packages
 
 ### DEBIAN - gyönyörű f*s
+  - name: Uninstall Vbox shit
+    apt: name={{item}}
+         state=absent
+    with_items:
+      - virtualbox-guest-dkms
+      - virtualbox-guest-utils
+      - virtualbox-guest-x11
+      - virtualbox-ose-guest-x11
+    tags:
+      - vbox
+
   - name: Install xen guest debs
     copy: src=debs/{{item}}
           dest=/root/{{item}}
@@ -34,7 +45,10 @@
       - debs
 
   - name: Install debs
-    shell: dpkg -i /root/xe-guest-utilities_6.2.0-1120_amd64.deb
+    shell: dpkg -i /root/{{item}}
+    with_items:
+      - xe-guest-utilities_6.2.0-1120_amd64.deb
     when: ansible_os_family == "Debian"
     tags:
       - packages
+

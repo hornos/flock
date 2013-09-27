@@ -138,6 +138,7 @@ Create an Ansible inventory (`.inventory/template.ansible`):
 Bootstrap the machine:
 
     flock kick centos64-template @centos-template 10.1.1.10 centos-template
+    flock kick precise-template @ubuntu-template 10.1.1.11 ubuntu-template
 
 Start the servers and the machine:
 
