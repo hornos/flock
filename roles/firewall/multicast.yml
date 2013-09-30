@@ -18,3 +18,13 @@
       when: ansible_os_family == "RedHat"
       tags:
         - config
+
+# http://guru.kirz.com/?p=129
+
+    - name: Enable multicast route
+      lineinfile: dest=/etc/network/interfaces
+                  regexp='^up route'
+                  line='up route add -net 224.0.0.0/4 dev {{interfaces.system}}'
+      when: ansible_os_family == "Debian"
+      tags:
+        - config

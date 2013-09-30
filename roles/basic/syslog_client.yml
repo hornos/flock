@@ -4,6 +4,9 @@
 ---
 - hosts: all
 
+  vars_files:
+    - networks.yml
+
   tasks:
   - name: Enable loghost client
     template: src=templates/etc/syslog-ng/conf.d/client.{{ansible_distribution}}.j2

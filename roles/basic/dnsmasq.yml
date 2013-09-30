@@ -87,6 +87,13 @@
       tags:
         - hosts
 
+    - name: Set hostname for Debian
+      copy: dest=/etc/hostname
+            content="{{inventory_hostname}}"
+      when: ansible_os_family == "Debian"
+      tags:
+        - hostname
+
     - name: Enable networks in /etc/networks
       template: src=templates/etc/networks.j2
                 dest=/etc/networks

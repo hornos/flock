@@ -1,6 +1,9 @@
 ---
 - hosts: all
 
+  vars_files:
+    - networks.yml
+
   tasks:
 ### MRPROPER
   - name: Stop rsyslog

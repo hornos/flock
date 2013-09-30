@@ -25,6 +25,8 @@ paths:
   eth2: eth2
 
 ansible_paths:
+  eth0: 'ansible_eth0'
+  eth1: 'ansible_eth1'
   eth2: 'ansible_eth2'
 
 interfaces:

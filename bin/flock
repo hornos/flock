@@ -237,12 +237,17 @@ case ${cmd} in
     type=${1:-centos64}
     shift
     os=${1:-RedHat_64}
-
-    echo ""
+    shift
+    first=${1:-1}
+    first=$((first-1))
     read -p "Create fock of ${no} machines?"
 
-    echo "[${name}]" > ${inventory}
+    if test $first -eq 0; then
+      echo "[${name}]" > ${inventory}
+    fi
+
     for i in $(seq 1 ${no}) ; do
+      i=$((i+first))
       echo ""
       _no=$(printf %0.2d ${i})
       _id=${name}-${_no}

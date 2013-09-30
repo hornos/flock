@@ -8,15 +8,21 @@
     - vars/slurm.yml
     - vars/mariadb.yml
 
-  vars:
-    is_master: "'$inventory_hostname' == '$master'"
-    is_backup: "'$inventory_hostname' == '$backup'"
-
   tasks:
   - name: Install munge packages
     yum: name={{item}}
          state=installed
          enablerepo={{slurm.repo}}
+    when: ansible_os_family == "RedHat"
+    with_items:
+      - munge
+    tags:
+      - packages
+
+  - name: Install munge packages
+    apt: name={{item}}
+         state=installed
+    when: ansible_os_family == "Debian"
     with_items:
       - munge
     tags:
@@ -35,6 +41,7 @@
     lineinfile: dest=/etc/sysconfig/munge
                 regexp='^USER'
                 line='USER="munge"'
+    when: ansible_os_family == "RedHat"
     tags:
       - munge
 

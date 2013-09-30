@@ -109,8 +109,8 @@ AccountingStorageBackupHost={{backup}}
 #AccountingStorageUser=
 #
 # COMPUTE NODES
-NodeName={{slurm.compute}} State=UNKNOWN
-PartitionName=DEFAULT Nodes={{slurm.compute}} MaxTime=INFINITE State=UP
+NodeName={{computes}} State=UNKNOWN
+PartitionName=DEFAULT Nodes={{computes}} MaxTime=INFINITE State=UP
 PartitionName=low    Default=NO  Priority=10 PreemptMode=requeue
 PartitionName=normal Default=YES Priority=20 PreemptMode=suspend
 PartitionName=high   Default=NO  Priority=30 PreemptMode=off

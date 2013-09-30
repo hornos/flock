@@ -3,21 +3,23 @@
 #
 ---
 - hosts: all
+  vars:
+    backup: undefined
+
   vars_files:
     - networks.yml
     - vars/slurm.yml
     - vars/mariadb.yml
-
-  vars:
-    is_master: "'$inventory_hostname' == '$master'"
-    is_backup: "'$inventory_hostname' == '$backup'"
+    - [ "vars/{{ ansible_os_family }}.yml", "vars/Defaults.yml" ]
 
   tasks:
+### REDHAT
   - name: Install packages
     yum: name={{item}}
          state=installed
     with_items:
       - MySQL-python
+    when: ansible_os_family == "RedHat"
     tags:
       - packages
 
@@ -35,11 +37,23 @@
       - slurm-sjstat
       - slurm-slurmdbd
       - slurm-sql
-      - slurm-torque
       - mailx
+    when: ansible_os_family == "RedHat"
     tags:
       - packages
 
+### DEBIAN
+  - name: Install slurm packages
+    apt: name={{item}}
+         state=latest
+    with_items:
+      - slurm-llnl
+      - slurm-llnl-basic-plugins
+    when: ansible_os_family == "Debian"
+    tags:
+      - packages
+
+### USERS
   - name: Create users
     user: name={{item}}
           createhome=no
@@ -53,7 +67,7 @@
               login_user={{mariadb.user}}
               login_password={{mariadb.password}}
               login_unix_socket={{mariadb.socket}}
-    when: '$is_master'
+    when: inventory_hostname == master
     tags:
       - slurm
 
@@ -62,7 +76,7 @@
                 login_user={{mariadb.user}}
                 login_password={{mariadb.password}}
                 login_unix_socket={{mariadb.socket}}
-    when: '$is_master'
+    when: inventory_hostname == master
     tags:
       - slurm
 
@@ -93,6 +107,13 @@
     tags:
       - slurm
 
+  - name: Link slurm directory
+    file: src=/etc/slurm-llnl
+          dest=/etc/slurm
+          state=link
+    when: ansible_os_family == "Debian"
+    tags:
+      - links
 
 ### DATABASE
   - name: Install /etc/slurm/slurmdbd.conf
@@ -104,7 +125,7 @@
               backup=yes
     notify:
       - Restart slurmdbd
-    when: '$is_master or $is_backup'
+    when: inventory_hostname == master or inventory_hostname == backup
     tags:
       - slurm
       - database
@@ -140,28 +161,28 @@
     service: name=slurmdbd
              state=started
              enabled=yes
-    when: '$is_master'
+    when: inventory_hostname == master
     tags:
       - slurm
       - database
 
   - name: Create cluster
     shell: /usr/bin/sacctmgr -i create cluster name={{slurm.cluster}}
-    when: '$is_master'
+    when: inventory_hostname == master
     ignore_errors: yes
     tags:
       - slurm
 
   - name: Create test account
     shell: /usr/bin/sacctmgr -i add account sysop
-    when: '$is_master'
+    when: inventory_hostname == master
     ignore_errors: yes
     tags:
       - slurm
 
   - name: Enable test account
     shell: /usr/bin/sacctmgr -i add user sysop defaultaccount=sysop
-    when: '$is_master'
+    when: inventory_hostname == master
     ignore_errors: yes
     tags:
       - slurm
@@ -174,7 +195,7 @@
           state=directory
     tags:
       - state
-    when: '$is_master'
+    when: inventory_hostname == master
     tags:
       - slurm
 
@@ -185,7 +206,7 @@
           state=directory
     tags:
       - state
-    when: '$is_master'
+    when: inventory_hostname == master
     tags:
       - slurm
 
@@ -203,6 +224,7 @@
               owner=slurm
               group=slurm
               mode=0644
+    when: ansible_os_family == "RedHat"
     notify:
       - Restart slurm
     tags:
@@ -281,13 +303,13 @@
     service: name=slurmdbd
              state=started
              enabled=yes
-    when: '$is_backup'
+    when: inventory_hostname == backup
     tags:
       - slurm
       - database
 
   - name: Start slurm
-    service: name=slurm
+    service: name={{service.slurm}}
              state=started
              enabled=yes
 
@@ -297,7 +319,7 @@
                state=restarted
 
     - name: Restart slurm
-      service: name=slurm
+      service: name={{service.slurm}}
                state=restarted
 
     - name: Restart ipset

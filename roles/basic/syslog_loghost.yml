@@ -4,6 +4,9 @@
 ---
 - hosts: all
 
+  vars_files:
+    - networks.yml
+
   tasks:
 
   - name: Enable syslog-ng loghost

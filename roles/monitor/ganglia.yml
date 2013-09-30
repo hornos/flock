@@ -50,6 +50,7 @@
   - name: Install local Ganglia repo
     template: src=templates/etc/yum.repos.d/ganglia.repo.j2
               dest=/etc/yum.repos.d/ganglia.repo
+    when: ansible_os_family == "RedHat"
     tags:
       - packages
       - fix
@@ -63,6 +64,7 @@
       - ganglia-gmond
       - ganglia-gmond-modules-python
       - libganglia
+    when: ansible_os_family == "RedHat"
     tags:
       - packages
 
@@ -254,6 +256,15 @@
     tags:
       - config
       - gweb
+
+  - name: Fix Ganglia view
+    lineinfile: dest=/var/www/html/ganglia/conf_default.php
+                regexp="'optional_graphs'"
+                line="$conf['optional_graphs'] = array('cpu','load','mem','network');"
+                insertafter="#\$conf\['optional_graphs'"
+    when: ansible_os_family == "RedHat"
+    tags:
+      - view
 
   - name: Enable gmond service
     lineinfile: dest=/etc/services

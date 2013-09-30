@@ -8,9 +8,6 @@
     - networks.yml
     - vars/percona.yml
 
-  vars:
-    is_master: "'$inventory_hostname' == '$master'"
-
   tasks:
 ### REDHAT
     - name: Download repository
@@ -59,7 +56,7 @@
 
     - name: Set master
       lineinfile: dest=/etc/my.cnf regexp='^wsrep_cluster_address' line='wsrep_cluster_address=gcomm://'
-      when: '$is_master'
+      when: inventory_hostname == master
       tags:
         - config
 
@@ -68,8 +65,8 @@
       template: src=templates/root/{{item}}.j2
                 dest=/root/{{item}}
                 mode=0750
+      when: inventory_hostname == master
       with_items:
         - percona_bootstrap
       tags:
         - scripts
-

@@ -1599,9 +1599,12 @@ Save and start to reach the ground state:
     flock reboot @@ostest
     vbox snap /ostest ground
 
-## Docker
+## The Docker Supercomputer aka MAERSK
+Ubuntu is a so big stack of s***, waitin for 0.8.
 
-    flock out 3 docker raring Ubuntu_64
+Create one CentOS controller and two Ubuntu slave:
+
+    flock out 1 docker; flock out 2 docker raring Ubuntu_64 2
 
 Start the kickstart servers:
 
@@ -1622,7 +1625,7 @@ switch to disk boot make a snapshot and start:
     vbox start /@docker
     vbox snap /docker init
 
-Swith to the `docker` nevironment:
+Switch to the `docker` environment:
 
     flenv docker
 
@@ -1646,4 +1649,41 @@ Now, reach the ground state:
     flock reboot @@docker
     vbox snap /docker ground
 
-Install docker:
+This blueprint contains only a single controller, a production system should use a HA triangle.
+
+### Database
+Install the database:
+
+    flock play @@docker-01 roles/database/percona --extra-vars "master=docker-01"
+
+Login to the master node and bootstrap the cluster (set `root` password to `root`):
+
+    /etc/init.d/mysql start --wsrep-cluster-address="gcomm://"
+    mysql_secure_installation
+
+Enable php admin interface:
+
+    flock play @@docker-01 roles/database/admin
+
+DB interface at `http://10.1.1.1/phpmyadmin`.
+
+Save:
+
+    vbox snap /docker database
+
+### Scheduler
+Generate the Munge auth key:
+
+    dd if=/dev/random bs=1 count=1024 > keys/munge.key
+
+Install Slurm:
+
+    flock play @@docker scheduler --extra-vars \"master=docker-01 computes='docker-[02-3]'\"
+
+Verify munge:
+
+    munge -n | ssh docker-02 unmunge
+
+Login to the master node and test the queue:
+
+    srun -N 3 hostname
