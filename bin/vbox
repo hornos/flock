@@ -3,6 +3,8 @@
 
 ### init
 gdn=$(cd $(dirname $0); pwd)
+gbn=$(basename $0)
+
 usrlocal=/usr
 if [ ! -z "${OSTYPE/darwin/}" ]; then
   usrlocal=/usr/local
@@ -297,8 +299,7 @@ case ${cmd} in
     host=${1:-test}
     boot=${3:-disk}
     echo ""
-    echo "Do you want to switch of the machine"
-    echo "and restart from ${boot}?"
+    echo "Do you want to switch of the machine(s) and restart from ${boot}?"
     read
     ${gbn} off ${host}
     ${gbn} boot ${host} ${boot}

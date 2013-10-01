@@ -999,54 +999,7 @@ Enable elasticsearch:
 ## Ceph FS
 
 ## Gluster
-Triangle:
-
-    flock out 3 gluster
-
-Provision:
-
-    flock http
-    flock boot
-
-and start the group in the background:
-
-    vbox start /@gluster
-
-wait for the reboot signal and turn off the group:
-
-    vbox off /gluster
-
-switch to disk boot make a snapshot and start:
-
-    vbox boot /gluster disk
-    vbox start /@gluster
-    vbox snap /gluster init
-
-Change the inventory:
-
-    flock on gluster
-
-Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
-
-    flock bootstrap /gluster
-
-and ping by `sysop`:
-
-    flock ping @@gluster
-
-Check the network topology in `networks.yml` and secure the flock:
-
-    flock play @@gluster secure
-    flock reboot @@gluster
-    flock snap /gluster secure
-
-Now, reach the ground state:
-
-    flock play @@gluster ground
-    flock reboot @@gluster
-    flock snap /gluster ground
-
-Install storage disks:
+Make 3 ground state `gluster`. Install storage disks:
 
     flock shutdown @@gluster
     vbox storage /gluster
@@ -1130,54 +1083,7 @@ http://gluster.org/community/documentation/index.php/Gluster_3.2:_Installing_Glu
 -->
 
 ## [FhGFS](http://www.fhgfs.com/wiki/wikka.php?wakka=FhGFS)
-Triangle:
-
-    flock out 3 fhgfs
-
-Provision:
-
-    flock http
-    flock boot
-
-and start the group in the background:
-
-    vbox start /@fhgfs
-
-wait for the reboot signal and turn off the group:
-
-    vbox off /fhgfs
-
-switch to disk boot make a snapshot and start:
-
-    vbox boot /fhgfs disk
-    vbox start /@fhgfs
-    vbox snap /fhgfs init
-
-Change the inventory:
-
-    flock on fhgfs
-
-Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
-
-    flock bootstrap /fhgfs
-
-and ping by `sysop`:
-
-    flock ping @@fhgfs
-
-Check the network topology in `networks.yml` and secure the flock:
-
-    flock play @@fhgfs secure
-    flock reboot @@fhgfs
-    flock snap /fhgfs secure
-
-Now, reach the ground state:
-
-    flock play @@fhgfs ground
-    flock reboot @@fhgfs
-    flock snap /fhgfs ground
-
-Install storage disks:
+Make 3 ground state `fhgfs`. Install storage disks:
 
     flock shutdown @@fhgfs
     vbox storage /fhgfs
@@ -1218,92 +1124,6 @@ Save it for good:
 
 *Mind that, currently there is no any HA in FhGFS (distribute-only).*
 
-## [Lustre](http://myitnotes.info/doku.php?id=en:jobs:lustrefs)
-Create the triangle:
-
-    flock out 3 lustre
-
-Start the kickstart servers:
-
-    flock http
-    flock boot
-
-and start the group in the background:
-
-    vbox start /@lustre
-
-wait for the reboot signal and turn off the group:
-
-    vbox off /lustre
-
-*Warning: bonding does not seem to work in VirtualBox!* Configure a 2 frontend + 4 backend network card setup for bonding, mind that eth0 is reserved for the host-only system network. Add a new host-only network `vboxnet1` according to `networks.yml`. Bonding topology:
-
-    bond0: eth1-2
-    bond1: eth3-6
-
-    vbox bondnet /lustre
-
-Since host bonding fails just add on intnet interface:
-
-    vbox intnet /lustre
-
-Add 4 more disks for testing purposes:
-
-    vbox storage /lustre
-
-Switch to disk boot make a snapshot and start:
-
-    vbox boot /lustre disk
-    vbox start /@lustre
-
-Swith to the `lustre` nevironment:
-
-    flock on lustre
-
-Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
-
-    flock bootstrap /lustre
-
-Verify by `sysop`:
-
-    flock ping @@lustre
-
-*Warning: bonding does not seem to work in VirtualBox!* You might have to check `/etc/udev/rules.d/70-persistent-net.rules` for the mac address resolution. This setup configure DHCP with bonding.
-
-    flock play @@lustre bonding
-    flock reboot @@lustre
-
-Secure:
-
-    flock play @@lustre secure
-    flock reboot @@lustre
-    vbox snap /lustre secure
-
-Check the network topology in `networks.yml`. Edit the `paths` section for interface mapping.
-
-Ground state:
-
-    flock play @@lustre ground
-    flock reboot @@lustre
-    vbox snap /lustre ground
-
-Tune the network if you need:
-
-    flock play roles/network/tune
-    vbox snap /lustre tune
-
-Install Lustre:
-
-    flock play @@lustre roles/hpc/lustre
-    flock reboot @@lustre
-    vbox snap /lustre lustre
-
-Create and mount filesystems. The default install uses 4 disks on the OSS without bonding.
-
-    flock play roles/hpc/lustrefs
-
-*Lustre test script failed*
-
 
 <!--
 ##     ##    ###    ########   #######   #######  ########  
@@ -1316,51 +1136,7 @@ Create and mount filesystems. The default install uses 4 disks on the OSS withou
 -->
 
 ## Hadoop
-
-    flock out 3 hadoop centos64
-
-Start the kickstart servers:
-
-    flock http
-    flock boot
-
-and start the group in the background:
-
-    vbox start /@hadoop
-
-wait for the reboot signal and turn off the group:
-
-    vbox off /hadoop
-
-switch to disk boot make a snapshot and start:
-
-    vbox boot /hadoop disk
-    vbox start /@hadoop
-    vbox snap /hadoop init
-
-Swith to the `hadoop` nevironment:
-
-    flock on hadoop
-
-Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
-
-    flock bootstrap /hadoop
-
-Verify by `sysop`:
-
-    flock ping @@hadoop
-
-Check the network topology in `networks.yml` and secure the flock:
-
-    flock play @@hadoop secure
-    flock reboot @@hadoop
-    vbox snap /hadoop secure
-
-Now, reach the ground state:
-
-    flock play @@hadoop ground
-    flock reboot @@hadoop
-    vbox snap /hadoop ground
+Make 3 ground state `hadoop`.
 
 ### Prepare
 Install Gluster and setup a 3-node FS cluster if you want a storage based HA:
@@ -1590,66 +1366,11 @@ Save and start to reach the ground state:
     vbox snap /ostest ground
 
 ## Lustre on ZFS
-Create one CentOS controller and two Ubuntu slave:
+Make 3 ground state `luster`.
 
-    flock out 1 docker; flock out 2 docker raring Ubuntu_64 2
-
-Start the kickstart servers:
-
-    flock http
-    flock boot
 
 ## The Docker Supercomputer aka MAERSK
-Ubuntu is a so big stack of s***, waitin for Docker 1.0 CentOS support.
-
-Create one CentOS controller and two Ubuntu slave:
-
-    flock out 1 docker; flock out 2 docker raring Ubuntu_64 2
-
-Start the kickstart servers:
-
-    flock http
-    flock boot
-
-and start the group in the background:
-
-    vbox start /@docker
-
-wait for the reboot signal and turn off the group:
-
-    vbox off /docker
-
-switch to disk boot make a snapshot and start:
-
-    vbox boot /docker disk
-    vbox start /@docker
-    vbox snap /docker init
-
-Switch to the `docker` environment:
-
-    flock on docker
-
-Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
-
-    flock bootstrap /docker
-
-Verify by `sysop`:
-
-    flock ping @@docker
-
-Check the network topology in `networks.yml` and secure the flock:
-
-    flock play @@docker secure
-    flock reboot @@docker
-    vbox snap /docker secure
-
-Now, reach the ground state:
-
-    flock play @@docker ground
-    flock reboot @@docker
-    vbox snap /docker ground
-
-This blueprint contains only a single controller, a production system should use a HA triangle.
+Make 3 ground state `docker`.
 
 ### Database
 Install the database:
