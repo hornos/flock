@@ -102,20 +102,10 @@ Space Jockey (`jockey`) is a simple Cobbler replacement. You need a simple inven
 
 The boot server listens on `boot_server` IP and Debian-based systems use the `interface` interface to reach the internet (NAT or bridged or 2nd physical network card). DNSmasq gives IPs from the `dhcp_range`.
 
-Start bootp provision servers by:
-
-    flock provision
-
-*Mind that you have to Ctrl-C from each server session! Do not close the XTerm window.*
-<!--
-Boot server is started on the selected interface by:
+Start bootp provision servers by (each in a separate terminal):
 
     flock boot
-
-Kickstart or preseed files are fetched from a HTTP server started by:
-
     flock http
--->
 
 ### Cloudstack (CS) setup
 Network can be different in the cloud. Usually, eth0 is connected to the Internet and eth1 is for internal connections:
@@ -1599,8 +1589,18 @@ Save and start to reach the ground state:
     flock reboot @@ostest
     vbox snap /ostest ground
 
+## Lustre on ZFS
+Create one CentOS controller and two Ubuntu slave:
+
+    flock out 1 docker; flock out 2 docker raring Ubuntu_64 2
+
+Start the kickstart servers:
+
+    flock http
+    flock boot
+
 ## The Docker Supercomputer aka MAERSK
-Ubuntu is a so big stack of s***, waitin for 0.8.
+Ubuntu is a so big stack of s***, waitin for Docker 1.0 CentOS support.
 
 Create one CentOS controller and two Ubuntu slave:
 
