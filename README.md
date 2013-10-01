@@ -254,7 +254,7 @@ With the `snap` command you can snapshot the VM:
 
 Change the inventory:
 
-    flenv core
+    flock on core
 
 Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
 
@@ -609,7 +609,7 @@ switch to disk boot make a snapshot and start:
 
 Swith to the `ww` nevironment:
 
-    flenv ww
+    flock on ww
 
 Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
 
@@ -1024,7 +1024,7 @@ switch to disk boot make a snapshot and start:
 
 Change the inventory:
 
-    flenv gluster
+    flock on gluster
 
 Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
 
@@ -1155,7 +1155,7 @@ switch to disk boot make a snapshot and start:
 
 Change the inventory:
 
-    flenv fhgfs
+    flock on fhgfs
 
 Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
 
@@ -1258,7 +1258,7 @@ Switch to disk boot make a snapshot and start:
 
 Swith to the `lustre` nevironment:
 
-    flenv lustre
+    flock on lustre
 
 Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
 
@@ -1340,7 +1340,7 @@ switch to disk boot make a snapshot and start:
 
 Swith to the `hadoop` nevironment:
 
-    flenv hadoop
+    flock on hadoop
 
 Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
 
@@ -1627,7 +1627,7 @@ switch to disk boot make a snapshot and start:
 
 Switch to the `docker` environment:
 
-    flenv docker
+    flock on docker
 
 Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
 
