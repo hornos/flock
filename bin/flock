@@ -42,14 +42,17 @@ fi
 
 _opts=""
 # change in ansible
-# --sudo
+# password and sudo
 if [ "${hosts:0:1}" = "@" ] ; then
-  _opts="${_opts} --sudo"
+  _opts="${_opts} -k"
   hosts="${hosts:1}"
-  # -k
   if [ "${hosts:0:1}" = "@" ] ; then
-    _opts="${_opts} -k"
+    _opts="${_opts} --sudo"
     hosts="${hosts:1}"
+      if [ "${hosts:0:1}" = "@" ] ; then
+        _opts="${_opts} -K"
+        hosts="${hosts:1}"
+    fi
   fi
 fi
 
