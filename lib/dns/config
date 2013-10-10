@@ -1,0 +1,3 @@
+dns_dnskey="dnssec-keygen"
+dns_bits=512
+dns_algo=HMAC-MD5

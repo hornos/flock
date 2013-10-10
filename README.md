@@ -52,7 +52,7 @@ If you use RVM you can set prompt indicators, check `profile`.
 ### Flock Commands
 
     flock    - Ansible wrapper
-    flock-ca - Simple CA manager
+    cacert   - Simple CA manager
     vbox     - VirtualBox wrapper
     ovpn     - OpenVPN wrapper
     stack    - Cloud Monkey wrapper
@@ -1375,7 +1375,7 @@ Make 3 ground state `docker`.
 ### Database
 Install the database:
 
-    flock play @@docker-01 roles/database/percona --extra-vars "master=docker-01"
+    flock play @@maersk-01 roles/database/percona --extra-vars "master=maersk-01"
 
 Login to the master node and bootstrap the cluster (set `root` password to `root`):
 
@@ -1384,7 +1384,7 @@ Login to the master node and bootstrap the cluster (set `root` password to `root
 
 Enable php admin interface:
 
-    flock play @@docker-01 roles/database/admin
+    flock play @@maersk-01 roles/database/admin
 
 DB interface at `http://10.1.1.1/phpmyadmin`.
 
@@ -1399,12 +1399,19 @@ Generate the Munge auth key:
 
 Install Slurm:
 
-    flock play @@docker scheduler --extra-vars \"master=docker-01 computes='docker-[02-3]'\"
+    flock play @@docker scheduler --extra-vars \"master=maersk-01 computes='maersk-[02-3]'\"
 
 Verify munge:
 
-    munge -n | ssh docker-02 unmunge
+    munge -n | ssh maersk-02 unmunge
 
 Login to the master node and test the queue:
 
     srun -N 3 hostname
+
+### Docker
+TBD: shorewall chain inject
+
+    flock play @@docker roles/docker/docker
+    flock reboot @@docker
+

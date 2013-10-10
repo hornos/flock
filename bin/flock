@@ -1,8 +1,11 @@
 #!/bin/bash
-gdn=$(pwd $(dirname $0))
-gbn=$(basename $0)
-tmp=".${gbn}.$$"
+source $(dirname $0)/../lib/header
+import gui
 
+# TBD: help
+
+# trap
+tmp=".${gbn}.$$"
 function flock/exit() {
   if test -r "${tmp}" ; then
     rm -f "${tmp}"
@@ -41,8 +44,8 @@ if [ -z "$user" ] ; then
 fi
 
 _opts=""
-# change in ansible
-# password and sudo
+
+# too much love will kill you
 if [ "${hosts:0:1}" = "@" ] ; then
   _opts="${_opts} -k"
   hosts="${hosts:1}"
@@ -71,61 +74,74 @@ if [ -r "${module}.yml" ] ; then
   module="${module}.yml"
 fi
 
-function help/flock() {
-  # TODO: selfdoc
-  cat <<EOF
-
-  Command  Inventory         Playbook    Options
-  ------------------------------------------------
-  init
-  keys
-  play     [user][@@]<hosts> <playbook>  [options]
-  show     [user][@@]<hosts> <playbook>  [options]
-  module   [user][@@]<hosts> <module>    [options]
-  setup    [user][@@]<hosts>             [options]
-  command  [user][@@]<hosts> "<command>" [options]
-
-EOF
-  exit 1
-}
 
 ### main
+# mind that non-module commands should exit
 case ${cmd} in
+  #/* Call jockey password
+  #// password <*ARGS>
   password)
     jockey password ${_arg1}
     exit $?
-    ;;
+  ;;
 
+  #/* Initialize flock
+  #// init
   init)
     echo ""
     read -p "Do you want to initialize flock?"
+    
+    # keys
     if [ ! -d ./keys ]; then
       mkdir ./keys
+    else
+      echo "Keys directory OK"
     fi
+    
+    # PXE
     if [ ! -d ./space/boot/pxelinux.cfg ]; then
       mkdir -p ./space/boot/pxelinux.cfg
+    else
+      echo "PXE directory OK"   
     fi
-    echo ""
-    echo "Generating System Operator key (sysop)"
-    ssh-keygen -b2048 -f keys/sysop
-    echo ""
-    echo "Generating no password root key (nopass)"
-    ssh-keygen -b2048 -N "" -f keys/nopass
-    echo ""
+
+    if [ ! -f ./keys/sysop ] ; then
+      echo ""
+      echo "Generating System Operator key (sysop)"
+      ssh-keygen -b2048 -f ./keys/sysop
+    else
+      echo "Sysop SSH key OK" 
+    fi
+
+    if [ ! -f ./keys/sysop ] ; then
+      echo ""
+      echo "Generating no password root key (nopass)"
+      ssh-keygen -b2048 -N "" -f ./keys/nopass
+      echo ""
+    else
+      echo "Nopass SSH key OK" 
+    fi 
 
     exit 0
-    ;;
+  ;;
 
+  #/* List SSH keys
+  #// keys
   keys)
     echo ""
-    echo "SSH id : bits  FP  email (type)"
-    echo "------------------------------------------------"
+    printf "%-8s %s %58s\n" "ID" "bits FP" "email (type)"
+    gui/line
     for i in sysop nopass ; do
-      echo "${i} : $(ssh-keygen -lf keys/${i})"
+      printf "%-8s %s\n" "${i}" "$(ssh-keygen -lf keys/${i})"
     done
     echo ""
     exit 0
-    ;;
+  ;;
+
+### PLAYBOOK
+
+  #/* play and ansible playbook
+  #// play [@@@]<HOST> <MODULE> [<OPTS>]
   play)
     if [ ! -r "${module}" ] ; then
       echo "Not found: ${module}"
@@ -133,60 +149,91 @@ case ${cmd} in
     fi
     command="ansible-playbook"
     command_options="${module} -l ${hosts}"
-    ;;
+  ;;
+
+  #/* dry-play and ansible playbook
+  #// check [@@@]<HOST> <MODULE> [<OPTS>]
+  check)
+    if [ ! -r "${module}" ] ; then
+      echo "Not found: ${module}"
+      exit 1
+    fi
+    command="ansible-playbook"
+    command_options="${module} -l ${hosts}"
+  ;;
+
   show)
     command="ansible-playbook"
     command_options="${module} -l ${hosts}"
     echo ""
     echo "The following tasks will be played:"
     echo ""
-    cat ${module} | egrep "name:" | sed s/.*name://
+    cat ${module} | \
+    egrep "name:" | \
+    sed s/.*name://
     echo ""
     read -p "Press any key to continue or Ctrl+C to exit!" pass
-    ;;
+  ;;
+
+
+### ANSIBLE
+  #/* ansible modules
+  #// module [<OPTS>]
   module)
     command="ansible"
     command_options="${hosts} -m ${module}"
-    ;;
-  setup|facts|ohai)
+  ;;
+
+  #// setup [<OPTS>]
+  setup|facts)
     command="ansible"
     command_options="${hosts} -m setup"
-    ;;
+  ;;
+
+  #// command [<OPTS>]
   command)
     command="ansible"
     command_options="${hosts} -m command -a \"${module} ${opts}\""
     opts=""
-    ;;
+  ;;
+
+  #// stop|start|restart [<OPTS>]
   restart|stop|start)
     command="ansible"
     command_options="${hosts} -m command -a \"service ${_module} ${cmd}\""
-    ;;
+  ;;
+
   shell)
     echo "${module}" > ${tmp}
     chmod a+x ${tmp}
     command="ansible"
     command_options="${hosts} -m shell -a \"${tmp}\""
-    ;;
+  ;;
+
   reboot)
     command="ansible"
     command_options="${hosts} -m command -a /sbin/reboot"
-    ;;
+  ;;
+
   shutdown)
     command="ansible"
     command_options="${hosts} -m command -a \"/sbin/shutdown -h now\""
-    ;;
+  ;;
+
   bootlog)
     command="ansible"
     command_options="${hosts} -m command -a \"cat /var/log/boot.log\""
-    ;;
+  ;;
+  
   update)
     command="ansible"
     command_options="${hosts} -m command -a \"yum -y update\""
-    ;;
+  ;;
+
   ping)
     command="ansible"
     command_options="${hosts} -m ping"
-    ;;
+  ;;
 
   ssh)
     _hosts=$(cat ${inventory} | \
@@ -305,12 +352,15 @@ case ${cmd} in
     exit $?
     ;;
 
-  help|*)
-    help/flock
-    ;;
+  #/* Help
+  #// help
+  *)
+    help $0
+    exit $?
+  ;;
 esac
 
-### done
+### run
 echo ""
 echo "Running: $command $command_options $options ${_opts} $opts"
 echo ""

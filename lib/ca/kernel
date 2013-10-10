@@ -1,0 +1,24 @@
+function ca/mkdir() {
+  local _dir=${*}
+  if ! test -d "${_dir}" ; then
+    mkdir -v -p "${_dir}"
+  fi
+}
+
+function ca/init() {
+  ca/mkdir "${ca_dir}/grid-security"
+}
+
+
+function ca/hash() {
+  openssl x509 -hash -noout < ${1:-cacert.pem}
+}
+
+function ca/hash_old() {
+  openssl x509 -subject_hash_old -noout < ${1:-cacert.pem}
+}
+
+function ca/subject() {
+  local _cn=${1:-test}
+  echo "cn=${_cn},ou=${_cn}-${grid_ca_hostname:-cahost},${base_dn}"
+}

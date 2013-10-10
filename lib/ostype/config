@@ -1,0 +1,11 @@
+is_osx=false
+usrlocal=/usr
+if [ ! -z "${OSTYPE/darwin/}" ]; then
+  is_osx=true
+  usrlocal=/usr/local
+fi
+
+http_bin=$(which nginx)
+if [ -z "${http_bin}" ] ; then
+  http_bin=${usrlocal}/sbin/nginx
+fi

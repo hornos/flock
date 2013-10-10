@@ -1,0 +1,1 @@
+cs_monkey="cloudmonkey -c ${CMONKEY_HOSTS}"

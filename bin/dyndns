@@ -1,17 +1,7 @@
 #!/bin/bash
-# CM tool
-
-### init
-gdn=$(cd $(dirname $0); pwd)
-usrlocal=/usr
-if [ ! -z "${OSTYPE/darwin/}" ]; then
-  usrlocal=/usr/local
-fi
-
-dnskey="dnssec-keygen"
-bits=512
-algo=HMAC-MD5
-inkey="IN KEY 0 3 157"
+source $(dirname $0)/../lib/header
+import ostype
+import dns
 
 ### main
 cmd=${1:-help}
@@ -21,6 +11,8 @@ shift
 # http://stackoverflow.com/questions/8789729/zero-padding-in-bash
 
 case ${cmd} in
+  #/* Generate dyndns keys
+  #// keys <DOMAIN> <NAME> [<COUNT>]
   keys)
     domain=${1}.
     name=${2:-test}
@@ -32,7 +24,7 @@ case ${cmd} in
     cd ./dnssec
     for i in $(seq -f "%02g" 1 ${count}); do
       host=${name}-${i}.${domain}
-      ${dnskey} -a ${algo} -b ${bits} -n USER ${host}
+      ${dns_dnskey} -a ${dns_algo} -b ${dns_bits} -n USER ${host}
     done
 
     # alias links
@@ -67,10 +59,19 @@ case ${cmd} in
       ln -s ${i} ${j}
     done
   ;;
+
+  #/* List dyndns keys in ./dnsssec
+  #// ls
   ls)
     cd ./dnssec
     for i in *.key ; do
       cat $i
     done
+  ;;
+
+  #/* Help
+  #// help
+  *)
+    help $0
   ;;
 esac

@@ -1,53 +1,34 @@
 #
-# http://docs.docker.io/en/latest/installation/ubuntulinux/
+# http://nareshv.blogspot.se/2013/08/installing-dockerio-on-centos-64-64-bit.html
 #
 ---
 - hosts: all
 
-  vars_files:
-    - networks.yml
-
   tasks:
-### DEBIAN
-  - name: Install repository
-    apt_repository: repo=ppa:dotcloud/lxc-docker
-    when: ansible_os_family == "Debian"
-    tags:
-      - repo
+    - group_by: key=${ansible_os_family}
+### REDHAT
+- hosts: RedHat
+  vars_files:
+    - vars/docker.yml
+  tasks:
+    - name: Download hop5.in repo
+      get_url: url=${url}/${repo}
+               dest=/etc/yum.repos.d/${repo}
+      tags:
+        - repo
 
-  - name: Install packages
-    apt: name={{item}}
-         state=installed
-    with_items:
-      - lxc-docker
-    when: ansible_os_family == "Debian"
-    tags:
-      - packages
+    - name: Install packages
+      yum: name={{item}}
+           state=installed
+      with_items:
+        - docker-io
+      tags:
+        - packages
 
-### FIREWALL
-#  - name: Install firewall rules
-#    template: src=templates/etc/shorewall/rules.d/docker.j2
-#              dest=/etc/shorewall/rules.d/docker
-#              owner=root
-#              group=root
-#              mode=0640
-#    tags:
-#      - firewall
-#    notify:
-#      - Restart shorewall
-
-# TODO: docker chain action
-# http://shorewall.net/Actions.html
-
-  - name: Enable masq
-    copy: content={{interfaces.masq}}
-          dest=/etc/shorewall/masq
-    tags:
-      - firewall
-    notify:
-      - Restart shorewall
-
-  handlers:
-  - name: Restart shorewall
-    service: name=shorewall
-             state=restarted
+    - name: Enable cgroup filesystem
+      lineinfile: dest=/etc/fstab
+                  regexp='^none /sys/fs/cgroup'
+                  line='none /sys/fs/cgroup cgroup defaults 0 0'
+                  backup=yes
+      tags:
+        - fstab

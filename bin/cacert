@@ -1,13 +1,13 @@
 #!/bin/bash
-#
+source $(dirname $0)/../lib/header
+import ostype
+import ca
+
+# Notes on certs with alt names:
 # http://wiki.cacert.org/FAQ/subjectAltName
-#
 
-gdn=$(pwd $(dirname $0))
-gbn=$(basename $0)
+# trap
 tmp=".${gbn}.$$"
-
-
 function ca/exit() {
   if test -r "${tmp}" ; then
     rm -f "${tmp}"
@@ -16,7 +16,8 @@ function ca/exit() {
 }
 trap ca/exit INT TERM EXIT
 
-### defaults
+
+### TBD defaults
 inventory=${ANSIBLE_HOSTS:-./hosts}
 config=${FLOCK_CONFIG:-./flock.conf}
 grid_ca_hostname=cahost
@@ -28,43 +29,8 @@ if [ -r "${config}" ] ; then
 fi
 
 
-function help/ca() {
-  cat <<EOF
-
-  create <CN> [days] [email]
-  host <CA> <FQDN>
-
-EOF
-  exit 1
-}
-
-function ca/mkdir() {
-  local _dir=${*}
-  if ! test -d "${_dir}" ; then
-    mkdir -v -p "${_dir}"
-  fi
-}
-
-function ca/init() {
-  ca/mkdir "${ca_dir}/grid-security"
-}
-
-
-function ca/hash() {
-  openssl x509 -hash -noout < ${1:-cacert.pem}
-}
-
-function ca/hash_old() {
-  openssl x509 -subject_hash_old -noout < ${1:-cacert.pem}
-}
-
-function ca/subject() {
-  local _cn=${1:-test}
-  echo "cn=${_cn},ou=${_cn}-${grid_ca_hostname:-cahost},${base_dn}"
-}
-
 ### args
-cmd=${1:-create}
+cmd=${1:-help}
 shift
 
 export X509_CERT_DIR=grid-security
@@ -88,7 +54,9 @@ EOF
     ca/hash "${ca_cn}/cacert.pem"
     popd
   ;;
-  ### Create CA
+
+  #/* Create a CA
+  #// create <CN> <DAYS> <EMAIL>
   create)
     ca_cn=${1:-coreca}
     shift
@@ -104,7 +72,9 @@ EOF
 
     pushd "${ca_dir}"
     subject=$(ca/subject "${ca_cn}")
-    grid-ca-create -dir "${ca_cn}" -subject "${subject}" -days ${days} ${email}
+    grid-ca-create -dir "${ca_cn}" \
+                   -subject "${subject}" \
+                   -days ${days} ${email}
 
     ### certificates for the CA
     ca/mkdir "${ca_cn}/grid-security"
@@ -118,10 +88,12 @@ EOF
     fi
     echo
     echo "Install ${ca_cn} (${ca_hash})"
-    tar xvz --exclude debian --strip-components=1 \
-            -C grid-security -f ${tgz}
-    ln -v -s "${ca_cn}" "${ca_hash}"
+    tar xvz --exclude debian \
+            --strip-components=1 \
+            -C grid-security \
+            -f ${tgz}
 
+    ln -v -s "${ca_cn}" "${ca_hash}"
     popd
     echo ""
   ;;
@@ -137,7 +109,8 @@ EOF
     popd
   ;;
 
-  ### Request user certificate
+  #/* Request user cert
+  #// user <CA CN> <USER> <USER CN> [<OPTS>]
   user)
     ca_cn=${1:-coreca}
     shift
@@ -155,12 +128,16 @@ EOF
     ca_hash=$(ca/hash ${ca_cn}/cacert.pem)
 
     grid-cert-request -dir "${ca_cn}/grid-security" \
-    -prefix "${user_id}_" -ca "${ca_hash}" \
-    -cn "${user_cn}" ${opts}
+                      -prefix "${user_id}_" \
+                      -ca "${ca_hash}" \
+                      -cn "${user_cn}" \
+                      ${opts}
 
     popd
   ;;
 
+  #/* Verify user cert
+  #// verify <CA CN> <USER> [<OPTS>]
   verify)
     ca_cn=${1:-coreca}
     shift
@@ -173,10 +150,14 @@ EOF
     _key=${_dir}/${user_id}_key.pem
     _cert=${_dir}/${user_id}_cert.pem
 
-    grid-proxy-init -verify -debug -cert ${_cert} \
-                    -key ${_key} -certdir ${_certdir}
+    grid-proxy-init -verify \
+                    -debug -cert ${_cert} \
+                    -key ${_key} \
+                    -certdir ${_certdir}
   ;;
 
+  #/* Request host cert
+  #// host <CA CN> <FQDN> [<OPTS>]
   host)
     ca_cn=${1:-coreca}
     shift
@@ -192,14 +173,20 @@ EOF
     fi
     ca_hash=$(ca/hash ${ca_cn}/cacert.pem)
 
+    # mind the dns and ip attributes
     grid-cert-request -dir "${ca_cn}/grid-security" \
-    -prefix "${fqdn}_" -ca "${ca_hash}" \
-    -dns "${fqdn},localhost" -ip "127.0.0.1" \
-    -host "${fqdn}" ${opts}
+                      -prefix "${fqdn}_" \
+                      -ca "${ca_hash}" \
+                      -dns "${fqdn},localhost" \
+                      -ip "127.0.0.1" \
+                      -host "${fqdn}" \
+                      ${opts}
 
     popd
   ;;
 
+  #/* Request service cert
+  #// service <CA CN> <FQDN> <SERVICE> [<OPTS>]
   service)
     ca_cn=${1:-coreca}
     shift
@@ -217,29 +204,40 @@ EOF
     ca_hash=$(ca/hash ${ca_cn}/cacert.pem)
 
     grid-cert-request -dir "${ca_cn}/grid-security" \
-    -prefix "${fqdn}_${service}_" -ca "${ca_hash}" \
-    -host "${fqdn}" -service "${service}" ${opts}
+                      -prefix "${fqdn}_${service}_" \
+                      -ca "${ca_hash}" \
+                      -host "${fqdn}" \
+                      -service "${service}" \
+                      ${opts}
 
     ln -v -s "${ca_cn}" "${ca_hash}"
 
     popd
   ;;
 
+  #/* Show a request
+  #// showreq <CA CN> <REQUEST>
   showreq)
     pushd ${ca_dir}
     ca_cn=${1:-coreca}
     shift
     req=${1:-localhost}
-    openssl req -noout -text -in "${ca_cn}/grid-security/${req}_cert_request.pem"
+    openssl req -noout \
+                -text \
+                -in "${ca_cn}/grid-security/${req}_cert_request.pem"
     popd
   ;;
 
+  #/* Sign a request
+  #// sign <CA CN> <REQUEST>
   sign)
     ca_cn=${1:-coreca}
     shift
     req=${1:-localhost}
     pushd "${ca_dir}/${ca_cn}"
-    grid-ca-sign -in "grid-security/${req}_cert_request.pem" -out "grid-security/${req}_cert.pem" -dir .
+    grid-ca-sign -in "grid-security/${req}_cert_request.pem" \
+                 -out "grid-security/${req}_cert.pem" \
+                 -dir .
     popd
   ;;
 
@@ -297,7 +295,9 @@ EOF
     popd
   ;;
 
-  help|*)
-    help/ca
+  #/* Help
+  #// help
+  *)
+    help $0
   ;;
 esac

@@ -1,0 +1,163 @@
+
+function vb/valid() {
+  ${vb_mgt} showvminfo ${1} 2>/dev/null
+}
+
+function vb/path() {
+  ${vb_mgt} showvminfo ${1} | \
+  grep 'Config file:' | \
+  sed 's/[^.\/]*//'
+}
+
+# 4 more disks for brick testing
+# TODO: factor above
+function vb/mkdisk() {
+  local _disk=${1}
+  local _hdsize=${2:-2000000}
+  echo "Create HD ${_disk} [${_hdsize}MB]"
+  ${vb_mgt} createhd \
+            --filename "${_disk}" \
+            --size ${_hdsize}
+}
+
+function vb/create() {
+  local _name=${1}
+  local _type=${2} # Ubuntu_64 RedHat_64
+  local _cpus=${3}
+  local _memory=${4}
+  local _hdsize=${5}
+  local _hostnet=${6}
+  local _brdev=${7:-en0: Wi-Fi (AirPort)}
+
+  vb/valid ${_name}
+  if succeed $? ; then
+    echo " VM ${_name} already created"
+    exit 1
+  fi
+
+  echo "Create VM ${_name} [${_type}]"
+  ${vb_mgt} createvm \
+            --name "${_name}" \
+            --ostype ${_type} \
+            --register
+  if failed $? ; then exit 1; fi
+
+  # TODO: vm/
+  local _path=$(vb/path "${_name}")
+  _path=$(dirname "${_path}")
+  local _disk="${_path}/${_name}-osdisk-1.vdi"
+
+  vb/mkdisk "${_disk}" "${_hdsize}"
+  if failed $? ; then exit 1; fi
+
+  if test "${_hostnet}" = "bridged" ; then
+    ${vb_mgt} modifyvm "${_name}" \
+              --memory ${_memory} \
+              --cpus ${_cpus} \
+              --acpi on \
+              --boot1 net \
+              --boot2 disk \
+              --nic1 bridged \
+              --bridgeadapter1 "${_brdev}" \
+              --macaddress1 auto \
+              --audio none
+  else
+    ${vb_mgt} modifyvm "${_name}" \
+              --memory ${_memory} \
+              --cpus ${_cpus} \
+              --acpi on \
+              --boot1 net \
+              --boot2 disk \
+              --nic1 hostonly \
+              --hostonlyadapter1 ${_hostnet} \
+              --nic2 nat \
+              --macaddress1 auto \
+              --macaddress2 auto \
+              --audio none
+  fi
+
+  local _controller="Controller: SATA"
+
+  ${vb_mgt} storagectl "${_name}" \
+            --name "${_controller}" \
+            --add sata
+
+  ${vb_mgt} storageattach "${_name}" \
+            --storagectl "${_controller}" \
+            --port 0 \
+            --device 0 \
+            --type hdd \
+            --medium "${_disk}"
+}
+
+# 1 + 2 + 4 network topolgy
+function vb/bondnet() {
+  local _name=${1}
+  local _hostnet=${2:-vboxnet1}
+  ${vb_mgt} modifyvm "${_name}" \
+            --nic3 nat \
+            --macaddress3 auto \
+            --nic4 hostonly \
+            --macaddress4 auto \
+            --hostonlyadapter4 ${_hostnet} \
+            --nic5 hostonly \
+            --macaddress5 auto \
+            --hostonlyadapter5 ${_hostnet} \
+            --nic6 hostonly \
+            --macaddress6 auto \
+            --hostonlyadapter6 ${_hostnet} \
+            --nic7 hostonly \
+            --macaddress7 auto \
+            --hostonlyadapter7 ${_hostnet}
+}
+
+function vb/intnet() {
+  local _name=${1}
+  ${vb_mgt} modifyvm "${_name}" \
+            --nic3 intnet \
+            --macaddress3 auto
+}
+
+function vb/storage() {
+  local _name=${1}
+  local _hdsize=${2:-2000000}
+
+  local _path=$(vb/path "${_name}")
+  _path=$(dirname "${_path}")
+
+  # 1st disk
+  local _disk=""
+  local _controller="Controller: SATA"
+
+  for i in 1 2 3 4 ; do
+    _disk="${_path}/${_name}-storage-${i}.vdi"
+    vb/mkdisk "${_disk}" "${_hdsize}"
+    # attach
+    ${vb_mgt} storageattach "${_name}" \
+              --storagectl "${_controller}" \
+              --port ${i} \
+              --device 0 \
+              --type hdd \
+              --medium "${_disk}"
+  done
+}
+
+function vb/disk() {
+  local _host=${1}
+  local _type=${2:-vdi}
+  local _disk=$(${vb_mgt} showvminfo ${_host} | \
+    grep ${_type} | \
+    sed s/\(UUID.*// | \
+    cut -d: -f 3 | \
+    sed -e 's/^ *//g' -e 's/ *$//g')
+  echo ${_disk}
+}
+
+function vb/list() {
+  local _group=${1}
+  ${vb_mgt} list -l vms 2>/dev/null | \
+          grep ${_group} | \
+          grep Config | \
+          sed s/.*\\/// | \
+          sed s/\\..*//
+}

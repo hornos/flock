@@ -3,11 +3,10 @@ source $(dirname $0)/../lib/header
 import pass
 import vbox
 
-
+### defaults
 jockey_root="${gdn}/../space"
 jockey_root=$(cd ${jockey_root}; pwd)
 
-### defaults
 default=centos64
 inventory=${JOCKEY_HOSTS:-${jockey_root}/hosts}
 if [ ! -r ${inventory} ] ; then

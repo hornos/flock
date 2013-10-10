@@ -1,25 +1,14 @@
 #!/bin/bash
 source $(dirname $0)/../lib/header
+import ostype
 import inifile
-
-# TBD: cs lib
-
-### init
-usrlocal=/usr
-if [ ! -z "${OSTYPE/darwin/}" ]; then
-  usrlocal=/usr/local
-fi
-
-cm="cloudmonkey -c ${CMONKEY_HOSTS}"
+import cs
+import ansible
 
 ### main
 cmd=${1:-help}
 shift
 
-# http://www.commandlinefu.com/commands/view/3584/remove-color-codes-special-characters-with-sed
-
-# linux: sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})*)?m//g"
-# osx: sed -E "s/"$'\E'"\[([0-9]{1,2}(;[0-9]{1,2})*)?m//g"
 
 ### args
 # http://xmodulo.com/2013/05/how-to-parse-json-string-via-command-line-on-linux.html
@@ -30,37 +19,22 @@ case ${cmd} in
   #// inventory <NAME>
   inventory)
     name=${1:-test}
-    inventory="./inventory/${name}.ansible"
-    if test -r "${inventory}" ; then
-      read -p "Overwrite inventory?"
+    inventory="inventory/ansible ${name}"
+
+    if readable "${inventory}" ; then
+      answer "Overwrite inventory?"
+      if failed $?; then $failure; fi
     fi
 
-    # list=$(${cm} list virtualmachines name=${name})
-    # echo "${list}" | \
-    # jq ".count"
-    count=$(${cm} list virtualmachines name=${name} | \
-            sed -E "s/"$'\E'"\[([0-9]{1,2}(;[0-9]{1,2})*)?m//g" | \
-            grep 'count' | \
-            grep -v account | \
-            awk '{print $3}')
+    count=$(cs/vmcount ${name})
 
+    # generate the inventory
     echo "[${name}]" > ${inventory}
     for i in $(seq -f "%02g" 1 ${count}); do
       host=${name}-${i}
-      ip=$(${cm} list virtualmachines name=${host} | \
-           grep ipaddress | \
-           awk '{print $3}' | \
-           head -1 | \
-           sed -E "s/"$'\E'"\[([0-9]{1,3}((;[0-9]{1,3})*)?)?[m|K]//g")
+      ip=$(cs/vmip ${host})
       echo "${host} ansible_ssh_host=${ip} ansible_connection=paramiko" >> ${inventory}
     done
-
-    # ip=$(${cm} list virtualmachines name=${name} | \
-    # grep ipaddress | awk '{print $3}' | \
-    # sed -E "s/"$'\E'"\[([0-9]{1,3}((;[0-9]{1,3})*)?)?[m|K]//g")	
-    # echo "[${name}]" > ${inventory}
-    # echo "${fqdn} ansible_ssh_host=${ip} ansible_connection=paramiko" >> ${inventory}
-
   ;;
 
   #/* Mass deploy VMs
@@ -71,7 +45,9 @@ case ${cmd} in
     name=${2:-test}
     domain=${3}
     read_ini "${CMONKEY_HOSTS}"
-    read -p "Deploy ${count} VMs?"
+
+    answer "Deploy ${count} VMs?"
+    if failed $?; then $failure; fi
 
     for i in $(seq -f "%02g" 1 ${count}); do
       host=${name}-${i}
@@ -84,19 +60,21 @@ case ${cmd} in
         disk="diskofferingid=${INI__defaultvm__diskofferingid}"
       fi
 
-      ${cm} deploy virtualmachine name=${host} displayname=${host} \
-      zoneid=${INI__defaultvm__zoneid} \
-      templateid=${INI__defaultvm__templateid} \
-      serviceofferingid=${INI__defaultvm__serviceofferingid} \
-      networkids=${INI__defaultvm__networkids} \
-      ${disk}
-      if test $? -gt 0; then
+      cs/vmdeploy "${host}" "${host}" "${INI__defaultvm__zoneid}" \
+                  "${INI__defaultvm__templateid}" \
+                  "${INI__defaultvm__serviceofferingid}" \
+                  "${INI__defaultvm__networkids}" \
+                  "${disk}"
+
+      if failed $? ; then
         echo "Failed to deploy VM: ${host}"
         exit 1
       fi
     done
   ;;
 
+  #/* Help
+  #// help
   *)
     help $0
   ;;

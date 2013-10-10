@@ -1,23 +1,14 @@
 #!/bin/bash
+source $(dirname $0)/../lib/header
+# do not import ca!
+
 #
 # http://openvpn.net/index.php/open-source/documentation/howto.html#quick
 #
 
-gdn=$(pwd $(dirname $0))
-gbn=$(basename $0)
-tmp=".${gbn}.$$"
+### TBD defaults
 ca_dir="./ca"
 ca_ver=2.0
-
-function ca/exit() {
-  if test -r "${tmp}" ; then
-    rm -f "${tmp}"
-  fi
-  exit 1
-}
-trap ca/exit INT TERM EXIT
-
-### defaults
 inventory=${ANSIBLE_HOSTS:-./hosts}
 config=${FLOCK_CONFIG:-./flock.conf}
 openvpn='/usr/local/Cellar/openvpn/2.2.2/sbin/openvpn'
@@ -26,15 +17,6 @@ if [ -r "${config}" ] ; then
   source "${config}"
 fi
 
-function help/ca() {
-  cat <<EOF
-
-  create <CN> [days] [email]
-  host <CA> <FQDN>
-
-EOF
-  exit 1
-}
 
 function ca/init() {
   # ca/mkdir "${ca_dir}/grid-security"
@@ -42,12 +24,13 @@ function ca/init() {
 }
 
 ### args
-cmd=${1:-create}
+cmd=${1:-help}
 shift
 
 case "${cmd}" in
 
-  ### Create CA
+  #/* Create OpenVPN CA
+  #// create <CN> <DAYS> <EMAIL>
   create)
     ca_cn=${1:-vpnca}
     shift
@@ -65,6 +48,8 @@ case "${cmd}" in
     echo ""
   ;;
 
+  #/* Create OpenVPN server cert
+  #// server <CA CN> <FQDN> [<OPTS>]
   server)
     ca_cn=${1:-vpnca}
     shift
@@ -78,6 +63,8 @@ case "${cmd}" in
     popd
   ;;
 
+  #/* Create OpenVPN client cert
+  #// client <CA CN> <FQDN> [<OPTS>]
   client)
     ca_cn=${1:-vpnca}
     shift
@@ -91,6 +78,8 @@ case "${cmd}" in
     popd
   ;;
 
+  #/* Generate DH parameter for the server
+  #// dh <CA CN> <FQDN> [<OPTS>]
   dh)
     ca_cn=${1:-vpnca}
     shift
@@ -104,6 +93,8 @@ case "${cmd}" in
     popd
   ;;
 
+  #/* Generate TA key
+  #// ta <CA CN> <FQDN> [<OPTS>]
   ta)
     ca_cn=${1:-vpnca}
     shift
@@ -133,6 +124,8 @@ case "${cmd}" in
     popd
   ;;
 
+  #/* Create good enough Tunnelblick config
+  #// blick <CA CN> <FQDN> [<OPTS>]
   blick)
     ca_cn=${1:-vpnca}
     shift
@@ -176,7 +169,9 @@ EOF
     popd
   ;;
 
-  iphone)
+  #/* Create good enough iDevice config
+  #// idevice <CA CN> <FQDN> [<OPTS>]
+  idevice)
     ca_cn=${1:-vpnca}
     shift
     fqdn=${1:-iphone}
@@ -197,6 +192,8 @@ EOF
     cp -v roles/vpn/ovpn/iphone.ovpn "${dest}/client.ovpn"
   ;;
 
+  #/* TBD TiNG ThINKS
+  #// ting <CA CN> <FQDN>
   ting)
     pat=${1}
     shift
@@ -226,7 +223,9 @@ verb 3
 EOF
   ;;
 
-  help|*)
-    help/ca
+  #/* Help
+  #// help
+  *)
+    help $0
   ;;
 esac
