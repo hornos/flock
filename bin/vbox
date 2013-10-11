@@ -1,7 +1,7 @@
 #!/bin/bash
 source $(dirname $0)/../lib/header
 import ostype
-import vbox
+import vb
 
 # TBD: ipmi api
 

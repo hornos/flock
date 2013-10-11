@@ -290,7 +290,10 @@ case ${cmd} in
     shift
     first=${1:-1}
     first=$((first-1))
-    read -p "Create fock of ${no} machines?"
+    echo ""
+    echo "Number of machines: 3"
+    echo "Basename: ${name}"
+    read -p "Do you want to create the flock?"
 
     if test $first -eq 0; then
       echo "[${name}]" > ${inventory}
@@ -316,9 +319,8 @@ case ${cmd} in
     group=${_arg1:-/test}
     for i in $(vbox group? ${group}) ; do
       echo ""
-      echo ""
-      echo "BOOTSTRAP [$i]"
-      echo "Please type the password below!"
+      echo "BOOTSTRAP host: $i"
+      echo -n "PASSWORD "
       jockey password @${i}
       flock play root@@${i} bootstrap
     done
@@ -329,11 +331,9 @@ case ${cmd} in
     group=${_arg1:-/test}
     for i in $(vbox group? ${group}) ; do
       echo ""
-      echo ""
       echo "Bootstrap and secure: $i"
-      echo ""
-      jockey password @${i}
-      ${gbn} play root@@${i} bootstrap
+      # jockey password @${i}
+      # ${gbn} play root@@${i} bootstrap
       ${gbn} play @@${i} secure
       ${gbn} reboot @@${i}
     done
@@ -346,8 +346,8 @@ case ${cmd} in
     for i in $(vbox group? ${group}) ; do
       echo ""
       echo "Creating certificate for $i"
-      flock-ca host $ca $i
-      flock-ca sign $ca $i
+      cacert host $ca $i
+      cacert sign $ca $i
     done
     exit $?
     ;;

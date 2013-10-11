@@ -1,13 +1,17 @@
-Flock - Infrastructure Prototype Engine
-=================================================
-
-*The fact is, Adelmo's death has caused much spiritual unease among my flock.*
+# Flock
 
 ![Flock](http://24.media.tumblr.com/tumblr_lzinfntu2G1qj8pa7o1_500.gif)
 
-You can use flock to install and setup arbitrary large infrastructure from scratch from a Linux or OS X laptop. All you need is some basic CLI tools, Ansible and internet connection.
+*The fact is, Adelmo's death has caused much spiritual unease among my flock.*
 
-Virtual environments are built in VirtualBox. The goal is to keep virtual (test) and production systems as close as possible.
+
+*Flock* is an infrastructure prototype engine. You can use it to install and setup arbitrary large infrastructures from scratch with a laptop. All you need is some basic CLI tools, Ansible and Internet connection. It was tested in OS X but Linux should work as well.
+
+Virtual environments are built in VirtualBox. The goal is to keep virtual (test) and production systems as close as possible. It is also easy to make CloudStack templates from VirtualBox images.
+
+Anisble is chosen for the configuration manager since it is dead easy, very intuitive and superior to other alternatives (aka *Leave chefs in the kitchen alone!*).
+
+Currently CloudStack is supported as a cloud backend. Mind that the Ansible part is cloud agnostic.
 
 ## Install for OS X
 Install [Homebrew](http://brew.sh) and [Ansible](http://www.ansibleworks.com/docs/gettingstarted.html) and the following packages. *Do not use ansible development branch!* Optionally, you should install [Cloud Monkey](https://cwiki.apache.org/confluence/display/CLOUDSTACK/CloudStack+cloudmonkey+CLI) to hack Cloudstack.
@@ -18,9 +22,9 @@ Edit your `.profile` or `.bash_profile` and set PATH:
 
     PATH=/usr/local/bin:$PATH
 
-For the Flock you need Flock:
+Install `flock`:
 
-    git clone git://github.com/hornos/flock.git
+    cd; git clone git://github.com/hornos/flock.git
 
 Install [VirtualBox](https://www.virtualbox.org/) with the [extension pack](https://www.virtualbox.org/wiki/Downloads).
 
@@ -43,13 +47,17 @@ Keys and certificates are in the `keys` directory. By default all your operation
 Ansible host inventories and Cloud Monkey config files are kept under the `inventory` directory with names `.ansible` and `.cmonkey`, respectively. To change Ansbile or Cloud Monkey inventory:
 
     flock on <HOSTS>
-    stack on <CONF>
+    stack on <STACK>
 
-where `<HOSTS>` and `<CONF>` are the suffix truncated basename of the inventory file. Show actual inventory by `inventory`, list inventories by `{flock,stack} ls [<INV>]`.
+or in one command:
+
+    flack on <HOSTS>@<STACK>
+
+where `<HOSTS>` and `<STACK>` are the suffix truncated basename of the inventory file. Show actual inventory by `inventory`, list inventories by `{flock,stack} ls [<INV>]`.
 
 If you use RVM you can set prompt indicators, check `profile`.
 
-### Flock Commands
+### Flock Wrappers
 
     flock    - Ansible wrapper
     cacert   - Simple CA manager
@@ -60,11 +68,11 @@ If you use RVM you can set prompt indicators, check `profile`.
     cmonkey  - Inventory aware Cloud Monkey CLI
 
 #### Customize for production
-Flock playbooks are never general. You might have to make customized playbook trees for production systems. Please keep the flock tree intact and create a new directory for your needs. Since flock commands are realtive you can use any directory.
+Flock playbooks are never general. You should create customized playbook trees for production systems. Please keep the flock tree intact and create a new directory for your needs. Since flock commands are realtive you can use any directory, eg. name system directories according to the domain name.
 
-## Network Install
-### Prepare Syslinux
-Download [syslinux 4.X](https://www.kernel.org/pub/linux/utils/boot/syslinux/) and the following files to `space/boot`:
+## Prepare Network Install
+### Install Syslinux
+Download [syslinux 4.X](https://www.kernel.org/pub/linux/utils/boot/syslinux/) and copy the following files to `space/boot`:
 
     core/pxelinux.0
     com32/mboot/mboot.c32
@@ -76,39 +84,44 @@ Download install images eg. for Debian (mind the trailing slash!):
     rsync -avP ftp.us.debian.org::debian/dists/wheezy/main/installer-amd64/current/images/netboot/ ./wheezy
     popd
 
-*Warning: Debian-based systems should be installed with NAT!*
+*Warning: Debian-based systems should be installed with NAT and not fully supported by all playbooks!*
 
 ### CentOS
-Or get the kickass Debian killer CentOS (mind the trailing slash!):
+If you need professional stuff use eg. CentOS (mind the trailing slash!):
 
     pushd space/boot
     rsync -avP rsync.hrz.tu-chemnitz.de::ftp/pub/linux/centos/6.4/os/x86_64/isolinux/ ./centos64
     popd
 
 ### CoreOS
-Finally, it is [here](http://coreos.com/docs/pxe/):
+From the [CoreOS PXE howto](http://coreos.com/docs/pxe/):
 
     mkdir space/boot/coreos
     pushd space/boot/coreos
     curl http://storage.core-os.net/coreos/amd64-generic/72.0.0/coreos_production_pxe.vmlinuz > vmlinuz
     curl http://storage.core-os.net/coreos/amd64-generic/72.0.0/coreos_production_pxe_image.cpio.gz > initrd.gz
 
-### Bootp setup
-Space Jockey (`jockey`) is a simple Cobbler replacement. You need a simple inventory file like this (`space/hosts`):
+### Prepare Bootp Server
+Space Jockey (`jockey`) is a simple Cobbler replacement. You need an *inventory* (`space/hosts`) file with the bootp/dhcp parameters:
 
     boot_server=10.1.1.254
     dhcp_range="10.1.1.1,10.1.1.128,255.255.255.0,6h"
     interface=eth1
 
-The boot server listens on `boot_server` IP and Debian-based systems use the `interface` interface to reach the internet (NAT or bridged or 2nd physical network card). DNSmasq gives IPs from the `dhcp_range`.
+The boot server listens on the `boot_server` IP address. Debian-based systems use the `interface` interface to reach the internet. DNSmasq DHCP allocates IPs from the `dhcp_range`.
 
 Start bootp provision servers by (each in a separate terminal):
 
     flock boot
+    (open a new terminal)
     flock http
 
-### Cloudstack (CS) setup
-Network can be different in the cloud. Usually, eth0 is connected to the Internet and eth1 is for internal connections:
+Terminate servers by pressing `Ctrl-C`.
+
+Go to [Install Core Server](#core)
+
+### Cloudstack Template Setup (optional)
+Network can be different in the cloud. Usually, `eth0` is connected to the Internet and eth1 is for internal connections:
 
     Network  | Inerface    | IPv4 Addr  | Mask | DHCP
     -------------------------------------------------
@@ -218,32 +231,32 @@ TBD genders pssh
 TBD initial reset dyndns
 TBD [ansible shell](https://github.com/dominis/ansible-shell)
 
-### Core Servers
-The following network topology is used. You have to use vboxnet0 as eth0 since bootp works only on the first interface. For a production or a cloud environment you have to exchange the two.
+### <a name="core"></a>Install Core Servers
+The following network topology is used in the VirtualBox environment. You have to use `vboxnet0` as `eth0` since bootp works only on the first interface. For a production or a cloud environment you have to exchange the two interface (see above).
 
     Network  | VBox Net    | IPv4 Addr  | Mask | DHCP
     -------------------------------------------------
     system   | vboxnet0    | 10.1.1.254 | 16   | off
     external | NAT/Bridged |
 
-Create 3 VMs:
+Create 3 VMs (aka triangle):
 
     flock out 3 core centos64
 
-Start the boot/kickstart servers on your OS X host each in a separate Terminal tab:
+Start the boot servers on your OS X host:
 
     flock http
     flock boot
 
-Start the background flock:
+Start the machines in headless mode (`/` - means group, `@` - headless mode):
 
     vbox start /@core
 
-wait for the reboot signal and turn off the group:
+wait for the reboot signal and turn off the group. Mind that the installation is kickstart based, no user interventionis needed. The initial root password is auto-generated by the `flock out` command.
 
     vbox off /core
 
-Switch to disk boot make a snapshot and start again:
+Change the boot device to disk and start:
 
     vbox boot /core disk
     vbox start /@core
@@ -252,75 +265,70 @@ With the `snap` command you can snapshot the VM:
 
     vbox snap /core init
 
-Change the inventory:
+#### Configuration
+Change the inventory for the Ansible steps:
 
     flock on core
 
-Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
+Bootstrap the flock. The subsequent steps are based on Ansible and you might have to delete old hostkey lines in `$HOME/.ssh/known_hosts`.
 
     flock bootstrap /core
 
-and ping by `sysop`:
+The bootstrap process installs the `sysop` administrator user. The SSH key generated by the `flock init` command is used for the `sysop` user. Host strings without a user default to `sysop`. Examples:
+
+    flock ping @core    - ping cores by sysop
+    flock ping me@core  - ping cores by me
+    flock ping me@@core - ping cores by me with sudo
+    flock ping @@@core  - ping cores by sysop with sudo and ask for the sudo password
+
+Verify with ping or setup:
 
     flock ping @@core
+    flock ping @@setup
 
-Check the network topology in `networks.yml` and secure the flock:
+#### Network Setup
+The `networks.yml` is a central network topology file, you should link in other playbook directories as well. It is possible to set interfaces in a delicate way. The `interfaces` structure defines pseudo-interfaces while the `path` structure defines the real ones (eg. good for bonding). Example:
+
+    paths:
+      eth0: eth0
+    ansible_paths:
+      eth0: 'ansible_eth0'
+    interfaces:
+      bmc: eth0
+
+In playbooks or Jinja templates use the following statements:
+
+    {{paths[interfaces.bmc]}} -> eth0
+    {{ansible_paths[interfaces.bmc]}} -> ansible_eth0
+
+#### Basic Provisioning
+The goal of the basic provisioning is to provide a good enough base for service roles. First you have to secure the group by basic hardening (TBD intermediate hardening: netlog, dresden, snoopy).
 
     flock play @@core secure
     flock reboot @@core
     vbox snap /core secure
 
-Now, reach the ground state:
+The ground state is the 2nd step of basic provisioning. It contains several useful stuff and setups basic clustering:
 
     flock play @@core ground
     flock reboot @@core
     vbox snap /core ground
 
-Mind that the system network is not protected, due to performance reasons core servers can reach each other wihtout restriction or authentication. Monitoring is done by Ganglia in multicast mode.
+*Mind that the system network is not protected!* Due to performance reasons core servers can reach each other wihtout restriction or authentication. Cluster monitor is Ganglia in multicast mode. Remote logging is syslog-ng in multicast mode.
 
-Check the cluster state by or on `http://10.1.1.1/ganglia`:
+Check the cluster state at `http://10.1.1.1/ganglia` or by:
 
     gstat -a
 
-For the awesome PCP download `ftp://oss.sgi.com/projects/pcp/download/mac/` and install `pcp` and `pcp-gui`. Get realtime statistics:
+If you install PCP (`pcp` and `pcp-gui`) from `ftp://oss.sgi.com/projects/pcp/download/mac/` you can get realtime statistics:
 
     pmstat -h 10.1.1.1 -h 10.1.1.2 -h 10.1.1.3
     /Applications/pmchart.app/Contents/MacOS/pmchart -h 10.1.1.1 -c Overview 
 
-### Boot CoreOS
-Create an empty machine:
+Mind that the firewall is also more open for the so called operator hosts (your laptop) on the system network.
 
-    vbox create coreos
-    flock coreos @coreos
-
-Start the boot servers
-
-    flock boot
-    flock http
-
-TODO: network setting, ansible bootstrap
-
-#### Templating
-
-    vbox template coreos
-    flock coreos @coreos
-
-Check the IP at boot and login (Ansible TBD):
-
-    ssh -i keys/sysop core@<IP>
-    sudo bash
-    coreos-install -d /dev/sda
-    reboot
-    (relogin)
-    mount /dev/sda9 /mnt/
-    mkdir -p /mnt/overlays/home/core/
-    chown core.core /mnt/overlays/home/core/
-    cp -Ra ~core/.ssh /mnt/overlays/home/core/
-
-    vbox vhd coreos
-    vbox http coreos <ALLOW>
-
-TBD
+## Service Roles
+Service roles are additional fetures on top of the *ground state*.
 
 ### Globus CA
 Install the certificate utilities and Globus on your mac:
@@ -333,11 +341,11 @@ There is a hash mismatch between OpenSSL 0.9 and 1.X. Install newer OpenSSL on y
 
 The Grid needs a PKI, which protects access and the communication. You can create as many CA as you like. It is advised to make many short-term flat CAs. Edit grid scripts as well as templates in `share/globus_simple_ca` if you want to change key parameters. Create a Core CA:
 
-    flock-ca create coreca 365 sysop@localhost
+    cacert create coreca 365 sysop@localhost
 
 The new CA is created under the `ca/coreca` directory. The CA certificate is installed under `ca/grid-security` to make requests easy. If you compile Globus with the old OpenSSL (system default) you have to use old-style subject hash. Create old CA hash by:
 
-    flock-ca oldhash
+    cacert oldhash
 
 Edit `coreca/grid-ca-ssl.conf` and add the following line under `policy` in `CA_default` section, this enables extension copy on sign and let alt names go.
 
@@ -345,33 +353,33 @@ Edit `coreca/grid-ca-ssl.conf` and add the following line under `policy` in `CA_
 
 Request & sign host certificates:
 
-    for i in 1 2 3 ; do flock-ca host coreca core-0$i; done
-    for i in 1 2 3 ; do flock-ca sign coreca core-0$i; done
+    for i in 1 2 3 ; do cacert host coreca core-0$i; done
+    for i in 1 2 3 ; do cacert sign coreca core-0$i; done
 
 Certs, private keys and requests are in `ca/coreca/grid-security`. There is also a `ca/<CAHASH>` directory link for each CA. You have to use the `<CAHASH>` in the playbooks. Get the `<CAHASH>`:
 
-    flock-ca cahash coreca
+    cacert cahash coreca
 
 Edit `roles/globus/vars/globus.yml` and set the default CA hash.
 
 Create and sign the sysop certificate:
 
-    flock-ca user coreca sysop "System Operator"
-    flock-ca sign coreca sysop
+    cacert user coreca sysop "System Operator"
+    cacert sign coreca sysop
 
 In order to use `sysop` as a default grid user you have to copy cert and key into the `keys` directory:
 
-    flock-ca keys coreca sysop
+    cacert keys coreca sysop
 
 Create a pkcs12 version if you need for the browser (this command works in the `keys` directory):
 
-    flock-ca p12 sysop
+    cacert p12 sysop
 
 Test your user certificate (you might have to create the old hash):
 
-    flock-ca verify coreca sysop
+    cacert verify coreca sysop
 
-Enter Grid state:
+Install basic grid feature:
 
     flock play @@core grid
 
@@ -381,30 +389,13 @@ If you want to enable the CA certificate system-wide run:
 
     /root/bin/enable_grid_cert
 
-#### Production
+In production add the ip parameter as well:
 
-    flock-ca host coreca <FQDN> -ip <IP>
-    flock-ca sign coreca <FQDN>
-
+    cacert host coreca <FQDN> -ip <IP>
+    cacert sign coreca <FQDN>
     flock play @@<FQDN> grid
 
-
-### Clustering
-Create common authentication key (`keys/authkey`):
-
-    dd if=/dev/urandom of=keys/authkey bs=128 count=1
-
-Enter Cluster state:
-
-    flock play @@core cluster
-
-The following tools are installed under `/root/bin`:
-
-    ring
-    totem
-    quorum
-
-### Database
+### SQL Database
 #### MariaDB with Galera
 Install database:
 
@@ -416,7 +407,7 @@ Login to the master node and secure the installation:
 
 #### Percona
 
-    flock play @@core roles/database/percona
+    flock play @@core roles/database/percona --extra-vars "master=core-01"
 
 Login to the master node and bootstrap the cluster:
 
@@ -425,15 +416,13 @@ Login to the master node and bootstrap the cluster:
 
 Now start the whole cluster:
 
-    flock play @@core roles/adatabase/percona_start
-
-Add eg. `--extra-vars "master=percona-01"` if you have a different master.
+    flock play @@core roles/adatabase/percona_start --extra-vars "master=core-01"
 
 Verify:
 
     echo "show status like 'wsrep%'" | mysql -u root -p
 
-Enable php admin interface:
+Install administrator interface:
 
     flock play @@core roles/database/admin
 
@@ -469,7 +458,7 @@ Generate the Munge auth key:
 
 Install Slurm:
 
-    flock play @@core scheduler
+    flock play @@core scheduler --extra-vars "master=core-01"
 
 Login to the master node and test the queue:
 
@@ -569,7 +558,6 @@ Hosts are collected in `ting/hosts` as json files. Create an Tunnelblick client 
 
 Now connect with Tunnelblick.
 
-
 <!--
 ##      ##    ###    ########  ######## ##      ## ##     ## ##       ######## 
 ##  ##  ##   ## ##   ##     ## ##       ##  ##  ## ##     ## ##       ##       
@@ -580,14 +568,12 @@ Now connect with Tunnelblick.
  ###  ###  ##     ## ##     ## ########  ###  ###   #######  ######## ##          
 -->
 
-![warewulf](http://warewulf.lbl.gov/images/wwheader-4.png)
-
 ## Warewulf HPC Cluster
-Warewulf is a badass HPC cluster kit. Create a controller node or nodes and converge them into ground state. In this example I will use 1 controller (core) and 2 compute machines (cn-0[1-2]). Use two network card on the controller, eth0 is on the `system` network. In reality, this network should be on a separated internal LAN (VLAN is not secure by design) since its unsecure and vulnerable to DOS attacks.
+Warewulf is an easy to use HPC kit comparable to proprietary HPC solutions. You need at least 3 manager nodes since the minimal size of a Percona cluster is 3. The scheduler (Slurm) works in a master-slave failover, so you can reserve the 3rd machine for other admin related tasks.
 
-### Create the controller triangle
+Create the controller tringle:
 
-    flock out 3 ww
+    flock out 3 manager
 
 Start the kickstart servers:
 
@@ -596,100 +582,110 @@ Start the kickstart servers:
 
 and start the group in the background:
 
-    vbox start /@ww
+    vbox start /@manager
 
 wait for the reboot signal and turn off the group:
 
-    vbox off /ww
+    vbox off /manager
 
-switch to disk boot make a snapshot and start:
+switch to disk boot make a snapshot and start (now in interactive mode):
 
-    vbox boot /ww disk
-    vbox start /@ww
+    vbox boot /manager disk
+    vbox start /manager
 
-Swith to the `ww` nevironment:
+Swith to the `manager` nevironment:
 
-    flock on ww
+    flock on manager
 
-Lets bootstrap the flock (mind hostkeys in `$HOME/.ssh/known_hosts`):
+Check the inventory by:
 
-    flock bootstrap /ww
+    inventory
+
+Delete SSH host keys in `$HOME/.ssh/known_hosts` if you have old ones. Bootstrap the machines (pre-generated password will be displayed):
+
+    flock bootstrap /manager
 
 Verify by `sysop`:
 
-    flock ping @@ww
+    flock ping @@manager
 
 Check the network topology in `networks.yml` and secure the flock:
 
-    flock play @@ww secure
-    flock reboot @@ww
-    vbox snap /ww secure
+    flock secure /manager
+    (wait for reboot)
+    vbox snap /manager secure
+
+Your machines restarted and saved in a *basic secure* state.
 
 #### Ground state
+Reach the common ground state:
 
-    flock play @@ww ground
-    flock reboot @@ww
-    vbox snap /ww ground
+    flock play @@manager ground
+    flock reboot @@manager
 
-finally, change the old kernel for good:
+Verify the ground state monitoring:
 
-    flock play @@ww roles/system/kernel --extra-vars "clean=yes"
-    flock reboot @@ww
-    vbox snap /ww kernel
-
-Check the boot log for sure:
-
-    flock bootlog @@ww
-
-By default, sysop machines can access the system information page and Ganglia at
-
-    http://10.1.1.1/phpsysinfo
     http://10.1.1.1/ganglia
+    http://10.1.1.1/phpsysinfo
 
 You can also get live monitoring with PCP console or GUI:
 
     pmstat -h 10.1.1.1
     pmchart -h 10.1.1.1 -c Overview
 
+Check the boot log:
+
+    flock bootlog @@manager
+
+Check syslog in `/var/log/loghost/manager-0{1,2,3}`. Save:
+
+    vbox snap /manager ground
+
+Change to the mainline kernel:
+
+    flock play @@manager kernel --extra-vars "clean=true"
+    flock reboot @@manager
+    vbox snap /manager kernel
+
 #### Globus (optional)
-Install globus and openssl as written in the Globus CA section. Edit grid scripts as well as templates in `share/globus_simple_ca` if you want to change key parameters. Create a Warewulf CA (365 days):
+Create a HPC CA:
 
-    flock-ca create wwca
+    module load openssl lobus/5.2.0
+    cacert create hpctest
 
-The new CA is created under the `ca/wwca` directory. The CA certificate is installed under `ca/grid-security` to make requests easy. If you compile Globus with the old OpenSSL (system default) you have to use old-style subject hash. Create old CA hash by:
+The new CA is created under the `ca/hpctest` directory. The CA certificate is installed under `ca/grid-security`. If you compile Globus with the old OpenSSL (system default) you have to use old-style subject hash. Create old CA hash by:
 
-    flock-ca oldhash
+    cacert oldhash
 
-Edit `wwca/grid-ca-ssl.conf` and add the following line under `policy` in `[CA_default]` section, this enables extension copy on sign and let alt names go.
+Edit `ca/hpctest/grid-ca-ssl.conf` and add the following line under `policy` in `[CA_default]` section, this enables extension copy on sign and let alt names go.
 
     copy_extensions = copy
 
-Request & sign host certificates of the controller triangle:
+Request & sign host certificates for the manager nodes:
 
-    flock cert wwca /ww
+    flock cert hpctest /manager
 
-Certs, private keys and requests are in `ca/coreca/grid-security`. There is also a `ca/<CAHASH>` directory link for each CA. You have to use the `<CAHASH>` in the playbooks. Get the `<CAHASH>`:
+Certs, private keys and requests are in `ca/hpctest/grid-security`. There is also a `ca/<CAHASH>` directory link for each CA. You have to use the `<CAHASH>` in the playbooks. Get the `<CAHASH>`:
 
-    flock-ca cahash wwca
+    cacert cahash hpctest
 
-Edit `roles/globus/vars/globus.yml` and set the default CA hash.
+Call the role with `--extra-vars="defaultca=<CAHASH>"`.
 
 Create and sign the sysop certificate:
 
-    flock-ca user wwca sysop "System Operator"
-    flock-ca sign wwca sysop
+    cacert newuser hpctest sysop "System Operator"
 
 In order to use `sysop` as a default grid user you have to copy cert and key into the `keys` directory:
 
-    flock-ca keys wwca sysop
+    cacert keys hpctest sysop
 
 Test your user certificate (you might have to create the old hash):
 
-    flock-ca verify wwca sysop
+    cacert verify hpctest sysop
 
-Enable the Grid state:
+HERE Enable the Grid state:
 
-    flock play @@ww grid
+    flock play @@manager globus --extra-vars="defaultca=<CAHASH>"
 
 Check `ssl.conf` for a strong [PFS](http://vincent.bernat.im/en/blog/2011-ssl-perfect-forward-secrecy.html) cipher setting.
 
@@ -698,13 +694,12 @@ Verify https in your browser:
     https://10.1.1.1/phpsysinfo
     https://10.1.1.1/ganglia
 
-TODO: PFS SSL
+Save:
 
-    vbox snap /ww grid
+    vbox snap /manager grid
 
-#### Monitoring
-
-TODO: OMD http://omdistro.org/
+TBD PFS SSL
+TBD http://omdistro.org
 
 #### Master and servant
 Name the master and backup node for a failover HA:

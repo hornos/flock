@@ -50,9 +50,9 @@ EOF
   cahash)
     ca_cn=${1:-coreca}
     shift
-    pushd "${ca_dir}"
+    cd "${ca_dir}"
+    echo -n "${ca_cn}:"
     ca/hash "${ca_cn}/cacert.pem"
-    popd
   ;;
 
   #/* Create a CA
@@ -134,6 +134,21 @@ EOF
                       ${opts}
 
     popd
+  ;;
+
+  #/* Request and sign user cert
+  #// user <CA CN> <USER> <USER CN> [<OPTS>]
+  newuser)
+    ca_cn=${1:-coreca}
+    shift
+    user_id=${1:-test}
+    shift
+    user_cn=${1:-Test}
+    shift
+    opts=${*}
+
+    ${gbn} user "${ca_cn}" "${user_id}" "${user_cn}" "${opts}"
+    ${gbn} sign "${ca_cn}" "${user_id}"
   ;;
 
   #/* Verify user cert
@@ -249,9 +264,20 @@ EOF
     opts=${*}
 
     _dir="${ca_dir}/${ca_cn}/grid-security"
+    _key="${_dir}/${user_id}_key.pem"
+    _crt="${_dir}/${user_id}_cert.pem"
 
-    cp -v ${_dir}/${user_id}_key.pem ./keys/
-    cp -v ${_dir}/${user_id}_cert.pem ./keys/  
+    if [ -f "./keys/${user_id}_key.pem" ] ; then
+      echo "User key found: ./keys/${user_id}_key.pem"
+      exit 1
+    fi
+    cp -v "${_key}" ./keys/${user_id}_key.pem
+
+    if [ -f "./keys/${user_id}_cert.pem" ] ; then
+      echo "User cert found: ./keys/${user_id}_cert.pem}"
+      exit 1
+    fi
+    cp -v "${_crt}" ./keys/${user_id}_cert.pem
   ;;
 
   p12)

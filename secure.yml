@@ -1,6 +1,6 @@
 # TODO: better roles in ansible
 ---
-- include: roles/secure/secure.yml
+- include: roles/secure/basic.yml
 
 - hosts: all
   tasks:
