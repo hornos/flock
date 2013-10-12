@@ -9,9 +9,9 @@
 
 Virtual environments are built in VirtualBox. The goal is to keep virtual (test) and production systems as close as possible. It is also easy to make CloudStack templates from VirtualBox images.
 
-Anisble is chosen for the configuration manager since it is dead easy, very intuitive and superior to other alternatives (aka *Leave chefs in the kitchen alone!*).
+Anisble is chosen as configuration manager since it is dead easy, very intuitive and superior to other alternatives (aka *Leave chefs in the kitchen alone!*).
 
-Currently CloudStack is supported as a cloud backend. Mind that the Ansible part is cloud agnostic.
+Currently, CloudStack is supported as a cloud backend. The Ansible part is cloud agnostic.
 
 ## Install for OS X
 Install [Homebrew](http://brew.sh) and [Ansible](http://www.ansibleworks.com/docs/gettingstarted.html) and the following packages. *Do not use ansible development branch!* Optionally, you should install [Cloud Monkey](https://cwiki.apache.org/confluence/display/CLOUDSTACK/CloudStack+cloudmonkey+CLI) to hack Cloudstack.
@@ -185,7 +185,7 @@ Upload to a URL or start ad-hoc ngnix for template deploy (http runs on port 808
 
 where `<ALLOW>` is an ngnix allow rule range or address (eg. 192.168.1.0/24).
 
-Switch to your [Cloud Monkey](https://www.youtube.com/watch?v=y6wX4UhJ_Vg) inventory by `cminv <INVENTORY>` and upload/[register](https://cloudstack.apache.org/docs/api/apidocs-4.0.0/user/registerTemplate.html) the YOLO:
+Switch to your [Cloud Monkey](https://www.youtube.com/watch?v=y6wX4UhJ_Vg) inventory by `stack on <INVENTORY>` and upload/[register](https://cloudstack.apache.org/docs/api/apidocs-4.0.0/user/registerTemplate.html) the YOLO:
 
     set display table
     list ostypes
@@ -199,7 +199,6 @@ All you need is zone, template, compute and disk offering, affinity and network
     list serviceofferings
     list diskofferings
     list networkofferings
-
     deploy virtualmachine name=test displayname=test zoneid=<ZONEID> templateid=<TEMPID> serviceofferingid=<SERVICEID> diskofferingid=<DISKID> networkids=<INTERNETID>,<INTERNALID>
 
 The first card is the default and should be connected to the Internet. You can extend cmonkey inventory with default values and do the YOLO. Add a new section:
@@ -684,6 +683,7 @@ Test your user certificate (you might have to create the old hash):
     cacert verify hpctest sysop
 
 HERE Enable the Grid state:
+https://www.insecure.ws/2013/10/11/ssltls-configuration-for-apache-mod_ssl/
 
     flock play @@manager globus --extra-vars="defaultca=<CAHASH>"
 
