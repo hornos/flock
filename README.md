@@ -13,6 +13,8 @@ Anisble is chosen as configuration manager since it is dead easy, very intuitive
 
 Currently, CloudStack is supported as a cloud backend. The Ansible part is cloud agnostic.
 
+"With marrying it with something like cobbler you can in theory rack mount a machine, hit the power button and have a machine exactly how you want it to be in “x” about of time. This is great for big companies that always want machines to cookie cutter." [jjasghar.github.io](http://jjasghar.github.io/blog/2013/06/26/ansible-vs-chef-vs-puppet/) True story, but it is great for everyone not just big companies. that is exactly what Flock can do for you.
+
 ## Install for OS X
 Install [Homebrew](http://brew.sh) and [Ansible](http://www.ansibleworks.com/docs/gettingstarted.html) and the following packages. *Do not use ansible development branch!* Optionally, you should install [Cloud Monkey](https://cwiki.apache.org/confluence/display/CLOUDSTACK/CloudStack+cloudmonkey+CLI) to hack Cloudstack.
 
