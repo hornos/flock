@@ -36,7 +36,7 @@ interfaces:
   dhcp: eth1
   nosys: eth0
   masq: eth1
-  storage: eth2
+  storage: eth0
 
 networks:
   bmc: 10.0.0.0

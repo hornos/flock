@@ -121,6 +121,7 @@ function vb/intnet() {
 function vb/storage() {
   local _name=${1}
   local _hdsize=${2:-2000000}
+  local _count=${3:-4}
 
   local _path=$(vb/path "${_name}")
   _path=$(dirname "${_path}")
@@ -129,7 +130,7 @@ function vb/storage() {
   local _disk=""
   local _controller="Controller: SATA"
 
-  for i in 1 2 3 4 ; do
+  for i in $(seq 1 ${_count}) ; do
     _disk="${_path}/${_name}-storage-${i}.vdi"
     vb/mkdisk "${_disk}" "${_hdsize}"
     # attach

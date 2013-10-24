@@ -1,14 +1,14 @@
 #!/bin/bash
 
 PEERS="{%- for host in hostvars %}
-{{- hostvars[host]['ansible_'+paths[interfaces.storage]]['ipv4']['address'] }}
+{{- hostvars[host][ansible_paths[interfaces.storage]]['ipv4']['address'] }}
 {%- if not loop.last %}
 ,
 {%- endif %}
 {%- endfor %}"
 
 DISKS="{%- for host in hostvars %}
-{{- hostvars[host]['ansible_'+paths[interfaces.storage]]['ipv4']['address'] }}:{{- gluster.lv_mnt }}
+{{- hostvars[host][ansible_paths[interfaces.storage]]['ipv4']['address'] }}:{{- gluster.lv_mnt }}
 {%- if not loop.last %}
 {{- ' ' }}
 {%- endif %}
@@ -39,10 +39,11 @@ read -p "Start volume $VOLUME?"
 gluster volume start $VOLUME
 
 echo ""
-read -o "Set timeouts on $VOLUME?"
-echo ""
-read -o "Set timeouts on $VOLUME?"
+read -p "Set timeouts on $VOLUME?"
 gluster volume set $VOLUME network.ping-timeout {{gluster.ping}}
+
+echo ""
+read -p "Set timeouts on $VOLUME?"
 gluster volume set $VOLUME network.frame-timeout {{gluster.frame}}
 
 echo ""

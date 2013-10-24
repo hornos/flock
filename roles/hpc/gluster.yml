@@ -35,7 +35,6 @@
   - name: Create gluster VG
     lvg: vg={{gluster.vg_root}}
          pvs={{gluster.vg_pvs}}
-         pesize={{gluster.vg_size}}
     tags:
       - vg
 
@@ -49,6 +48,7 @@
       - partition
       - lvm
 
+  # TBD: tune options
   - name: Create filesystem
     filesystem: fstype=xfs
                 dev=/dev/{{gluster.vg_root}}/{{gluster.lv_data}}
@@ -66,7 +66,7 @@
     mount: name={{gluster.lv_mnt}}
            src=/dev/{{gluster.vg_root}}/{{gluster.lv_data}}
            fstype=xfs
-           opts={{gluster.opts}}
+           opts={{gluster.mntopts}}
            state=mounted
     tags:
       - partition

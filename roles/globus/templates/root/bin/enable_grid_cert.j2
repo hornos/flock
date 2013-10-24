@@ -1,5 +1,5 @@
 #!/bin/bash
-ca_cert=/etc/grid-security/certificates/{{globus.default}}.0
+ca_cert=/etc/grid-security/certificates/{{defaultca}}.0
 ca_bundle=/etc/ssl/certs/ca-bundle.crt
 ca_fp=$(openssl x509 -fingerprint -noout -in ${ca_cert})
 

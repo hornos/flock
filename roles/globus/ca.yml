@@ -23,8 +23,26 @@
         - packages
         - ca
 
-    - name: Set default CA [{{globus.default}}]
-      file: src=/etc/grid-security/certificates/{{item}}.{{globus.default}}
+
+    - name: Download defaultca
+      copy: src=ca/globus_simple_ca_{{defaultca}}.tar.gz
+            dest=/root/globus_simple_ca_{{defaultca}}.tar.gz
+            owner=root
+            group=root
+            mode=0600
+      tags:
+        - packages
+        - ca
+
+    - name: Install defaultca
+      shell: tar xvz --strip-components 1 -C /etc/grid-security/certificates -f /root/globus_simple_ca_{{defaultca}}.tar.gz
+      tags:
+        - packages
+        - ca
+
+
+    - name: Set default CA [{{defaultca}}]
+      file: src=/etc/grid-security/certificates/{{item}}.{{defaultca}}
             dest=/etc/grid-security/{{item}}
             state=link
       with_items:
@@ -36,7 +54,7 @@
         - config
 
     - name: Install /etc/grid-security/hostcert.pem
-      copy: src=../../ca/{{globus.default}}/grid-security/{{inventory_hostname}}_cert.pem
+      copy: src=../../ca/{{defaultca}}/grid-security/{{inventory_hostname}}_cert.pem
             dest=/etc/grid-security/hostcert.pem
             owner=root
             group=root
@@ -46,7 +64,7 @@
         - config
 
     - name: Install /etc/grid-security/hostkey.pem
-      copy: src=../../ca/{{globus.default}}/grid-security/{{inventory_hostname}}_key.pem
+      copy: src=../../ca/{{defaultca}}/grid-security/{{inventory_hostname}}_key.pem
             dest=/etc/grid-security/hostkey.pem
             owner=root
             group=root
@@ -56,7 +74,7 @@
         - config
 
     - name: Link default CA
-      file: src=/etc/grid-security/certificates/{{globus.default}}.0
+      file: src=/etc/grid-security/certificates/{{defaultca}}.0
             dest=/etc/grid-security/cacert.pem
             state=link
       tags:

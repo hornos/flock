@@ -651,7 +651,7 @@ Change to the mainline kernel:
 #### Globus (optional)
 Create a HPC CA:
 
-    module load openssl lobus/5.2.0
+    module load openssl globus/5.2.0
     cacert create hpctest
 
 The new CA is created under the `ca/hpctest` directory. The CA certificate is installed under `ca/grid-security`. If you compile Globus with the old OpenSSL (system default) you have to use old-style subject hash. Create old CA hash by:
@@ -687,7 +687,7 @@ Test your user certificate (you might have to create the old hash):
 HERE Enable the Grid state:
 https://www.insecure.ws/2013/10/11/ssltls-configuration-for-apache-mod_ssl/
 
-    flock play @@manager globus --extra-vars="defaultca=<CAHASH>"
+    flock play @@manager roles/globus/globus --extra-vars="defaultca=<CAHASH>"
 
 Check `ssl.conf` for a strong [PFS](http://vincent.bernat.im/en/blog/2011-ssl-perfect-forward-secrecy.html) cipher setting.
 
@@ -698,21 +698,20 @@ Verify https in your browser:
 
 Save:
 
-    vbox snap /manager grid
+    vbox snap /manager globus
 
-TBD PFS SSL
 TBD http://omdistro.org
 
 #### Master and servant
 Name the master and backup node for a failover HA:
 
-    flock play @@ww roles/hpc/hosts --extra-vars=\"master=ww-01 backup=ww-02\"
-    vbox snap /ww hosts
+    flock play @@manager roles/hpc/hosts --extra-vars=\"manager=manager-01 backup=manager-02 interface=eth0\"
+    vbox snap /manager hosts
 
 #### Database
 SQL database is used for the scheduler backend. Install the SQL cluster:
 
-    flock play @@ww roles/database/percona --extra-vars "master=ww-01"
+    flock play @@manager roles/database/percona --extra-vars "master=manager-01"
 
 Login to the master node and bootstrap the cluster (as root):
 
@@ -720,7 +719,7 @@ Login to the master node and bootstrap the cluster (as root):
 
 Now start the whole cluster:
 
-    flock play @@ww roles/database/percona_start --extra-vars "master=ww-01"
+    flock play @@manager roles/database/percona_start --extra-vars "master=manager-01"
 
 Verify on the master node:
 
@@ -728,16 +727,23 @@ Verify on the master node:
 
 Enable php admin interface:
 
-    flock play @@ww roles/database/admin
+    flock play @@manager roles/database/admin
 
 The mysql admin page is at `http://10.1.1.1/phpmyadmin`.
 
-    vbox snap /ww sql
+    vbox snap /manager percona
 
 #### Gluster
+Stop the machines and install a state disk (/dev/sdb):
+
+    flock shutdown @@manager
+    vbox statedisk /manager
+    vbox start /manager
+    vbox snap /manager statedisk
+
 Install a common state directory with Gluster:
 
-    flock play @@ww roles/hpc/gluster --extra-vars="master=ww-01"
+    flock play @@manager roles/hpc/gluster --extra-vars="master=manager-01"
 
 Login to the master node and bootstrap the cluster (as root):
 
@@ -745,8 +751,8 @@ Login to the master node and bootstrap the cluster (as root):
 
 Finally, mount the common directory (check tune parameters):
 
-    flock play @@ww roles/hpc/glusterfs
-    flock play @@ww roles/hpc/gtop
+    flock play @@manager roles/hpc/glusterfs
+    flock play @@manager roles/hpc/gtop
 
 Monitor the cluster (as root):
 
@@ -754,13 +760,13 @@ Monitor the cluster (as root):
 
 Save:
 
-    vbox snap /ww gluster
+    vbox snap /manager gluster
 
 #### HA Scheduler
 Generate a munge key for the compute cluster and setup the scheduler services:
 
     dd if=/dev/random bs=1 count=4096 > keys/munge.key
-    flock play @@ww scheduler --extra-vars=\"master=ww-01 backup=ww-02\"
+    flock play @@manager scheduler --extra-vars=\"master=manager-01 backup=manager-02 computes=manager-[01-3]\"
 
 Scheduler authentication relies on NTP and the Munge key. Keep the key in secret! The basic Slurm setup contains only the controller machines. Restart `slurmdbd` can fail.
 
@@ -774,9 +780,11 @@ Verify the queue:
 
 Save:
 
-    vbox snap /ww slurm
+    vbox snap /manager slurm
 
 [Back to the future](https://www.youtube.com/watch?v=KG2M4ttzBnY).
+
+<!-- DONE -->
 
 #### Warewulf
 Generate a cluster key. The cluster key is used to SSH to the compute nodes:
@@ -1362,53 +1370,14 @@ Save and start to reach the ground state:
     flock reboot @@ostest
     vbox snap /ostest ground
 
-## Lustre on ZFS
-Make 3 ground state `luster`.
-
-
-## The Docker Supercomputer aka MAERSK
-Make 3 ground state `docker`.
-
-### Database
-Install the database:
-
-    flock play @@maersk-01 roles/database/percona --extra-vars "master=maersk-01"
-
-Login to the master node and bootstrap the cluster (set `root` password to `root`):
-
-    /etc/init.d/mysql start --wsrep-cluster-address="gcomm://"
-    mysql_secure_installation
-
-Enable php admin interface:
-
-    flock play @@maersk-01 roles/database/admin
-
-DB interface at `http://10.1.1.1/phpmyadmin`.
-
-Save:
-
-    vbox snap /docker database
-
-### Scheduler
-Generate the Munge auth key:
-
-    dd if=/dev/random bs=1 count=1024 > keys/munge.key
-
-Install Slurm:
-
-    flock play @@docker scheduler --extra-vars \"master=maersk-01 computes='maersk-[02-3]'\"
-
-Verify munge:
-
-    munge -n | ssh maersk-02 unmunge
-
-Login to the master node and test the queue:
-
-    srun -N 3 hostname
+## The Docker Supercomputer aka MAERSK (mérszk?)
+Make a manager triangle with Slurm on it. For the sake of simplicity manager nodes will carry the Docker VMs. This blueprint is based on [nareshv's](http://nareshv.blogspot.hu/2013/08/installing-dockerio-on-centos-64-64-bit.html) blog.
 
 ### Docker
-TBD: shorewall chain inject
 
-    flock play @@docker roles/docker/docker
-    flock reboot @@docker
+    flock play @@manager roles/docker/docker
+    flock reboot @@manager
 
+    [sysop@manager-01 ~]$ sudo mkdir /glusterfs/common/docker
+    [sysop@manager-01 ~]$ sudo chown sysop /glusterfs/common/docker
+    aufs is there but Unable to load the AUFS module

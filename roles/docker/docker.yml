@@ -19,7 +19,7 @@
 
     - name: Install packages
       yum: name={{item}}
-           state=installed
+           state=latest
       with_items:
         - docker-io
       tags:
@@ -32,3 +32,11 @@
                   backup=yes
       tags:
         - fstab
+
+    - name: Set grub default
+      lineinfile: dest=/boot/grub/grub.conf
+                  regexp='^default'
+                  line='default=0'
+      when: ansible_os_family == "RedHat"
+      tags:
+        - grub

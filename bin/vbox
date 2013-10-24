@@ -149,6 +149,30 @@ case ${cmd} in
     done
   ;;
 
+  #/* Install state disk for gluster
+  #// statedisk <HOST>
+  #//           /<GROUP>
+  statedisk)
+    host="${1}"
+    opts=""
+    group=false
+
+    # group
+    if [ "${host:0:1}" = "/" ] ; then
+      group=true
+      host="${host:1}"
+    fi
+
+    if ! ${group} ; then
+      vb/storage "${host}" 20000 1
+      exit $?
+    fi
+
+    for i in $(vb/list "/${host}") ; do
+      vb/storage "${i}" 20000 1
+    done
+  ;;
+
   #/* Power off a VM or a group
   #// off <HOST>
   #//     /<GROUP>

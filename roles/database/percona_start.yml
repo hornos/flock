@@ -9,14 +9,11 @@
     - vars/percona.yml
     - vars/mariadb.yml
 
-  vars:
-    is_master: "'$inventory_hostname' == '$master'"
-
   tasks:
 ### REDHAT
     - name: Create sstuser
       mysql_user: name=sstuser password={{wsrep.password}} priv=*.*:ALL login_user={{mariadb.user}} login_password={{mariadb.password}} state=present
-      when: '$is_master'
+      when: inventory_hostname == master
       tags:
         - users
 # CREATE USER 'sstuser'@'localhost' IDENTIFIED BY 's3cret';

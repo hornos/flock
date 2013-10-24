@@ -3,22 +3,21 @@ repo: glusterfs-epel.repo
 
 #
 # tune ping and frame timeouts
-#
+# vg_pvs: '/dev/sdb,/dev/sdc,/dev/sdd,/dev/sde'
 
 gluster:
-  interface: eth2
-  vg_root: 'vg_lustre'
-  vg_pvs: '/dev/sdb,/dev/sdc,/dev/sdd,/dev/sde'
-  vg_size: 1048576
+  vg_root: 'vg_gluster'
+  vg_pvs: '/dev/sdb'
   lv_data: 'lv_glusterfs_common_brick1'
-  lv_size: 256000
+  lv_size: '18000'
   lv_mnt: '/data/glusterfs/common/brick1'
   transport: 'tcp,rdma'
   volume: 'common'
   replica: 3
-  common: '/gluster/common'
+  common: '/glusterfs/common'
   fio_size: '100M'
   disk: 'sda'
   opts: 'defaults,fetch-attempts=9,_netdev'
+  mntopts: 'defaults'
   ping: 30
   frame: 60

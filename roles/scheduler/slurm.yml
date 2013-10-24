@@ -144,18 +144,18 @@
       - config
       - slurmctld
 
-### keep the original for slurmconf
-  - name: Install /etc/slurm/slurm.conf.template
-    template: src=templates/etc/slurm/slurm.conf.template.j2
-              dest=/etc/slurm/slurm.conf.template
-              owner=slurm
-              group=slurm
-              mode=0644
-    tags:
-      - slurm
-      - config
-      - slurmctld
-      - slurmconf
+#### keep the original for slurmconf
+#  - name: Install /etc/slurm/slurm.conf.template
+#    template: src=templates/etc/slurm/slurm.conf.template.j2
+#              dest=/etc/slurm/slurm.conf.template
+#              owner=slurm
+#              group=slurm
+#              mode=0644
+#    tags:
+#      - slurm
+#      - config
+#      - slurmctld
+#      - slurmconf
 
   - name: Start slurmdbd
     service: name=slurmdbd
@@ -316,7 +316,7 @@
   handlers:
     - name: Restart slurmdbd
       service: name=slurmdbd
-               state=restarted
+               state=reconfig
 
     - name: Restart slurm
       service: name={{service.slurm}}
