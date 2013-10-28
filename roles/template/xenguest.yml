@@ -32,6 +32,7 @@
       - virtualbox-guest-utils
       - virtualbox-guest-x11
       - virtualbox-ose-guest-x11
+    when: ansible_os_family == "Debian"
     tags:
       - vbox
 

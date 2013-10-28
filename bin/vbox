@@ -257,9 +257,23 @@ case ${cmd} in
     if test -f "${dest}"; then
       rm -f "${dest}"
     fi
-    ${vb_mgt} clonehd "${disk}" "${dest}" \
+    ${vb_mgt} clonehd \
+              "${disk}" \
+              "${dest}" \
               --format VHD
     exit $?
+  ;;
+
+  #/* Clone, convert and start upload server on the template
+  #// The allow string format: ip/mask
+  #// upload <HOST> <ALLOW> <PORT>
+  upload)
+    host=${1:-test}
+    allow=${2:-127.0.0.1/32}
+    port=${3:-8080}
+    ${gbn} clone ${host}
+    ${gbn} vhd ${host}-clone
+    ${gbn} http ${host}-clone ${allow} ${port}
   ;;
 
   #/* Start webserver for image upload

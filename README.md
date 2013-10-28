@@ -171,19 +171,15 @@ Or reach the ground state:
     flock reboot @@template
     vbox snap centos-template ground
 
-Create a template. *Mind that network, firewall resets!* You might have to change NTP settings as well. Fot the xenguest playbook you have to copy `xen-guest-utilities*.rpm` into the `rpms` directory. TBD multicast change
+Create a template. *Mind that network, firewall resets! Also mind that SSH port is allowed without any FW restriction, and after VM create you should refine ipset/shorewall!* You might have to change NTP settings as well. Fot the xenguest playbook you have to copy `xen-guest-utilities*.rpm` into the `rpms` directory. TBD multicast change
 
     flock play @@template ground-template
     flock shutdown @@template
+    vbox snap centos-template template
 
-Clone the machine or merge all snapshots since VDI to VHD needs a singel disk file.
+Clone the machine and start upload server:
 
-    vbox clone centos-template
-    vbox vhd centos-template-clone
-
-Upload to a URL or start ad-hoc ngnix for template deploy (http runs on port 8080):
-
-    vbox http centos-template-clone <ALLOW>
+    vbox upload centos-template <ALLOW>
 
 where `<ALLOW>` is an ngnix allow rule range or address (eg. 192.168.1.0/24).
 
@@ -194,7 +190,7 @@ Switch to your [Cloud Monkey](https://www.youtube.com/watch?v=y6wX4UhJ_Vg) inven
     list zones
     register template displaytext=template-test format=VHD hypervisor=XenServer name=template-test ostypeid=<OSTYPEID> url=<URL TO VHD> zoneid=<ZONEID>
 
-All you need is zone, template, compute and disk offering, affinity and network
+You might have to create an isolated network. You need the following `id`s of: zone, template, compute, disk offering, affinity and network:
 
     list zones
     list templates templatefilter=community
@@ -227,6 +223,10 @@ Profit and happy cheffing :)
     flock setup @@core
     flock command @@core hostname
     flock ssh @@<HOST>
+
+Fix ipset whitelist without system network:
+
+    flock play @@core roles/firewall/whitelist.yml --extra-vars="is_nosys=true"
 
 TBD genders pssh
 TBD initial reset dyndns
@@ -1129,7 +1129,6 @@ Save it for good:
 
 *Mind that, currently there is no any HA in FhGFS (distribute-only).*
 
-
 <!--
 ##     ##    ###    ########   #######   #######  ########  
 ##     ##   ## ##   ##     ## ##     ## ##     ## ##     ## 
@@ -1140,29 +1139,8 @@ Save it for good:
 ##     ## ##     ## ########   #######   #######  ##
 -->
 
-## Hadoop
-Make 3 ground state `hadoop`.
-
-### Prepare
-Install Gluster and setup a 3-node FS cluster if you want a storage based HA:
-
-    flock play @@core roles/system/kernel --extra-vars "clean=yes"
-    flock reboot @@core
-
-    flock play @@core roles/hpc/gluster
-
-Login to the master node and bootstrap the cluster:
-
-    /root/gluster_bootstrap
-
-Finally, mount the common directory:
-
-    flock play @@core roles/hpc/glusterfs
-    flock play @@core roles/hpc/gtop
-
-Monitor the cluster:
-
-    /root/bin/gtop
+## Hadoop aka Nelli az elefánt
+For the sake of simplicity create a scheduler triangle (`manager`).
 
 ### CDH4
 Deploy standalone HDFS cluster:

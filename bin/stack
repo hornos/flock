@@ -3,7 +3,7 @@ source $(dirname $0)/../lib/header
 import ostype
 import inifile
 import cs
-import ansible
+# import ansible
 
 ### main
 cmd=${1:-help}
@@ -19,7 +19,7 @@ case ${cmd} in
   #// inventory <NAME>
   inventory)
     name=${1:-test}
-    inventory="inventory/ansible ${name}"
+    inventory="./inventory/${name}.ansible"
 
     if readable "${inventory}" ; then
       answer "Overwrite inventory?"

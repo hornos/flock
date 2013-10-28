@@ -1,0 +1,62 @@
+#
+# Shorewall firewall fix whitelist
+#
+---
+- hosts: all
+
+  vars:
+    is_nosys: false
+    is_natvpn: false
+
+  vars_files:
+    - vars/ipset.yml
+    - networks.yml
+
+  tasks:
+
+# IPSET
+  - name: Clean ipset rules
+    file: path=/etc/ipset.d/{{item}}
+          state=absent
+    with_items:
+      - whitelist.sh
+      - whitelist.save
+    tags:
+      - ipset
+
+  - name: Install ipset tables
+    template: src=templates/etc/ipset.d/{{item}}.j2
+              dest=/etc/ipset.d/{{item}}
+              owner=root
+              group=root
+              mode=0755
+    with_items:
+      - whitelist.sh
+    notify:
+      - Reload ipset
+    tags:
+      - config
+
+# SHOREWALL
+  - name: Install rules
+    template: src=templates/etc/shorewall/rules.d/{{item}}.j2
+              dest=/etc/shorewall/rules.d/{{item}}
+              owner=root
+              group=root
+              mode=0640
+    with_items:
+      - core
+    tags:
+      - rules
+    notify:
+      - Restart shorewall
+
+
+  handlers:
+    - name: Reload ipset
+      service: name=ipset
+               state=reloaded
+
+    - name: Restart shorewall
+      service: name=shorewall
+               state=restarted
