@@ -332,8 +332,8 @@ case ${cmd} in
     for i in $(vbox group? ${group}) ; do
       echo ""
       echo "Bootstrap and secure: $i"
-      # jockey password @${i}
-      # ${gbn} play root@@${i} bootstrap
+      jockey password @${i}
+      ${gbn} play root@@${i} bootstrap
       ${gbn} play @@${i} secure
       ${gbn} reboot @@${i}
     done
