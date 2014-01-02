@@ -24,6 +24,14 @@ LABEL centos64-template
 	MENU LABEL centos64
 	KERNEL centos64/vmlinuz
 	APPEND initrd=centos64/initrd.img ksdevice=eth0 method=cdrom ks=http://KICKSTART
+LABEL centos65
+	MENU LABEL centos65
+	KERNEL centos65/vmlinuz
+	APPEND initrd=centos65/initrd.img ksdevice=eth0 method=cdrom ks=http://KICKSTART
+LABEL centos65-template
+	MENU LABEL centos65
+	KERNEL centos65/vmlinuz
+	APPEND initrd=centos65/initrd.img ksdevice=eth0 method=cdrom ks=http://KICKSTART
 LABEL cbcpp
 	MENU LABEL cbcpp
 	KERNEL centos64/vmlinuz

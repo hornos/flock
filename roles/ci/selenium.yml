@@ -21,4 +21,4 @@
         - packages
 
     - name: Install Xvfb init script
-      
+      template: 

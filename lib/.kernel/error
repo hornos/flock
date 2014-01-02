@@ -1,0 +1,122 @@
+
+### messages
+function msg() {
+  echo -e "[${gbn}] ${*}"
+}
+
+function msg/debug() {
+  if ${gdbg} ; then
+    msg "DEBUG: ${*}"
+  fi
+}
+
+function msg/error() {
+  msg "ERROR: ${*}"
+  exit ${2:-${_false_}}
+}
+
+function msg/warn() {
+  msg "WARN: ${*}"
+}
+
+function failed() {
+  local _r=${1:-${_false_}}
+  if test ${_r} -gt 0 ; then
+    return ${_true_}
+  fi
+  return ${_false_}
+}
+
+function succeed() {
+  local _r=${1:-${_false_}}
+  if test ${_r} -eq 0 ; then
+    return ${_true_}
+  fi
+  return ${_false_}
+}
+
+function empty() {
+  local _s="${1}"
+  if test -z "${_s}"; then
+    return ${_true_}
+  fi
+  return ${_false_}
+}
+
+function readable() {
+  local _f="${1}"
+  if test -r "${_f}" ; then
+    return ${_true_}
+  fi
+  return ${_false_}
+}
+
+function executable() {
+  local _f="${1}"
+  if test -x "${_f}" ; then
+    return ${_true_}
+  fi
+  return ${_false_}
+}
+
+function directory() {
+  local _f="${1}"
+  if empty "${_f}" ; then
+    return ${_false_}
+  fi
+  if test -d "${_f}" ; then
+    return ${_true_}
+  fi
+  return ${_false_}
+}
+
+function lessthan() {
+  local _v=${1}
+  local _l=${2}
+  if test ${_v} -lt ${_l} ; then
+    return ${_true_}
+  fi
+  return ${_false_}
+}
+
+function morethan() {
+  local _v=${1}
+  local _l=${2}
+  if test ${_v} -gt ${_l} ; then
+    return ${_true_}
+  fi
+  return ${_false_}
+}
+
+function equal() {
+  local _v=${1}
+  local _l=${2}
+  if test ${_v} -eq ${_l} ; then
+    return ${_true_}
+  fi
+  return ${_false_}
+}
+
+
+function args() {
+  local _a=${1}
+  local _l=${2:-3}
+  if test ${_a} -lt ${_l} ; then
+    return ${_false_}
+  fi
+  return ${_true_}
+}
+
+function stop() {
+  if test -r "${grc}" ; then
+    rm -f "${grc}"
+  fi
+  exit 1
+}
+
+function error/stop() {
+  local _f="${1:-stop}"
+  shift
+  local _s="${*:-INT TERM EXIT}"
+  trap ${_f} ${_s}
+}

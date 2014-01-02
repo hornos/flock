@@ -1,0 +1,64 @@
+
+function help() {
+  import sys/dir
+  import gui
+  local _h="${1:-}"
+  echo
+  msg "Manual"
+  gui/line
+
+  cat $1 | \
+  awk '/#\/\*/{sub(/#\/\*/,"",$0); print "\n" $0}
+       /#\/\//{sub(/#\/\//,"",$0); print "  " $0}'
+  echo ""
+#  if ! empty "${_h}" ; then
+#    local _f="help/${_h}"
+#    if $(ns/isfunc "${_f}") ; then
+#      ${_f}
+#      return $?
+#    fi
+#    msg "Help not available for ${_h}"
+#    $failure
+#  fi
+#
+#  msg "Available help:"
+#  local i
+#  for i in $(set | grep "^help/*\ *\(\)" | awk '{print $1}') ; do
+#    i=${i##help}
+#    if ! empty "${i}" ; then
+#      echo "${i##/}"
+#    fi
+#  done | u/column
+}
+
+function help/kernel() {
+  import gui
+  local _l="${grd}/lib"
+  msg "Kernel functions"
+  gui/line
+  local i
+  for i in error help import namespace util; do
+    echo "kernel/${i} functions:"
+    ns/func/dir "${_l}/.kernel/${i}" | u/column
+    echo ""
+  done
+}
+
+function help/modules() {
+  import sys/dir
+  local _l=""
+  if ! empty "${gip}" ; then
+    echo
+    local j
+    for j in $(ns/lspath ${gip}); do
+      _l="${j}"
+      echo "Available modules in ${_l}:"
+      for i in $(sys/dir/rls "${_l}") ; do
+        i=${i##${_l}}
+        if ! empty "${i}"; then
+          echo "${i##/}"
+        fi
+      done | u/column
+    done
+  fi
+}

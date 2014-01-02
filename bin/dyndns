@@ -27,20 +27,20 @@ case ${cmd} in
       ${dns_dnskey} -a ${dns_algo} -b ${dns_bits} -n USER ${host}
     done
 
-    # alias links
-    for i in *.key ; do
-      j=$i
-      j=${j%%.*}
-      j=${j:1}.key
-      ln -s ${i} ${j}
-    done
+    # # alias links
+    # for i in *.key ; do
+    #   j=$i
+    #   j=${j%%.*}
+    #   j=${j:1}.key
+    #   ln -s ${i} ${j}
+    # done
 
-    for i in *.private ; do
-      j=$i
-      j=${j%%.*}
-      j=${j:1}.private
-      ln -s ${i} ${j}
-    done
+    # for i in *.private ; do
+    #   j=$i
+    #   j=${j%%.*}
+    #   j=${j:1}.private
+    #   ln -s ${i} ${j}
+    # done
   ;;
 
   ln)

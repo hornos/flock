@@ -1,0 +1,189 @@
+function u/column() {
+  local _c=${1:-3}
+  awk -v c=3 'BEGIN{i=0;s="";}{
+    if(i==c) {
+      print s;
+      s="";
+      i=0
+    }
+    else {
+      s=sprintf("%s %-30s",s,$0);
+      ++i;
+    }
+  }
+  END{if(i>0) print s;}'
+}
+
+function u/installed() {
+  local _b="${1}"
+  if empty "${_b}" ; then
+    $failure
+  fi
+  which "${_b}" &> /dev/null
+  if succeed $?; then
+    $success
+  fi
+  $failure
+}
+
+function answer() {
+  import str
+  local _m="${1:-Answer}"
+  local _t=${2:-3}
+  local _a
+
+  while true ; do
+    echo -en "[${gbn}] ${_m} (y/n/q) [${_t}]: "
+    read _a
+    _a=$(str/tolower ${_a})
+    case "${_a}" in
+      "y" | "case" | "yes" )
+        $success
+      ;;
+      "n" | "no" | "q"  )
+        echo -e "[${gbn}] Abort\n"
+        $failure
+      ;;
+      *)
+        echo -e "[${gbn}] Invalid\n"
+        _t=$((_t-1))
+      ;;
+    esac
+    if test ${_t} -lt 1 ; then
+      $failure
+    fi
+  done
+}
+
+function choose() {
+  import str
+  local _m="${1:-Answer}"
+  local _n=${2:-3}
+  local _t=${2:-3}
+  local _a
+
+  while true ; do
+    echo -en "[${gbn}] ${_m} (1-${_n}/n/q) [${_t}]: "
+    read _a
+    _a=$(str/tolower ${_a})
+    case "${_a}" in
+      "y" | "case" | "yes" )
+        $success
+      ;;
+      "n" | "no" | "q"  )
+        echo -e "[${gbn}] Abort\n"
+        $abort
+      ;;
+      *)
+        if test ${_a} -le ${_n} && \
+           test ${_a} -gt 0 ; then
+          return ${_a}
+        else
+          echo -e "[${gbn}] Invalid\n"
+          _t=$((_t-1))
+        fi
+      ;;
+    esac
+    if test ${_t} -lt 1 ; then
+      $abort
+    fi
+  done
+}
+
+function u/split() {
+  local _s="${1}"
+  local _f=${2:-1}
+  local _x="${3:-|}"
+  echo "${_s}" | cut  -d "${_x}" -f ${_f}
+}
+
+# TODO: to be removed
+function field() {
+  u/split $*
+}
+
+function epoch() {
+  local _d=${1:-0}
+  if ! ns/isint "${_d}" ; then
+    echo "${_d}"
+    return
+  fi
+  if test ${_d} -eq 0 ; then
+    date +%s
+  else
+    date -r ${_d} +"%Y-%m-%d %H:%M:%S"
+  fi
+}
+
+function elapsed() {
+  local _t0=${1}
+  local _t1=${2}
+  local _dt=$((_t1-_t0))
+
+  h=$(( _dt / 3600 ))
+  m=$(( ( _dt / 60 ) % 60 ))
+  s=$(( _dt % 60 ))
+  printf "%02d:%02d:%02d" $h $m $s
+}
+
+function check() {
+  msg "import path    = ${gip}"
+  msg "loaded modules = ${gim}"
+}
+
+function timestamp() {
+  date +%Y-%m-%d-%H-%M-%S
+}
+
+function match() {
+  local _v="${1}"
+  local _m="${2}"
+  if empty "${_v}" || empty "${_m}" ; then $failure; fi
+
+  if test "${!_v/*${_m}*/${_m}}" = "${_m}" ; then
+    $success
+  fi
+  $failure
+}
+
+function u/calc() {
+  local _exp="${*}"
+  if empty "${_exp}" ; then
+    $failure
+  fi
+  echo "${_exp}" | bc
+}
+
+function u/resolv() {
+  local _v="${1}"
+  if empty "${_v}" ; then $failure ; fi
+
+  local _w=$(echo "${!_v}" | sed s/@/\\\\$/g )
+  eval "${_v}=\"${_w}\""
+}
+
+function u/title() {
+  import gui
+  echo -e "\n$*"
+  gui/line
+}
+
+function u/sudo() {
+  local _u=$(whoami)
+  if test "${_u}" != "root" ; then
+    sudo $*
+  else
+    $*
+  fi
+}
+
+function u/rm() {
+  local _f="${*}"
+  if empty "${_f}" ; then $failure ; fi
+  local i
+  for i in ${_f} ; do
+    if test -r "${i}" ; then
+      rm -f "${i}"
+    fi
+  done
+}

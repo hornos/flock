@@ -1,4 +1,5 @@
 ipset:
-  ipblocks: 'http://www.ipdeny.com/ipblocks/data/countries'
+  # ipblocks: 'http://www.ipdeny.com/ipblocks/data/countries'
+  ipblocks: 'https://dl.dropboxusercontent.com/u/14292474/ipb'
   blacklist: 'cn,kr,pk,tw,sg,hk,pe,ru'
   whitelist: 'hu'

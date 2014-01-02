@@ -276,6 +276,13 @@ case ${cmd} in
     ${gbn} http ${host}-clone ${allow} ${port}
   ;;
 
+  share)
+    host=${1:-test}
+    allow=${2:-127.0.0.1/32}
+    port=${3:-8080}
+    ${gbn} http ${host}-clone ${allow} ${port}
+  ;;
+
   #/* Start webserver for image upload
   #// The allow string format: ip/mask
   #// http <HOST> <ALLOW> <PORT>

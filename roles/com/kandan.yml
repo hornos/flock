@@ -6,6 +6,8 @@
 #
 # flock play @@percona roles/com/kandan.yml --extra-vars=\"master=percona-01 mysql_devel=Percona-SQL-devel-50\"
 #
+# uncomment mysql require
+#
 ---
 - hosts: all
 
@@ -14,9 +16,6 @@
     - vars/mariadb.yml
 
   vars:
-    is_master: "'$inventory_hostname' == '$master'"
-    is_backup: "'$inventory_hostname' == '$backup'"
-    is_schema: "'$schema' == 'yes'"
     mysql_devel: "MariaDB-devel"
 
   tasks:
@@ -39,13 +38,13 @@
       - packages
       - devel
 
-  - name: Install mysql devel
-    yum: name={{mysql_devel}}
-         state=installed
-    tags:
-      - packages
-      - devel
-      - mysql
+#  - name: Install mysql devel
+#    yum: name={{mysql_devel}}
+#         state=installed
+#    tags:
+#      - packages
+#      - devel
+#      - mysql
 
 # TODO: mysql adapter
   - name: Install gem packages
@@ -84,7 +83,6 @@
               login_user={{mariadb.user}}
               login_password={{mariadb.password}}
               login_unix_socket={{mariadb.socket}}
-    when: '$is_master'
     tags:
       - db
 
@@ -93,7 +91,6 @@
                 login_user={{mariadb.user}}
                 login_password={{mariadb.password}}
                 login_unix_socket={{mariadb.socket}}
-    when: '$is_master'
     tags:
       - db
 
