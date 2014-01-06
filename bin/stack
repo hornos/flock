@@ -40,16 +40,26 @@ case ${cmd} in
   #/* Mass deploy VMs
   #// internal names are: <NAME>-<COUNT>
   #// out <COUNT> <NAME>
+  #// <COUNT> = <count>[:<from>]
   out)
     count=${1:-1}
+    from=1
+    echo "$count" | grep ":" &>/dev/null
+    if succeed $? ; then
+      from=${count##*:}
+    fi
+    count=${count%%:*}
+
+    # echo $count $from
+
     name=${2:-test}
     domain=${3}
     read_ini "${CMONKEY_HOSTS}"
 
-    answer "Deploy ${count} VMs?"
+    answer "Deploy ${count} VMs (count from ${from})?"
     if failed $?; then $failure; fi
 
-    for i in $(seq -f "%02g" 1 ${count}); do
+    for i in $(seq -f "%02g" ${from} ${count}); do
       host=${name}-${i}
       if test -n "${domain}" ; then
         host=${host}.${domain}
