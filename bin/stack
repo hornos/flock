@@ -51,6 +51,7 @@ case ${cmd} in
     count=${count%%:*}
 
     # echo $count $from
+    to=$((count+from-1))
 
     name=${2:-test}
     domain=${3}
@@ -59,7 +60,8 @@ case ${cmd} in
     answer "Deploy ${count} VMs (count from ${from})?"
     if failed $?; then $failure; fi
 
-    for i in $(seq -f "%02g" ${from} ${count}); do
+    for i in $(seq -f "%02g" ${from} ${to}); do
+      # echo $i; continue
       host=${name}-${i}
       if test -n "${domain}" ; then
         host=${host}.${domain}

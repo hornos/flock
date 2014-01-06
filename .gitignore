@@ -48,3 +48,4 @@ inventory/*
 roles/template/files/*
 roles/template/rpms/*
 roles/template/debs/*
+ansible/roles/*
