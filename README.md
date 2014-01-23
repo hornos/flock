@@ -4,6 +4,7 @@
 
 *The fact is, Adelmo's death has caused much spiritual unease among my flock.*
 
+*For a role based version check [Flock2](https://github.com/hornos/flock2)*
 
 *Flock* is an infrastructure prototype engine. You can use it to install and setup arbitrary large infrastructures from scratch with a laptop. All you need is some basic CLI tools, Ansible and Internet connection. It was tested in OS X but Linux should work as well.
 

@@ -1,4 +1,8 @@
-### flock
+# _______         _____  _______ _     _
+# |______ |      |     | |       |____/ 
+# |       |_____ |_____| |_____  |    \_
+#
+
 flock_root=$(cd $(dirname "${BASH_SOURCE}");pwd -P)
 PATH=${PATH}:${flock_root}/bin
 
