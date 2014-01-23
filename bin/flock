@@ -33,7 +33,7 @@ shift
 opts=$*
 
 ### host operators
-user=${hosts/@*}
+user=${hosts/[@|%]*}
 if [ ! -z "$user" ] ; then
   hosts=${hosts/${user}}
 fi
@@ -52,11 +52,16 @@ if [ "${hosts:0:1}" = "@" ] ; then
   if [ "${hosts:0:1}" = "@" ] ; then
     _opts="${_opts} --sudo"
     hosts="${hosts:1}"
-      if [ "${hosts:0:1}" = "@" ] ; then
-        _opts="${_opts} -K"
-        hosts="${hosts:1}"
-    fi
+    # if [ "${hosts:0:1}" = "@" ] ; then
+    #   _opts="${_opts} -K"
+    #   hosts="${hosts:1}"
+    # fi
   fi
+fi
+
+if [ "${hosts:0:1}" = "%" ] ; then
+  _opts="${_opts} -K"
+  hosts="${hosts:1}"
 fi
 
 ### common options
