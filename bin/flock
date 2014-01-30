@@ -289,7 +289,7 @@ case ${cmd} in
     no=${_arg1:-3}
     name=${_arg2:-core}
     inventory="./inventory/${name}.ansible"
-    type=${1:-centos64}
+    type=${1:-centos65}
     shift
     os=${1:-RedHat_64}
     shift
